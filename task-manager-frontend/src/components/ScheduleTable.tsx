@@ -2,20 +2,22 @@ import { For, createMemo } from "solid-js";
 import type { Person } from "../data";
 import type { AssignmentStore } from "../stores/assignmentStore";
 import type { TaskStore } from "../stores/taskStore";
+import type { DragStore } from "../stores/dragStore";
 
 export type Props = {
   persons: Person[];
   week: { key: string; label: string }[];
   assignmentStore: AssignmentStore;
   taskStore: TaskStore;
+  dragStore: DragStore;
 };
 
 export default function ScheduleTable(props: Props) {
-  const { persons, week, assignmentStore, taskStore } = props;
+  const { persons, week, assignmentStore, taskStore, dragStore } = props;
 
-  const tasksMap = createMemo(() => {
-    return Object.fromEntries(taskStore.tasks().map((t) => [t.id, t.name]));
-  });
+  const tasksMap = createMemo(() =>
+    Object.fromEntries(taskStore.tasks().map((t) => [t.id, t.name]))
+  );
 
   return (
     <div class="flex-1 overflow-auto p-4">
@@ -27,7 +29,6 @@ export default function ScheduleTable(props: Props) {
           "grid-template-columns": `120px repeat(${week.length}, 1fr)`,
         }}
       >
-        {/* Header */}
         <div class="border-b border-r p-2 bg-gray-100 font-semibold text-sm">
           人員
         </div>
@@ -40,16 +41,13 @@ export default function ScheduleTable(props: Props) {
           )}
         </For>
 
-        {/* Rows */}
         <For each={persons}>
           {(p) => (
             <>
-              {/* Person name */}
               <div class="border-b border-r p-2 font-medium sticky left-0 z-[1] bg-white">
                 {p.name}
               </div>
 
-              {/* Each day */}
               <For each={week}>
                 {(d) => {
                   const items = createMemo(() =>
@@ -62,20 +60,41 @@ export default function ScheduleTable(props: Props) {
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={(e) => {
                         e.preventDefault();
-                        const taskId = e.dataTransfer!.getData("text/plain");
-                        if (!taskId) return;
+                        const drag = dragStore.state();
 
-                        assignmentStore.createAssignment({
-                          taskId,
-                          personId: p.id,
-                          date: d.key,
-                        });
+                        // 建立新指派
+                        if (drag.type === "task") {
+                          assignmentStore.createAssignment({
+                            taskId: drag.taskId,
+                            personId: p.id,
+                            date: d.key,
+                          });
+                        }
+                        // 移動既有指派
+                        else if (drag.type === "assignment") {
+                          assignmentStore.updateAssignment(drag.assignmentId, {
+                            personId: p.id,
+                            date: d.key,
+                          });
+                        }
+
+                        dragStore.clear();
                       }}
                     >
                       <For each={items()}>
                         {(a) => (
-                          <div class="bg-blue-100 border border-blue-300 text-xs p-1 rounded mb-1">
-                            {tasksMap()[a.taskId] ?? "(未知工作)"}
+                          <div
+                            class="bg-blue-100 border border-blue-300 text-xs p-1 rounded mb-1 cursor-pointer"
+                            draggable="true"
+                            ondragstart={() => {
+                              props.dragStore.startAssignmentDrag({
+                                assignmentId: a.id,
+                                personId: a.personId,
+                                date: a.date,
+                              });
+                            }}
+                          >
+                            {tasksMap()[a.taskId]}
                           </div>
                         )}
                       </For>

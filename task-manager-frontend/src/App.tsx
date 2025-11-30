@@ -9,12 +9,14 @@ import { genWeek } from "./utils/date";
 import { createTaskStore } from "./stores/taskStore";
 import { createProjectStore } from "./stores/projectStore";
 import { createAssignmentStore } from "./stores/assignmentStore";
+import { createDragStore } from "./stores/dragStore";
 
 export default function App() {
   // --- stores ---
   const taskStore = createTaskStore();
   const projectStore = createProjectStore();
   const assignmentStore = createAssignmentStore();
+  const dragStore = createDragStore();
   const week = genWeek();
 
   // --- Task Panel State ---
@@ -87,11 +89,23 @@ export default function App() {
   };
 
   return (
-    <div class="flex h-screen">
+    <div
+      class="flex h-screen"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        const drag = dragStore.state();
+        if (drag.type === "assignment") {
+          assignmentStore.deleteAssignment(drag.assignmentId);
+        }
+        dragStore.clear();
+      }}
+    >
       {/* 左側 Project & Task 清單 */}
       <TaskPool
         taskStore={taskStore}
         projectStore={projectStore}
+        dragStore={dragStore}
         onCreateTask={openCreateTask}
         onEditTask={openEditTask}
         onCreateProject={openCreateProject}
@@ -105,6 +119,7 @@ export default function App() {
           week={week}
           assignmentStore={assignmentStore}
           taskStore={taskStore}
+          dragStore={dragStore}
         />
       </div>
 

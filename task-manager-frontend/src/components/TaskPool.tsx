@@ -1,8 +1,10 @@
 import { For } from "solid-js";
 import type { TaskStore } from "../stores/taskStore";
 import type { ProjectStore } from "../stores/projectStore";
+import type { DragStore } from "../stores/dragStore";
 
 export type Props = {
+  dragStore: DragStore;
   taskStore: TaskStore;
   projectStore: ProjectStore;
   onCreateTask: (projectId: string) => void;
@@ -16,7 +18,6 @@ export default function TaskPool(props: Props) {
     taskStore,
     projectStore,
     onCreateTask,
-    onEditTask,
     onEditProject,
     onCreateProject,
   } = props;
@@ -52,13 +53,10 @@ export default function TaskPool(props: Props) {
                 {(t) => (
                   <div
                     class="p-1 bg-white border rounded text-sm shadow cursor-pointer hover:bg-blue-50"
-                    onClick={() => onEditTask(t.id)}
+                    onClick={() => props.onEditTask(t.id)}
                     draggable="true"
-                    onDragStart={(e) => {
-                      // 放入 payload：taskId
-                      e.dataTransfer!.setData("text/plain", t.id);
-                      // 指定拖曳影像（可選）
-                      e.dataTransfer!.effectAllowed = "copyMove";
+                    onDragStart={() => {
+                      props.dragStore.startTaskDrag(t.id);
                     }}
                   >
                     {t.name}
