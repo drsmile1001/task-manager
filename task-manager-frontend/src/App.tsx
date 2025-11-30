@@ -1,86 +1,134 @@
-import { createMemo, createSignal, Show } from "solid-js";
+import { createSignal, createMemo, Show } from "solid-js";
 import { persons, assignments } from "./data";
 import TaskPool from "./components/TaskPool";
 import ScheduleTable from "./components/ScheduleTable";
-import { genWeek } from "./utils/date";
-import { createTaskStore } from "./stores/taskStore";
 import TaskDetailsPanel from "./components/TaskDetailsPanel";
-import type { Task } from "./domain/task";
+import ProjectDetailsPanel from "./components/ProjectDetailsPanel";
+import { genWeek } from "./utils/date";
+
+import { createTaskStore } from "./stores/taskStore";
+import { createProjectStore } from "./stores/projectStore";
 
 export default function App() {
+  // --- stores ---
   const taskStore = createTaskStore();
+  const projectStore = createProjectStore();
   const week = genWeek();
-  const [selectedTaskId, setSelectedTaskId] = createSignal<string | null>(null);
-  const [isCreating, setIsCreating] = createSignal(false);
+
+  // --- Task Panel State ---
+  const [taskPanelTaskId, setTaskPanelTaskId] = createSignal<string | null>(
+    null
+  );
+  const [taskPanelProjectIdForCreate, setTaskPanelProjectIdForCreate] =
+    createSignal<string | null>(null);
+
+  // --- Project Panel State ---
+  const [projectPanelProjectId, setProjectPanelProjectId] = createSignal<
+    string | null
+  >(null);
+  const [isProjectCreating, setIsProjectCreating] = createSignal(false);
+
+  // --- Derived values ---
+  const selectedProject = () => {
+    const id = projectPanelProjectId();
+    return id ? projectStore.getProject(id)! : null;
+  };
 
   const tasks = taskStore.tasks();
   const tasksMap = createMemo(() =>
     Object.fromEntries(tasks.map((t) => [t.id, t.name]))
   );
 
-  // 從 store 取出選中的 task 內容
-  const selectedTask = () => {
-    if (!selectedTaskId()) return null;
-    return taskStore.getTask(selectedTaskId()!);
+  // --- Handlers ---
+
+  // 開啟「新增 Task」
+  const openCreateTask = (projectId: string) => {
+    setTaskPanelTaskId(null);
+    setTaskPanelProjectIdForCreate(projectId);
+
+    // 關閉 Project panel
+    setProjectPanelProjectId(null);
+    setIsProjectCreating(false);
   };
 
-  // 開啟新增窗口
-  const openCreatePanel = () => {
-    setSelectedTaskId(null);
-    setIsCreating(true);
+  // 開啟「編輯 Task」
+  const openEditTask = (taskId: string) => {
+    setTaskPanelTaskId(taskId);
+    setTaskPanelProjectIdForCreate(null);
+
+    // 關閉 Project panel
+    setProjectPanelProjectId(null);
+    setIsProjectCreating(false);
   };
 
-  // 點擊某 task → 開啟編輯窗口
-  const openEditPanel = (taskId: string) => {
-    setIsCreating(false);
-    setSelectedTaskId(taskId);
+  // 開啟「新增 Project」
+  const openCreateProject = () => {
+    setIsProjectCreating(true);
+    setProjectPanelProjectId(null);
+
+    // 關閉 Task panel
+    setTaskPanelTaskId(null);
+    setTaskPanelProjectIdForCreate(null);
   };
 
-  // 關閉窗口
+  // 開啟「編輯 Project」
+  const openEditProject = (projectId: string) => {
+    setIsProjectCreating(false);
+    setProjectPanelProjectId(projectId);
+
+    // 關閉 Task panel
+    setTaskPanelTaskId(null);
+    setTaskPanelProjectIdForCreate(null);
+  };
+
+  // 關閉所有 panel
   const closePanel = () => {
-    setSelectedTaskId(null);
-    setIsCreating(false);
-  };
-
-  // 點 scheduleTable assignment 也可開起編輯
-  const handleAssignmentClick = (taskId: string) => {
-    openEditPanel(taskId);
+    setTaskPanelTaskId(null);
+    setTaskPanelProjectIdForCreate(null);
+    setProjectPanelProjectId(null);
+    setIsProjectCreating(false);
   };
 
   return (
     <div class="flex h-screen">
-      {/* 左側工作池 */}
+      {/* 左側 Project & Task 清單 */}
       <TaskPool
         taskStore={taskStore}
-        onCreate={openCreatePanel}
-        onSelectTask={openEditPanel}
+        projectStore={projectStore}
+        onCreateTask={openCreateTask}
+        onEditTask={openEditTask}
+        onCreateProject={openCreateProject}
+        onEditProject={openEditProject}
       />
 
-      {/* 中間排程區域 */}
+      {/* 中間 schedule */}
       <div class="flex-1 overflow-hidden">
         <ScheduleTable
           persons={persons}
           week={week}
           assignments={assignments}
           tasksMap={tasksMap()}
-          //onSelectAssignment={(a) => handleAssignmentClick(a.taskId)}
         />
       </div>
 
-      {/* 右側詳細面板 */}
-      <Show when={isCreating() || selectedTask()}>
+      {/* --- Task Details Panel --- */}
+      <Show when={taskPanelTaskId() || taskPanelProjectIdForCreate()}>
         <TaskDetailsPanel
-          task={selectedTask()}
-          isCreating={isCreating()}
+          taskId={taskPanelTaskId()}
+          projectIdForCreate={taskPanelProjectIdForCreate()}
+          taskStore={taskStore}
+          projectStore={projectStore}
           onClose={closePanel}
-          onSave={(task: Task) => {
-            if (isCreating()) {
-              taskStore.createTask(task);
-            } else if (selectedTask()) {
-              taskStore.updateTask(selectedTask()!.id, task);
-            }
-            closePanel();
-          }}
+        />
+      </Show>
+
+      {/* --- Project Details Panel --- */}
+      <Show when={isProjectCreating() || selectedProject()}>
+        <ProjectDetailsPanel
+          project={selectedProject()}
+          isCreating={isProjectCreating()}
+          projectStore={projectStore}
+          onClose={closePanel}
         />
       </Show>
     </div>

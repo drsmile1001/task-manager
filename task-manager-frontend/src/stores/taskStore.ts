@@ -36,12 +36,17 @@ export function createTaskStore(
     return tasks().find((t) => t.id === id);
   }
 
+  function listByProject(projectId: string) {
+    return tasks().filter((t) => t.projectId === projectId);
+  }
+
   return {
     tasks,
     createTask,
     updateTask,
     deleteTask,
     getTask,
+    listByProject,
   };
 }
 
