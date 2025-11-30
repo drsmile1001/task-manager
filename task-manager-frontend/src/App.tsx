@@ -1,4 +1,4 @@
-import { createSignal, createMemo, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { persons } from "./data";
 import TaskPool from "./components/TaskPool";
 import ScheduleTable from "./components/ScheduleTable";
@@ -35,11 +35,6 @@ export default function App() {
     const id = projectPanelProjectId();
     return id ? projectStore.getProject(id)! : null;
   };
-
-  const tasks = taskStore.tasks();
-  const tasksMap = createMemo(() =>
-    Object.fromEntries(tasks.map((t) => [t.id, t.name]))
-  );
 
   // --- Handlers ---
 
@@ -109,7 +104,7 @@ export default function App() {
           persons={persons}
           week={week}
           assignmentStore={assignmentStore}
-          tasksMap={tasksMap()}
+          taskStore={taskStore}
         />
       </div>
 
