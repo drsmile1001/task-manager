@@ -53,6 +53,13 @@ export default function TaskPool(props: Props) {
                   <div
                     class="p-1 bg-white border rounded text-sm shadow cursor-pointer hover:bg-blue-50"
                     onClick={() => onEditTask(t.id)}
+                    draggable="true"
+                    onDragStart={(e) => {
+                      // 放入 payload：taskId
+                      e.dataTransfer!.setData("text/plain", t.id);
+                      // 指定拖曳影像（可選）
+                      e.dataTransfer!.effectAllowed = "copyMove";
+                    }}
                   >
                     {t.name}
                   </div>

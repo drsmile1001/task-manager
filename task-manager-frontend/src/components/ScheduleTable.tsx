@@ -1,13 +1,17 @@
 import { For } from "solid-js";
-import type { Assignment, Person } from "../data";
+import type { Person } from "../data";
+import type { AssignmentStore } from "../stores/assignmentStore";
+import { createMemo } from "solid-js";
 
-export default function ScheduleTable(props: {
+export type Props = {
   persons: Person[];
-  assignments: Assignment[];
   week: { key: string; label: string }[];
+  assignmentStore: AssignmentStore;
   tasksMap: Record<string, string>;
-}) {
-  const { persons, week, assignments, tasksMap } = props;
+};
+
+export default function ScheduleTable(props: Props) {
+  const { persons, week, assignmentStore, tasksMap } = props;
 
   return (
     <div class="flex-1 overflow-auto p-4">
@@ -19,7 +23,7 @@ export default function ScheduleTable(props: {
           "grid-template-columns": `120px repeat(${week.length}, 1fr)`,
         }}
       >
-        {/* Header */}
+        {/* Header: 日期列表 */}
         <div class="border-b border-r p-2 bg-gray-100 font-semibold text-sm">
           人員
         </div>
@@ -32,27 +36,45 @@ export default function ScheduleTable(props: {
           )}
         </For>
 
-        {/* Rows */}
+        {/* rows: 每個人 */}
         <For each={persons}>
           {(p) => (
             <>
-              {/* Person name */}
-              <div class="border-b border-r p-2 font-medium bg-white sticky left-0 z-[1] bg-white">
+              {/* 左欄：人名 */}
+              <div class="border-b border-r p-2 font-medium sticky left-0 z-[1] bg-white">
                 {p.name}
               </div>
 
-              {/* Dates */}
+              {/* 每天列表 */}
               <For each={week}>
                 {(d) => {
-                  const items = assignments.filter(
-                    (a) => a.personId === p.id && a.date === d.key
+                  const items = createMemo(() =>
+                    assignmentStore.listForPersonOnDate(p.id, d.key)
                   );
+
                   return (
-                    <div class="border-b border-r p-1 min-h-[60px] bg-white">
-                      <For each={items}>
+                    <div
+                      class="border-b border-r p-1 min-h-[60px] bg-white"
+                      onDragOver={(e) => {
+                        // 必須阻止預設行為，否則 drop 事件不會觸發
+                        e.preventDefault();
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const taskId = e.dataTransfer!.getData("text/plain");
+                        if (!taskId) return;
+
+                        assignmentStore.createAssignment({
+                          taskId,
+                          personId: p.id,
+                          date: d.key,
+                        });
+                      }}
+                    >
+                      <For each={items()}>
                         {(a) => (
                           <div class="bg-blue-100 border border-blue-300 text-xs p-1 rounded mb-1">
-                            {tasksMap[a.taskId]}
+                            {tasksMap[a.taskId] ?? "(未知工作)"}
                           </div>
                         )}
                       </For>

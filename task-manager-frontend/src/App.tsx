@@ -1,5 +1,5 @@
 import { createSignal, createMemo, Show } from "solid-js";
-import { persons, assignments } from "./data";
+import { persons } from "./data";
 import TaskPool from "./components/TaskPool";
 import ScheduleTable from "./components/ScheduleTable";
 import TaskDetailsPanel from "./components/TaskDetailsPanel";
@@ -8,11 +8,13 @@ import { genWeek } from "./utils/date";
 
 import { createTaskStore } from "./stores/taskStore";
 import { createProjectStore } from "./stores/projectStore";
+import { createAssignmentStore } from "./stores/assignmentStore";
 
 export default function App() {
   // --- stores ---
   const taskStore = createTaskStore();
   const projectStore = createProjectStore();
+  const assignmentStore = createAssignmentStore();
   const week = genWeek();
 
   // --- Task Panel State ---
@@ -106,7 +108,7 @@ export default function App() {
         <ScheduleTable
           persons={persons}
           week={week}
-          assignments={assignments}
+          assignmentStore={assignmentStore}
           tasksMap={tasksMap()}
         />
       </div>
