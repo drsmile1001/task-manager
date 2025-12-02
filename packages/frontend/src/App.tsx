@@ -104,6 +104,7 @@ export default function App() {
     >
       {/* 左側 Project & Task 清單 */}
       <TaskPool
+        assignmentStore={assignmentStore}
         taskStore={taskStore}
         projectStore={projectStore}
         dragStore={dragStore}

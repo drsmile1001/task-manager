@@ -1,5 +1,6 @@
 import { For } from "solid-js";
 
+import type { AssignmentStore } from "../stores/assignmentStore";
 import type { DragStore } from "../stores/dragStore";
 import type { ProjectStore } from "../stores/projectStore";
 import type { TaskStore } from "../stores/taskStore";
@@ -8,6 +9,7 @@ export type Props = {
   dragStore: DragStore;
   taskStore: TaskStore;
   projectStore: ProjectStore;
+  assignmentStore: AssignmentStore;
   onCreateTask: (projectId: string) => void;
   onEditTask: (taskId: string) => void;
   onEditProject: (projectId: string) => void;
@@ -16,9 +18,12 @@ export type Props = {
 
 export default function TaskPool(props: Props) {
   const {
+    dragStore,
     taskStore,
     projectStore,
+    assignmentStore,
     onCreateTask,
+    onEditTask,
     onEditProject,
     onCreateProject,
   } = props;
@@ -51,18 +56,29 @@ export default function TaskPool(props: Props) {
             {/* 該專案的工作清單 */}
             <div class="pl-4 mt-2 space-y-1">
               <For each={taskStore.listByProject(p.id)}>
-                {(t) => (
-                  <div
-                    class="p-1 bg-white border rounded text-sm shadow cursor-pointer hover:bg-blue-50"
-                    onClick={() => props.onEditTask(t.id)}
-                    draggable="true"
-                    onDragStart={() => {
-                      props.dragStore.startTaskDrag(t.id);
-                    }}
-                  >
-                    {t.name}
-                  </div>
-                )}
+                {(t) => {
+                  const assigned = () =>
+                    assignmentStore.listByTask(t.id).length > 0;
+
+                  const className = () =>
+                    "p-1 border rounded text-sm shadow cursor-pointer " +
+                    (assigned()
+                      ? "bg-green-50 border-green-400 hover:bg-green-100"
+                      : "bg-yellow-50 border-yellow-400 hover:bg-yellow-100");
+
+                  return (
+                    <div
+                      class={className()}
+                      onClick={() => onEditTask(t.id)}
+                      draggable="true"
+                      onDragStart={() => {
+                        dragStore.startTaskDrag(t.id);
+                      }}
+                    >
+                      {t.name}
+                    </div>
+                  );
+                }}
               </For>
 
               {/* 新增工作 */}
