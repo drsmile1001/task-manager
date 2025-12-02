@@ -4,9 +4,9 @@ import ProjectDetailsPanel from "./components/ProjectDetailsPanel";
 import ScheduleTable from "./components/ScheduleTable";
 import TaskDetailsPanel from "./components/TaskDetailsPanel";
 import TaskPool from "./components/TaskPool";
-import { persons } from "./data";
 import { createAssignmentStore } from "./stores/assignmentStore";
 import { createDragStore } from "./stores/dragStore";
+import { createPersonStore } from "./stores/personStore";
 import { createProjectStore } from "./stores/projectStore";
 import { createTaskStore } from "./stores/taskStore";
 import { genWeek } from "./utils/date";
@@ -17,6 +17,7 @@ export default function App() {
   const projectStore = createProjectStore();
   const assignmentStore = createAssignmentStore();
   const dragStore = createDragStore();
+  const personStore = createPersonStore();
   const week = genWeek();
 
   // --- Task Panel State ---
@@ -115,7 +116,7 @@ export default function App() {
       {/* 中間 schedule */}
       <div class="flex-1 overflow-hidden">
         <ScheduleTable
-          persons={persons}
+          personStore={personStore}
           week={week}
           assignmentStore={assignmentStore}
           projectStore={projectStore}

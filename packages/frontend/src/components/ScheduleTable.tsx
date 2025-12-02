@@ -1,13 +1,13 @@
+import type { PersonStore } from "@frontend/stores/personStore";
 import { For, createMemo } from "solid-js";
 
-import type { Person } from "../data";
 import type { AssignmentStore } from "../stores/assignmentStore";
 import type { DragStore } from "../stores/dragStore";
 import type { ProjectStore } from "../stores/projectStore";
 import type { TaskStore } from "../stores/taskStore";
 
 export type Props = {
-  persons: Person[];
+  personStore: PersonStore;
   week: { key: string; label: string }[];
   assignmentStore: AssignmentStore;
   taskStore: TaskStore;
@@ -16,7 +16,7 @@ export type Props = {
 };
 
 export default function ScheduleTable(props: Props) {
-  const { persons, week, assignmentStore, taskStore, dragStore } = props;
+  const { personStore, week, assignmentStore, taskStore, dragStore } = props;
 
   // project + task 名稱組合
   const tasksMap = createMemo(() => {
@@ -30,8 +30,7 @@ export default function ScheduleTable(props: Props) {
     );
   });
 
-  // debug: 全部 assign 列表（確認 reactive）
-  console.log("assignments:", assignmentStore.assignments());
+  const persons = () => personStore.persons();
 
   return (
     <div
@@ -70,7 +69,7 @@ export default function ScheduleTable(props: Props) {
         </For>
 
         {/* Row：每個人 */}
-        <For each={persons}>
+        <For each={persons()}>
           {(p) => (
             <>
               {/* 左欄：人名 */}

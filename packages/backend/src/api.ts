@@ -4,6 +4,7 @@ import { projectSchema } from "./schemas/Project";
 import { taskSchema } from "./schemas/Task";
 import { assignmentSchema } from "./schemas/Assignment";
 import type { Logger } from "~shared/Logger";
+import { personSchema } from "./schemas/Person";
 
 export function buildApi(logger: Logger) {
   const projectRepo = createYamlRepo("projects.yaml", projectSchema, logger);
@@ -13,8 +14,41 @@ export function buildApi(logger: Logger) {
     assignmentSchema,
     logger
   );
+  const personRepo = createYamlRepo("persons.yaml", personSchema, logger);
 
   return new Elysia()
+    .get("/api/persons", async () => {
+      return await personRepo.list();
+    })
+    .post(
+      "/api/persons",
+      async ({ body }) => {
+        await personRepo.set(body);
+      },
+      {
+        body: personSchema,
+      }
+    )
+    .get("/api/persons/:id", async ({ params, status }) => {
+      const person = await personRepo.get(params.id);
+      if (!person) return status(404);
+      return person;
+    })
+    .patch(
+      "/api/persons/:id",
+      async ({ params, body, status }) => {
+        const existing = await personRepo.get(params.id);
+        if (!existing) return status(404);
+        const updated = { ...existing, ...body };
+        await personRepo.set(updated);
+      },
+      {
+        body: t.Partial(personSchema),
+      }
+    )
+    .delete("/api/persons/:id", async ({ params }) => {
+      await personRepo.remove(params.id);
+    })
     .get("/api/projects", async () => {
       return await projectRepo.list();
     })
