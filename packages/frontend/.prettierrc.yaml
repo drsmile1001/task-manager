@@ -1,0 +1,15 @@
+trailingComma: "es5"
+semi: true
+singleQuote: false
+# 以下為 @trivago/prettier-plugin-sort-imports 的設定
+plugins:
+  - "@trivago/prettier-plugin-sort-imports"
+importOrder:
+  - "^node:.*"
+  - "<THIRD_PARTY_MODULES>"
+  - "^@backend/.*"
+  - "^@fronend/.*"
+  - "^~test/"
+  - "^[./]"
+importOrderSeparation: true
+importOrderSortSpecifiers: true

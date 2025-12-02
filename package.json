@@ -1,0 +1,22 @@
+{
+  "name": "task-manager",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:frontend": "bun --filter frontend dev",
+    "dev:backend": "bun --filter backend dev",
+    "dev": "bun --filter '*' dev",
+    "build:frontend": "bun --filter frontend build",
+    "build:backend": "bun --filter backend build",
+    "build": "bun run scripts/build.ts",
+    "format": "bun --filter '*' format"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
