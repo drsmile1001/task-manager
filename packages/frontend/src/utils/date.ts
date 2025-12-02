@@ -5,7 +5,7 @@ export function genWeek(start = new Date()) {
   const day = base.getDay() === 0 ? 7 : base.getDay();
   base.setDate(base.getDate() - (day - 1));
 
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 14; i++) {
     const d = new Date(base);
     d.setDate(base.getDate() + i);
 

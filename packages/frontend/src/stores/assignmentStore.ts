@@ -1,6 +1,7 @@
 import { client } from "@frontend/client";
 import { format } from "date-fns";
 import { createSignal } from "solid-js";
+import { ulid } from "ulid";
 
 import type { Assignment } from "@backend/schemas/Assignment";
 
@@ -21,7 +22,7 @@ export function createAssignmentStore() {
   loadAssignments();
 
   async function createAssignment(input: Omit<Assignment, "id">) {
-    const id = crypto.randomUUID();
+    const id = ulid();
     const a: Assignment = { id, ...input };
     const reulst = await client.api.assignments.post(a);
     if (reulst.error) {

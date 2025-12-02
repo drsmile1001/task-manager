@@ -1,5 +1,6 @@
 import { client } from "@frontend/client";
 import { createSignal } from "solid-js";
+import { ulid } from "ulid";
 
 import type { Task } from "@backend/schemas/Task";
 
@@ -16,7 +17,7 @@ export function createTaskStore() {
   loadTasks();
 
   async function createTask(input: Omit<Task, "id">) {
-    const id = crypto.randomUUID();
+    const id = ulid();
     const newTask: Task = { id, ...input };
     const result = await client.api.tasks.post(newTask);
     if (result.error) {
@@ -47,7 +48,9 @@ export function createTaskStore() {
   }
 
   function listByProject(projectId: string) {
-    return tasks().filter((t) => t.projectId === projectId);
+    return tasks()
+      .filter((t) => t.projectId === projectId)
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   return {

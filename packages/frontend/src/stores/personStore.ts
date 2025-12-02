@@ -1,5 +1,6 @@
 import { client } from "@frontend/client";
 import { createSignal } from "solid-js";
+import { ulid } from "ulid";
 
 import type { Person } from "@backend/schemas/Person";
 
@@ -18,7 +19,7 @@ export function createPersonStore() {
   loadPersons();
 
   async function createPerson(input: Omit<Person, "id">) {
-    const id = crypto.randomUUID();
+    const id = ulid();
     const p: Person = { id, ...input };
     const result = await client.api.persons.post(p);
     if (result.error) {

@@ -59,12 +59,16 @@ export default function TaskPool(props: Props) {
                 {(t) => {
                   const assigned = () =>
                     assignmentStore.listByTask(t.id).length > 0;
+                  const isDone = () => t.isDone;
 
                   const className = () =>
                     "p-1 border rounded text-sm shadow cursor-pointer " +
-                    (assigned()
+                    (assigned() || isDone()
                       ? "bg-green-50 border-green-400 hover:bg-green-100"
-                      : "bg-yellow-50 border-yellow-400 hover:bg-yellow-100");
+                      : "bg-yellow-50 border-yellow-400 hover:bg-yellow-100") +
+                    (isDone()
+                      ? " line-through text-gray-400"
+                      : " text-gray-800");
 
                   return (
                     <div

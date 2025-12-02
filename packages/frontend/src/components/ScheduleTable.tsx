@@ -23,9 +23,13 @@ export default function ScheduleTable(props: Props) {
     const projects = props.projectStore.projects();
     return Object.fromEntries(
       taskStore.tasks().map((t) => {
-        const project = projects.find((p) => p.id === t.projectId);
-        const name = `[${project?.name ?? "?"}] ${t.name}`;
-        return [t.id, name];
+        return [
+          t.id,
+          {
+            task: t,
+            project: projects.find((p) => p.id === t.projectId),
+          },
+        ];
       })
     );
   });
@@ -112,21 +116,28 @@ export default function ScheduleTable(props: Props) {
                     >
                       {/* 該格中的所有 assignment */}
                       <For each={items()}>
-                        {(a) => (
-                          <div
-                            class="bg-blue-100 border border-blue-300 text-xs p-1 rounded mb-1 cursor-pointer"
-                            draggable="true"
-                            onDragStart={() => {
-                              dragStore.startAssignmentDrag({
-                                assignmentId: a.id,
-                                personId: a.personId,
-                                date: a.date,
-                              });
-                            }}
-                          >
-                            {tasksMap()[a.taskId]}
-                          </div>
-                        )}
+                        {(a) => {
+                          const { task, project } = tasksMap()[a.taskId];
+                          const cssClass =
+                            "bg-blue-100 border border-blue-300 text-xs p-1 rounded mb-1 cursor-pointer" +
+                            (task.isDone ? " line-through" : "");
+
+                          return (
+                            <div
+                              class={cssClass}
+                              draggable="true"
+                              onDragStart={() => {
+                                dragStore.startAssignmentDrag({
+                                  assignmentId: a.id,
+                                  personId: a.personId,
+                                  date: a.date,
+                                });
+                              }}
+                            >
+                              {project?.name}:{task.name}
+                            </div>
+                          );
+                        }}
                       </For>
                     </div>
                   );

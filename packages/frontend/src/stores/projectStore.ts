@@ -1,5 +1,6 @@
 import { client } from "@frontend/client";
 import { createSignal } from "solid-js";
+import { ulid } from "ulid";
 
 import type { Project } from "@backend/schemas/Project";
 
@@ -16,7 +17,7 @@ export function createProjectStore() {
   loadProjects();
 
   async function createProject(input: Omit<Project, "id">) {
-    const id = crypto.randomUUID();
+    const id = ulid();
     const p: Project = { id, ...input };
     const result = await client.api.projects.post(p);
     if (result.error) {
