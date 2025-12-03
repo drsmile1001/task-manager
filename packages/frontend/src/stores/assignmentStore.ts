@@ -19,7 +19,9 @@ export function createAssignmentStore() {
       result.data.map((a) => ({ ...a, date: format(a.date, "yyyy-MM-dd") }))
     );
   }
-  loadAssignments();
+  setInterval(() => {
+    loadAssignments();
+  }, 5000);
 
   async function createAssignment(input: Omit<Assignment, "id">) {
     const id = ulid();

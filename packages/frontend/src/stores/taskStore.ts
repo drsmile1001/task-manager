@@ -14,7 +14,9 @@ export function createTaskStore() {
     }
     setTasks(result.data);
   }
-  loadTasks();
+  setInterval(() => {
+    loadTasks();
+  }, 5000);
 
   async function createTask(input: Omit<Task, "id">) {
     const id = ulid();

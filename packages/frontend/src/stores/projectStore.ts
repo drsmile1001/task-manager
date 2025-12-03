@@ -14,7 +14,9 @@ export function createProjectStore() {
     }
     setProjects(result.data);
   }
-  loadProjects();
+  setInterval(() => {
+    loadProjects();
+  }, 5000);
 
   async function createProject(input: Omit<Project, "id">) {
     const id = ulid();
