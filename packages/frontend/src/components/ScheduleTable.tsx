@@ -51,101 +51,103 @@ export default function ScheduleTable(props: Props) {
         dragStore.clear();
       }}
     >
-      <div class="text-gray-700 font-bold mb-3">本週工作表</div>
+      <div class="text-gray-700 font-bold mb-3">工作表</div>
 
-      <div
-        class="inline-grid border border-gray-300"
-        style={{
-          "grid-template-columns": `120px repeat(${week.length}, 1fr)`,
-        }}
-      >
-        {/* 表頭：日期 */}
-        <div class="border-b border-r p-2 bg-gray-100 font-semibold text-sm">
-          人員
-        </div>
+      <div class="border border-gray-300 h-[calc(100vh-100px)] overflow-y-auto">
+        <div
+          class="grid"
+          style={{
+            "grid-template-columns": `120px repeat(${week.length}, 1fr)`,
+          }}
+        >
+          {/* 表頭：日期 */}
+          <div class="border-b border-r p-2 bg-gray-100 font-semibold text-sm">
+            人員
+          </div>
 
-        <For each={week}>
-          {(d) => (
-            <div class="border-b border-r p-2 bg-gray-100 text-sm text-center w-30">
-              {d.label}
-            </div>
-          )}
-        </For>
-
-        {/* Row：每個人 */}
-        <For each={persons()}>
-          {(p) => (
-            <>
-              {/* 左欄：人名 */}
-              <div class="border-b border-r p-2 font-medium sticky left-0 z-[1] bg-white">
-                {p.name}
+          <For each={week}>
+            {(d) => (
+              <div class="border-b border-r p-2 bg-gray-100 text-sm text-center w-30">
+                {d.label}
               </div>
+            )}
+          </For>
 
-              {/* 每天 */}
-              <For each={week}>
-                {(d) => {
-                  const items = () =>
-                    assignmentStore.listForPersonOnDate(p.id, d.key);
+          {/* Row：每個人 */}
+          <For each={persons()}>
+            {(p) => (
+              <>
+                {/* 左欄：人名 */}
+                <div class="border-b border-r p-2 font-medium sticky left-0 z-[2] bg-white">
+                  {p.name}
+                </div>
 
-                  return (
-                    <div
-                      class="border-b border-r p-1 min-h-[60px] bg-white"
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        const drag = dragStore.state();
+                {/* 每天 */}
+                <For each={week}>
+                  {(d) => {
+                    const items = () =>
+                      assignmentStore.listForPersonOnDate(p.id, d.key);
 
-                        // 新增指派
-                        if (drag.type === "task") {
-                          assignmentStore.createAssignment({
-                            taskId: drag.taskId,
-                            personId: p.id,
-                            date: d.key,
-                          });
-                        }
-                        // 移動既有指派
-                        else if (drag.type === "assignment") {
-                          assignmentStore.updateAssignment(drag.assignmentId, {
-                            personId: p.id,
-                            date: d.key,
-                          });
-                        }
+                    return (
+                      <div
+                        class="border-b border-r p-1 min-h-[60px] bg-white"
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const drag = dragStore.state();
 
-                        dragStore.clear();
-                      }}
-                    >
-                      {/* 該格中的所有 assignment */}
-                      <For each={items()}>
-                        {(a) => {
-                          const { task, project } = tasksMap()[a.taskId];
-                          const cssClass =
-                            "bg-blue-100 border border-blue-300 text-xs p-1 rounded mb-1 cursor-pointer" +
-                            (task.isDone ? " line-through" : "");
+                          if (drag.type === "task") {
+                            assignmentStore.createAssignment({
+                              taskId: drag.taskId,
+                              personId: p.id,
+                              date: d.key,
+                            });
+                          } else if (drag.type === "assignment") {
+                            assignmentStore.updateAssignment(
+                              drag.assignmentId,
+                              {
+                                personId: p.id,
+                                date: d.key,
+                              }
+                            );
+                          }
 
-                          return (
-                            <div
-                              class={cssClass}
-                              draggable="true"
-                              onDragStart={() => {
-                                dragStore.startAssignmentDrag({
-                                  assignmentId: a.id,
-                                  personId: a.personId,
-                                  date: a.date,
-                                });
-                              }}
-                            >
-                              {project?.name}:{task.name}
-                            </div>
-                          );
+                          dragStore.clear();
                         }}
-                      </For>
-                    </div>
-                  );
-                }}
-              </For>
-            </>
-          )}
-        </For>
+                      >
+                        {/* 該格中的所有 assignment */}
+                        <For each={items()}>
+                          {(a) => {
+                            const { task, project } = tasksMap()[a.taskId];
+                            const cssClass =
+                              "bg-blue-100 border border-blue-300 text-xs p-1 rounded mb-1 cursor-pointer" +
+                              (task.isDone ? " line-through" : "");
+
+                            return (
+                              <div
+                                class={cssClass}
+                                draggable="true"
+                                onDragStart={() => {
+                                  dragStore.startAssignmentDrag({
+                                    assignmentId: a.id,
+                                    personId: a.personId,
+                                    date: a.date,
+                                  });
+                                }}
+                              >
+                                {project?.name}:{task.name}
+                              </div>
+                            );
+                          }}
+                        </For>
+                      </div>
+                    );
+                  }}
+                </For>
+              </>
+            )}
+          </For>
+        </div>
       </div>
     </div>
   );
