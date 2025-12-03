@@ -54,7 +54,9 @@ export function buildApi(logger: Logger) {
       await personRepo.remove(params.id);
     })
     .get("/api/projects", async () => {
-      return await projectRepo.list();
+      return (await projectRepo.list()).sort((a, b) =>
+        a.name.localeCompare(b.name)
+      );
     })
     .post(
       "/api/projects",
