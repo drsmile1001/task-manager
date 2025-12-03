@@ -23,10 +23,10 @@ export default function App() {
   const week = genWeek();
   const wshost =
     window.location.hostname === "localhost"
-      ? "localhost:3000"
-      : window.location.host;
+      ? "ws://localhost:3000/ws"
+      : `wss://${window.location.host}/ws`;
 
-  const ws = new WebSocket(`ws://${wshost}/ws`);
+  const ws = new WebSocket(wshost);
 
   ws.onmessage = (event) => {
     const message = JSON.parse(event.data);
