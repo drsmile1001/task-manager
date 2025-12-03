@@ -24,7 +24,7 @@ export default function App() {
   const wshost =
     window.location.hostname === "localhost"
       ? "ws://localhost:3000/ws"
-      : `wss://${window.location.host}/ws`;
+      : `wss://${window.location.host + import.meta.env.BASE_URL}ws`;
 
   const ws = new WebSocket(wshost);
 
