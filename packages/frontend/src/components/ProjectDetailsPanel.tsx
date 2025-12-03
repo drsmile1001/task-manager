@@ -1,4 +1,6 @@
+import { client } from "@frontend/client";
 import { createEffect, createSignal } from "solid-js";
+import { ulid } from "ulid";
 
 import type { Project } from "../../../backend/src/schemas/Project";
 import type { ProjectStore } from "../stores/projectStore";
@@ -23,16 +25,17 @@ export default function ProjectDetailsPanel(props: {
   });
 
   const update = (k: string, v: any) => setForm({ ...form(), [k]: v });
-  const commit = () => {
+  const commit = async () => {
     const data = form();
 
     if (props.isCreating) {
-      props.projectStore.createProject({
+      await client.api.projects.post({
+        id: ulid(),
         name: data.name,
         description: data.description,
       });
     } else if (props.project) {
-      props.projectStore.updateProject(props.project.id, {
+      await client.api.projects({ id: props.project.id }).patch({
         name: data.name,
         description: data.description,
       });

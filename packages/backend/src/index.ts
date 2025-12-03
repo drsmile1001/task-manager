@@ -1,6 +1,9 @@
 import { Elysia, file } from "elysia";
 import { createDefaultLoggerFromEnv } from "~shared/Logger";
-import { buildApi } from "./api";
+import {
+  buildApi,
+  setCurrentBunServerPublish as setCurrentBunServer,
+} from "./api";
 import { exists, readdir, readFile, writeFile } from "node:fs/promises";
 
 const logger = createDefaultLoggerFromEnv();
@@ -58,6 +61,7 @@ new Elysia()
     return file("public/index.html");
   })
   .get("/*", () => file("public/index.html"))
-  .listen(3000, () => {
+  .listen(3000, (server) => {
+    setCurrentBunServer(server);
     console.log("Server is running on http://localhost:3000");
   });

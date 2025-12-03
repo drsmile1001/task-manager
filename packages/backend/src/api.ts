@@ -6,6 +6,23 @@ import { assignmentSchema } from "./schemas/Assignment";
 import type { Logger } from "~shared/Logger";
 import { personSchema } from "./schemas/Person";
 
+let currentBunServer: Bun.Server<unknown> | null = null;
+
+export type MutationMessage = {
+  type: "person" | "project" | "task" | "assignment";
+  action: "create" | "update" | "delete";
+  id: string;
+  eneity?: unknown;
+};
+
+export type MutationTopic = {
+  topic: "mutations";
+} & MutationMessage;
+
+export function setCurrentBunServerPublish(server: Bun.Server<unknown>) {
+  currentBunServer = server;
+}
+
 export function buildApi(logger: Logger) {
   const projectRepo = createYamlRepo(
     "data/projects.yaml",
@@ -20,7 +37,37 @@ export function buildApi(logger: Logger) {
   );
   const personRepo = createYamlRepo("data/persons.yaml", personSchema, logger);
 
-  return new Elysia()
+  function broadcastMutation(message: {
+    type: "person" | "project" | "task" | "assignment";
+    action: "create" | "update" | "delete";
+    id: string;
+    eneity?: unknown;
+  }) {
+    logger.info(
+      {
+        type: "broadcastMutation",
+        message,
+      },
+      `Broadcasting mutation: ${message.type} ${message.action} ${message.id}`
+    );
+    currentBunServer?.publish(
+      "mutations",
+      JSON.stringify({
+        topic: "mutations",
+        ...message,
+      })
+    );
+  }
+
+  const api = new Elysia()
+    .ws("/ws", {
+      open(ws) {
+        ws.subscribe("mutations");
+      },
+      close(ws) {
+        ws.unsubscribe("mutations");
+      },
+    })
     .get("/api/persons", async () => {
       return await personRepo.list();
     })
@@ -28,6 +75,12 @@ export function buildApi(logger: Logger) {
       "/api/persons",
       async ({ body }) => {
         await personRepo.set(body);
+        broadcastMutation({
+          type: "person",
+          action: "create",
+          id: body.id,
+          eneity: body,
+        });
       },
       {
         body: personSchema,
@@ -45,6 +98,12 @@ export function buildApi(logger: Logger) {
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await personRepo.set(updated);
+        broadcastMutation({
+          type: "person",
+          action: "update",
+          id: params.id,
+          eneity: updated,
+        });
       },
       {
         body: t.Partial(personSchema),
@@ -52,6 +111,11 @@ export function buildApi(logger: Logger) {
     )
     .delete("/api/persons/:id", async ({ params }) => {
       await personRepo.remove(params.id);
+      broadcastMutation({
+        type: "person",
+        action: "delete",
+        id: params.id,
+      });
     })
     .get("/api/projects", async () => {
       return (await projectRepo.list()).sort((a, b) =>
@@ -62,6 +126,12 @@ export function buildApi(logger: Logger) {
       "/api/projects",
       async ({ body }) => {
         await projectRepo.set(body);
+        broadcastMutation({
+          type: "project",
+          action: "create",
+          id: body.id,
+          eneity: body,
+        });
       },
       {
         body: projectSchema,
@@ -79,6 +149,12 @@ export function buildApi(logger: Logger) {
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await projectRepo.set(updated);
+        broadcastMutation({
+          type: "project",
+          action: "update",
+          id: params.id,
+          eneity: updated,
+        });
       },
       {
         body: t.Partial(projectSchema),
@@ -86,6 +162,11 @@ export function buildApi(logger: Logger) {
     )
     .delete("/api/projects/:id", async ({ params }) => {
       await projectRepo.remove(params.id);
+      broadcastMutation({
+        type: "project",
+        action: "delete",
+        id: params.id,
+      });
     })
     .get("/api/tasks", async () => {
       return await taskRepo.list();
@@ -94,6 +175,12 @@ export function buildApi(logger: Logger) {
       "/api/tasks",
       async ({ body }) => {
         await taskRepo.set(body);
+        broadcastMutation({
+          type: "task",
+          action: "create",
+          id: body.id,
+          eneity: body,
+        });
       },
       {
         body: taskSchema,
@@ -111,6 +198,12 @@ export function buildApi(logger: Logger) {
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await taskRepo.set(updated);
+        broadcastMutation({
+          type: "task",
+          action: "update",
+          id: params.id,
+          eneity: updated,
+        });
       },
       {
         body: t.Partial(taskSchema),
@@ -123,6 +216,11 @@ export function buildApi(logger: Logger) {
         (a) => a.taskId !== params.id
       );
       await assignmentRepo.replaceAll(otherTaskAssignments);
+      broadcastMutation({
+        type: "task",
+        action: "delete",
+        id: params.id,
+      });
     })
     .get("/api/assignments", async () => {
       return await assignmentRepo.list();
@@ -131,6 +229,12 @@ export function buildApi(logger: Logger) {
       "/api/assignments",
       async ({ body }) => {
         await assignmentRepo.set(body);
+        broadcastMutation({
+          type: "assignment",
+          action: "create",
+          id: body.id,
+          eneity: body,
+        });
       },
       {
         body: assignmentSchema,
@@ -148,6 +252,12 @@ export function buildApi(logger: Logger) {
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await assignmentRepo.set(updated);
+        broadcastMutation({
+          type: "assignment",
+          action: "update",
+          id: params.id,
+          eneity: updated,
+        });
       },
       {
         body: t.Partial(assignmentSchema),
@@ -155,7 +265,14 @@ export function buildApi(logger: Logger) {
     )
     .delete("/api/assignments/:id", async ({ params }) => {
       await assignmentRepo.remove(params.id);
+      broadcastMutation({
+        type: "assignment",
+        action: "delete",
+        id: params.id,
+      });
     });
+
+  return api;
 }
 
 export type Api = ReturnType<typeof buildApi>;

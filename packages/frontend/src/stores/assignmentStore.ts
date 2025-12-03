@@ -1,7 +1,6 @@
 import { client } from "@frontend/client";
 import { format } from "date-fns";
 import { createSignal } from "solid-js";
-import { ulid } from "ulid";
 
 import type { Assignment } from "@backend/schemas/Assignment";
 
@@ -20,36 +19,17 @@ export function createAssignmentStore() {
     );
   }
   loadAssignments();
-  setInterval(() => {
-    loadAssignments();
-  }, 10000);
 
-  async function createAssignment(input: Omit<Assignment, "id">) {
-    const id = ulid();
-    const a: Assignment = { id, ...input };
-    const reulst = await client.api.assignments.post(a);
-    if (reulst.error) {
-      throw new Error(`Failed to create assignment`);
-    }
+  async function createAssignment(a: Assignment) {
     setAssignments((prev) => [...prev, a]);
     return a;
   }
 
-  async function updateAssignment(id: string, patch: Partial<Assignment>) {
-    const result = await client.api.assignments({ id }).patch(patch);
-    if (result.error) {
-      throw new Error(`Failed to update assignment`);
-    }
-    setAssignments((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, ...patch } : a))
-    );
+  async function updateAssignment(a: Assignment) {
+    setAssignments((prev) => prev.map((item) => (item.id === a.id ? a : item)));
   }
 
   async function deleteAssignment(id: string) {
-    const reuslt = await client.api.assignments({ id }).delete();
-    if (reuslt.error) {
-      throw new Error(`Failed to delete assignment`);
-    }
     setAssignments((prev) => prev.filter((a) => a.id !== id));
   }
 
@@ -87,5 +67,6 @@ export function createAssignmentStore() {
     listByPerson,
     listByTask,
     listForPersonOnDate,
+    loadAssignments,
   };
 }

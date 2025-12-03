@@ -1,5 +1,7 @@
+import { client } from "@frontend/client";
 import type { PersonStore } from "@frontend/stores/personStore";
 import { For, createMemo } from "solid-js";
+import { ulid } from "ulid";
 
 import type { AssignmentStore } from "../stores/assignmentStore";
 import type { DragStore } from "../stores/dragStore";
@@ -40,13 +42,12 @@ export default function ScheduleTable(props: Props) {
     <div
       class="flex-1 overflow-auto p-4"
       onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => {
+      onDrop={async (e) => {
         // 拖拽到空白區域則刪除指派
         e.preventDefault();
         const drag = dragStore.state();
-
         if (drag.type === "assignment") {
-          assignmentStore.deleteAssignment(drag.assignmentId);
+          await client.api.assignments({ id: drag.assignmentId }).delete();
         }
         dragStore.clear();
       }}
@@ -92,24 +93,26 @@ export default function ScheduleTable(props: Props) {
                       <div
                         class="border-b border-r p-1 min-h-[60px] bg-white"
                         onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => {
+                        onDrop={async (e) => {
                           e.preventDefault();
                           const drag = dragStore.state();
 
                           if (drag.type === "task") {
-                            assignmentStore.createAssignment({
+                            await client.api.assignments.post({
+                              id: ulid(),
                               taskId: drag.taskId,
                               personId: p.id,
                               date: d.key,
                             });
                           } else if (drag.type === "assignment") {
-                            assignmentStore.updateAssignment(
-                              drag.assignmentId,
-                              {
+                            await client.api
+                              .assignments({
+                                id: drag.assignmentId,
+                              })
+                              .patch({
                                 personId: p.id,
                                 date: d.key,
-                              }
-                            );
+                              });
                           }
 
                           dragStore.clear();

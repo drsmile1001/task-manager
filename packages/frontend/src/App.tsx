@@ -1,5 +1,7 @@
 import { Show, createSignal } from "solid-js";
 
+import type { MutationTopic } from "@backend/api";
+
 import ProjectDetailsPanel from "./components/ProjectDetailsPanel";
 import ScheduleTable from "./components/ScheduleTable";
 import TaskDetailsPanel from "./components/TaskDetailsPanel";
@@ -19,6 +21,70 @@ export default function App() {
   const dragStore = createDragStore();
   const personStore = createPersonStore();
   const week = genWeek();
+  const wshost =
+    window.location.hostname === "localhost"
+      ? "localhost:3000"
+      : window.location.host;
+
+  const ws = new WebSocket(`ws://${wshost}/ws`);
+
+  ws.onmessage = (event) => {
+    const message = JSON.parse(event.data);
+    if (message.topic === "mutations") {
+      const m = message as MutationTopic;
+      switch (m.type) {
+        case "task":
+          switch (m.action) {
+            case "create":
+              taskStore.createTask(m.eneity as any);
+              break;
+            case "update":
+              taskStore.updateTask(m.eneity as any);
+              break;
+            case "delete":
+              taskStore.deleteTask(m.id);
+              assignmentStore.loadAssignments();
+              break;
+            default:
+              break;
+          }
+          break;
+        case "project":
+          switch (m.action) {
+            case "create":
+              projectStore.createProject(m.eneity as any);
+              break;
+            case "update":
+              projectStore.updateProject(m.eneity as any);
+              break;
+            case "delete":
+              projectStore.deleteProject(m.id);
+              assignmentStore.loadAssignments();
+              break;
+            default:
+              break;
+          }
+          break;
+        case "assignment":
+          switch (m.action) {
+            case "create":
+              assignmentStore.createAssignment(m.eneity as any);
+              break;
+            case "update":
+              assignmentStore.updateAssignment(m.eneity as any);
+              break;
+            case "delete":
+              assignmentStore.deleteAssignment(m.id);
+              break;
+            default:
+              break;
+          }
+          break;
+        default:
+          break;
+      }
+    }
+  };
 
   // --- Task Panel State ---
   const [taskPanelTaskId, setTaskPanelTaskId] = createSignal<string | null>(

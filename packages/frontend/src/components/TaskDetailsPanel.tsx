@@ -1,4 +1,6 @@
+import { client } from "@frontend/client";
 import { For, Show, createEffect, createSignal } from "solid-js";
+import { ulid } from "ulid";
 
 import type { ProjectStore } from "../stores/projectStore";
 import type { TaskStore } from "../stores/taskStore";
@@ -43,25 +45,31 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   };
 
   // ★ commit：由 Panel 內處理 create/update
-  const commit = () => {
+  const commit = async () => {
     const data = form();
 
     if (isCreating()) {
-      props.taskStore.createTask({
+      await client.api.tasks.post({
+        id: ulid(),
         projectId: data.projectId,
         name: data.name,
         description: data.description,
         isDone: data.isDone,
       });
     } else if (isEditing() && props.taskId) {
-      props.taskStore.updateTask(props.taskId, data);
+      await client.api.tasks({ id: props.taskId }).patch({
+        projectId: data.projectId,
+        name: data.name,
+        description: data.description,
+        isDone: data.isDone,
+      });
     }
 
     props.onClose();
   };
 
-  const removeTask = () => {
-    props.taskStore.deleteTask(props.taskId!);
+  const removeTask = async () => {
+    await client.api.tasks({ id: props.taskId! }).delete();
     props.onClose();
   };
 
