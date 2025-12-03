@@ -118,6 +118,11 @@ export function buildApi(logger: Logger) {
     )
     .delete("/api/tasks/:id", async ({ params }) => {
       await taskRepo.remove(params.id);
+      const assignments = await assignmentRepo.list();
+      const otherTaskAssignments = assignments.filter(
+        (a) => a.taskId !== params.id
+      );
+      await assignmentRepo.replaceAll(otherTaskAssignments);
     })
     .get("/api/assignments", async () => {
       return await assignmentRepo.list();

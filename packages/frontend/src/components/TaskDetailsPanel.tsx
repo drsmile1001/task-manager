@@ -1,4 +1,4 @@
-import { For, createEffect, createSignal } from "solid-js";
+import { For, Show, createEffect, createSignal } from "solid-js";
 
 import type { ProjectStore } from "../stores/projectStore";
 import type { TaskStore } from "../stores/taskStore";
@@ -57,6 +57,11 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
       props.taskStore.updateTask(props.taskId, data);
     }
 
+    props.onClose();
+  };
+
+  const removeTask = () => {
+    props.taskStore.deleteTask(props.taskId!);
     props.onClose();
   };
 
@@ -123,6 +128,14 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
 
       {/* Footer */}
       <div class="p-3 border-t flex justify-end gap-2">
+        <Show when={isEditing()}>
+          <button
+            class="px-3 py-1 bg-red-300 text-white rounded"
+            onClick={removeTask}
+          >
+            刪除
+          </button>
+        </Show>
         <button class="px-3 py-1 bg-gray-200 rounded" onClick={props.onClose}>
           取消
         </button>
