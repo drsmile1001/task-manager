@@ -1,78 +1,19 @@
 stages:
   - build
-  - push
-  - package
-  - release
 
-# 以 tag 形狀決定 pipeline 類型
+variables:
+  VERSION: $CI_COMMIT_TAG
+  IMAGE_NAME: task-manager
+
 workflow:
   rules:
-    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+(-[\w\.\+]+)?$/'
-      variables: { PIPELINE_KIND: "app" }
-    - if: '$CI_COMMIT_TAG =~ /^chart-v\d+\.\d+\.\d+(-[\w\.\+]+)?$/'
-      variables: { PIPELINE_KIND: "chart" }
-    - when: never
+    - if: $CI_COMMIT_TAG =~ /^[0-9]+\.[0-9]+\.[0-9]+$/
+      when: always
 
-# 共用變數
-variables:
-  REGION: asia-east1
-  GCP_PROJECT: ew-dep4-dev
-  IMG_REPO: enw-bm-images
-  HELM_REPO: enw-bm-charts
-  IMAGE_NAME: stsp-account-service
-  IMAGE_REPO: "$REGION-docker.pkg.dev/$GCP_PROJECT/$IMG_REPO/$IMAGE_NAME"
-  CHART_DIR: deploy/helm
-  HELM_OCI_REPO: "oci://$REGION-docker.pkg.dev/$GCP_PROJECT/$HELM_REPO"
-
-# ============= App 發版（vX.Y.Z） ============================================
-
-build_docker_image:
+build:
   stage: build
-  rules: [{ if: '$PIPELINE_KIND == "app"' }]
-  script: |
-    set -euo pipefail
-    APP_VERSION="${CI_COMMIT_TAG#v}"
-    echo "📦 App version = ${APP_VERSION}"
-    docker build \
-      -t "$IMAGE_REPO:$APP_VERSION" \
-      -t "$IMAGE_REPO:$APP_VERSION-$CI_COMMIT_SHORT_SHA" \
-      .
-  tags: [shell, scdt-ai]
-
-push_docker_image:
-  stage: push
-  rules: [{ if: '$PIPELINE_KIND == "app"' }]
-  script: |
-    set -euo pipefail
-    APP_VERSION="${CI_COMMIT_TAG#v}"
-    echo "📦 App version = ${APP_VERSION}"
-    export DOCKER_CONFIG="$CI_PROJECT_DIR/.docker"
-    mkdir -p "$DOCKER_CONFIG"
-    docker login -u _json_key --password-stdin "https://$REGION-docker.pkg.dev" < "$GCP_SVC_JSON"
-    docker push "$IMAGE_REPO:$APP_VERSION"
-    docker push "$IMAGE_REPO:$APP_VERSION-$CI_COMMIT_SHORT_SHA"
-  tags: [shell, scdt-ai]
-
-# ============= Chart 發版（chart-vA.B.C） ====================================
-
-package_chart:
-  stage: package
-  rules: [{ if: '$PIPELINE_KIND == "chart"' }]
-  script: |
-    set -euo pipefail
-    CHART_VERSION="${CI_COMMIT_TAG#chart-v}"
-    echo "📦 Chart version = ${CHART_VERSION}"
-    helm package "$CHART_DIR" --version "$CHART_VERSION"
-    ls -1 *.tgz
-  artifacts:
-    paths: ["*.tgz"]
-  tags: [shell, scdt-ai]
-
-push_chart_to_oci:
-  stage: release
-  rules: [{ if: '$PIPELINE_KIND == "chart"' }]
-  needs: ["package_chart"]
-  script: |
-    helm registry login "$REGION-docker.pkg.dev" -u _json_key -p "$(cat "$GCP_SVC_JSON")"
-    helm push *.tgz "$HELM_OCI_REPO"
-  tags: [shell, scdt-ai]
+  script:
+    - docker build --rm -t $IMAGE_NAME:$VERSION -t $IMAGE_NAME:latest .
+  tags:
+    - shell
+    - scdt-ai
