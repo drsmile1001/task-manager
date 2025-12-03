@@ -7,14 +7,18 @@ import type { Logger } from "~shared/Logger";
 import { personSchema } from "./schemas/Person";
 
 export function buildApi(logger: Logger) {
-  const projectRepo = createYamlRepo("projects.yaml", projectSchema, logger);
-  const taskRepo = createYamlRepo("tasks.yaml", taskSchema, logger);
+  const projectRepo = createYamlRepo(
+    "data/projects.yaml",
+    projectSchema,
+    logger
+  );
+  const taskRepo = createYamlRepo("data/tasks.yaml", taskSchema, logger);
   const assignmentRepo = createYamlRepo(
-    "assignments.yaml",
+    "data/assignments.yaml",
     assignmentSchema,
     logger
   );
-  const personRepo = createYamlRepo("persons.yaml", personSchema, logger);
+  const personRepo = createYamlRepo("data/persons.yaml", personSchema, logger);
 
   return new Elysia()
     .get("/api/persons", async () => {

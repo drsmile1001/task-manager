@@ -1,0 +1,42 @@
+# VCS / tooling
+
+.git
+.gitignore
+.gitlab-ci.yml
+
+# Tests / docs / misc
+
+test
+\*.md
+
+# Local env & editor
+
+.env
+.env.\*
+!.env.example
+.vscode
+
+# Node artifacts
+
+node_modules
+
+# Build outputs
+
+dist
+build
+.out
+.tmp
+.cache
+\*.tar
+
+# Deployment & ops (不需要進 image)
+
+charts
+helmfile*
+Dockerfile.*
+deploy
+
+# OS / misc
+
+.DS_Store
+Thumbs.db

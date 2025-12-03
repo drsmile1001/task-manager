@@ -32,7 +32,3 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Finder (MacOS) folder config
 .DS_Store
-packages/backend/assignments.yaml
-packages/backend/projects.yaml
-packages/backend/tasks.yaml
-packages/backend/persons.yaml

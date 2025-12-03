@@ -5,6 +5,7 @@
   "description": "Hello World Bun Template",
   "scripts": {
     "dev": "bun run --watch src/index.ts",
+    "build": "bun build --compile --sourcemap --target bun --outfile dist/server src/index.ts",
     "index": "bun run src/index.ts",
     "format": "bunx prettier . --write"
   },

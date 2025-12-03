@@ -3,7 +3,8 @@
     "baseUrl": ".",
     "paths": {
       "@frontend/*": ["./src/*"],
-      "@backend/*": ["../backend/src/*"]
+      "@backend/*": ["../backend/src/*"],
+      "~shared/*": ["./backend/shared/*"]
     },
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES2022",
