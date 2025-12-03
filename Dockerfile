@@ -6,7 +6,7 @@ COPY . .
 RUN bun install
 RUN bun run build
 
-FROM gcr.io/distroless/base AS runtime
+FROM alpine:3.14 AS runtime
 WORKDIR /app
 COPY --from=build /app/dist ./
 EXPOSE 3000
