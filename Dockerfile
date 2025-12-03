@@ -6,7 +6,7 @@ COPY . .
 RUN bun install
 RUN bun run build
 
-FROM alpine:3.14 AS runtime
+FROM oven/bun:latest AS runtime
 WORKDIR /app
 COPY --from=build /app/dist ./
 EXPOSE 3000
