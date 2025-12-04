@@ -95,6 +95,8 @@ export default function ScheduleTable(props: Props) {
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={async (e) => {
                           e.preventDefault();
+                          e.stopPropagation();
+
                           const drag = dragStore.state();
 
                           if (drag.type === "task") {
