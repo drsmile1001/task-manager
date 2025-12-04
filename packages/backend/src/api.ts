@@ -67,6 +67,17 @@ export function buildApi(logger: Logger) {
       close(ws) {
         ws.unsubscribe("mutations");
       },
+      message(ws, message) {
+        if ((message as any).topic === "ping") {
+          ws.send(
+            JSON.stringify({
+              topic: "pong",
+              timeStamp: new Date().toISOString(),
+            })
+          );
+          return;
+        }
+      },
     })
     .get("/api/persons", async () => {
       return await personRepo.list();

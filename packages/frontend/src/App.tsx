@@ -28,6 +28,17 @@ export default function App() {
 
   const ws = new WebSocket(wshost);
 
+  ws.onopen = () => {
+    setInterval(() => {
+      ws.send(
+        JSON.stringify({
+          topic: "ping",
+          timeStamp: new Date().toISOString(),
+        })
+      );
+    }, 10000);
+  };
+
   ws.onmessage = (event) => {
     const message = JSON.parse(event.data);
     if (message.topic === "mutations") {
