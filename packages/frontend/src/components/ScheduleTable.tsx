@@ -47,7 +47,7 @@ export default function ScheduleTable(props: Props) {
     let curr = startDate;
     while (!isAfter(curr, endDate)) {
       dates.push({
-        key: curr.valueOf().toString(),
+        key: format(curr, "yyyy-MM-dd"),
         label: format(curr, "MM/dd"),
       });
       curr = addDays(curr, 1);
