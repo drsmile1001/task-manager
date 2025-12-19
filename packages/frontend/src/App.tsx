@@ -8,10 +8,10 @@ import TaskDetailsPanel from "./components/TaskDetailsPanel";
 import TaskPool from "./components/TaskPool";
 import { createAssignmentStore } from "./stores/assignmentStore";
 import { createDragStore } from "./stores/dragStore";
+import { createFilterStore } from "./stores/filterStore";
 import { createPersonStore } from "./stores/personStore";
 import { createProjectStore } from "./stores/projectStore";
 import { createTaskStore } from "./stores/taskStore";
-import { genWeek } from "./utils/date";
 
 export default function App() {
   // --- stores ---
@@ -20,7 +20,8 @@ export default function App() {
   const assignmentStore = createAssignmentStore();
   const dragStore = createDragStore();
   const personStore = createPersonStore();
-  const week = genWeek();
+  const filterStore = createFilterStore();
+
   const wshost =
     window.location.hostname === "localhost"
       ? "ws://localhost:3000/ws"
@@ -195,7 +196,7 @@ export default function App() {
       <div class="flex-1 overflow-hidden">
         <ScheduleTable
           personStore={personStore}
-          week={week}
+          filterStore={filterStore}
           assignmentStore={assignmentStore}
           projectStore={projectStore}
           taskStore={taskStore}

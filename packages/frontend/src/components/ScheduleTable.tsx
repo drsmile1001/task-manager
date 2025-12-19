@@ -1,5 +1,7 @@
 import { client } from "@frontend/client";
+import type { FilterStore } from "@frontend/stores/filterStore";
 import type { PersonStore } from "@frontend/stores/personStore";
+import { addDays, format, isAfter } from "date-fns";
 import { For, createMemo } from "solid-js";
 import { ulid } from "ulid";
 
@@ -10,7 +12,7 @@ import type { TaskStore } from "../stores/taskStore";
 
 export type Props = {
   personStore: PersonStore;
-  week: { key: string; label: string }[];
+  filterStore: FilterStore;
   assignmentStore: AssignmentStore;
   taskStore: TaskStore;
   projectStore: ProjectStore;
@@ -18,7 +20,8 @@ export type Props = {
 };
 
 export default function ScheduleTable(props: Props) {
-  const { personStore, week, assignmentStore, taskStore, dragStore } = props;
+  const { personStore, filterStore, assignmentStore, taskStore, dragStore } =
+    props;
 
   // project + task 名稱組合
   const tasksMap = createMemo(() => {
@@ -38,6 +41,41 @@ export default function ScheduleTable(props: Props) {
 
   const persons = () => personStore.persons();
 
+  const days = createMemo(() => {
+    const { startDate, endDate } = filterStore.filter();
+    const dates: { key: string; label: string }[] = [];
+    let curr = startDate;
+    while (!isAfter(curr, endDate)) {
+      dates.push({
+        key: curr.valueOf().toString(),
+        label: format(curr, "MM/dd"),
+      });
+      curr = addDays(curr, 1);
+    }
+    return dates;
+  });
+
+  function startInput() {
+    return format(filterStore.filter().startDate, "yyyy-MM-dd");
+  }
+  function setStart(value: string) {
+    const date = new Date(value);
+    filterStore.setFilter({
+      ...filterStore.filter(),
+      startDate: date,
+    });
+  }
+  function endInput() {
+    return format(filterStore.filter().endDate, "yyyy-MM-dd");
+  }
+  function setEnd(value: string) {
+    const date = new Date(value);
+    filterStore.setFilter({
+      ...filterStore.filter(),
+      endDate: date,
+    });
+  }
+
   return (
     <div
       class="flex-1 overflow-auto p-4"
@@ -53,12 +91,27 @@ export default function ScheduleTable(props: Props) {
       }}
     >
       <div class="text-gray-700 font-bold mb-3">工作表</div>
+      <div class="flex gap-2 mb-4 items-center">
+        <label class="mr-2 self-center">日期範圍：</label>
+        <input
+          type="date"
+          class="border"
+          value={startInput()}
+          onInput={(e) => setStart(e.currentTarget.value)}
+        />
+        <input
+          type="date"
+          class="border"
+          value={endInput()}
+          onInput={(e) => setEnd(e.currentTarget.value)}
+        />
+      </div>
 
       <div class="border border-gray-300 h-[calc(100vh-100px)] overflow-y-auto">
         <div
           class="grid"
           style={{
-            "grid-template-columns": `120px repeat(${week.length}, 1fr)`,
+            "grid-template-columns": `120px repeat(${days().length}, 1fr)`,
           }}
         >
           {/* 表頭：日期 */}
@@ -66,7 +119,7 @@ export default function ScheduleTable(props: Props) {
             人員
           </div>
 
-          <For each={week}>
+          <For each={days()}>
             {(d) => (
               <div class="border-b border-r p-2 bg-gray-100 text-sm text-center w-30">
                 {d.label}
@@ -84,7 +137,7 @@ export default function ScheduleTable(props: Props) {
                 </div>
 
                 {/* 每天 */}
-                <For each={week}>
+                <For each={days()}>
                   {(d) => {
                     const items = () =>
                       assignmentStore.listForPersonOnDate(p.id, d.key);
