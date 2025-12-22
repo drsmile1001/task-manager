@@ -14,7 +14,6 @@ import { createProjectStore } from "./stores/projectStore";
 import { createTaskStore } from "./stores/taskStore";
 
 export default function App() {
-  // --- stores ---
   const taskStore = createTaskStore();
   const projectStore = createProjectStore();
   const assignmentStore = createAssignmentStore();
@@ -28,7 +27,6 @@ export default function App() {
       : `wss://${window.location.host + import.meta.env.BASE_URL}ws`;
 
   const ws = new WebSocket(wshost);
-
   ws.onopen = () => {
     setInterval(() => {
       ws.send(
@@ -71,6 +69,7 @@ export default function App() {
               break;
             case "delete":
               projectStore.deleteProject(m.id);
+              taskStore.loadTasks();
               assignmentStore.loadAssignments();
               break;
             default:
@@ -98,73 +97,51 @@ export default function App() {
     }
   };
 
-  // --- Task Panel State ---
-  const [taskPanelTaskId, setTaskPanelTaskId] = createSignal<string | null>(
-    null
-  );
-  const [taskPanelProjectIdForCreate, setTaskPanelProjectIdForCreate] =
-    createSignal<string | null>(null);
-
-  // --- Project Panel State ---
   const [projectPanelProjectId, setProjectPanelProjectId] = createSignal<
     string | null
   >(null);
-  const [isProjectCreating, setIsProjectCreating] = createSignal(false);
+  const [projectPanelIsOpen, setProjectPanelIsOpen] = createSignal(false);
 
-  // --- Derived values ---
-  const selectedProject = () => {
-    const id = projectPanelProjectId();
-    return id ? projectStore.getProject(id)! : null;
-  };
+  const [taskPanelTaskId, setTaskPanelTaskId] = createSignal<string | null>(
+    null
+  );
+  const [taskPanelIsOpen, setTaskPanelIsOpen] = createSignal(false);
+  const [projectIdForCreate, setProjectIdForCreate] = createSignal<
+    string | null
+  >(null);
 
-  // --- Handlers ---
+  function closePanels() {
+    setProjectPanelIsOpen(false);
+    setTaskPanelIsOpen(false);
+  }
 
-  // 開啟「新增 Task」
   const openCreateTask = (projectId: string) => {
-    setTaskPanelTaskId(null);
-    setTaskPanelProjectIdForCreate(projectId);
+    closePanels();
 
-    // 關閉 Project panel
-    setProjectPanelProjectId(null);
-    setIsProjectCreating(false);
+    setProjectIdForCreate(projectId);
+    setTaskPanelTaskId(null);
+    setTaskPanelIsOpen(true);
   };
 
-  // 開啟「編輯 Task」
   const openEditTask = (taskId: string) => {
+    closePanels();
+
     setTaskPanelTaskId(taskId);
-    setTaskPanelProjectIdForCreate(null);
-
-    // 關閉 Project panel
-    setProjectPanelProjectId(null);
-    setIsProjectCreating(false);
+    setTaskPanelIsOpen(true);
   };
 
-  // 開啟「新增 Project」
   const openCreateProject = () => {
-    setIsProjectCreating(true);
-    setProjectPanelProjectId(null);
+    closePanels();
 
-    // 關閉 Task panel
-    setTaskPanelTaskId(null);
-    setTaskPanelProjectIdForCreate(null);
+    setProjectPanelIsOpen(true);
+    setProjectPanelProjectId(null);
   };
 
-  // 開啟「編輯 Project」
   const openEditProject = (projectId: string) => {
-    setIsProjectCreating(false);
+    closePanels();
+
+    setProjectPanelIsOpen(false);
     setProjectPanelProjectId(projectId);
-
-    // 關閉 Task panel
-    setTaskPanelTaskId(null);
-    setTaskPanelProjectIdForCreate(null);
-  };
-
-  // 關閉所有 panel
-  const closePanel = () => {
-    setTaskPanelTaskId(null);
-    setTaskPanelProjectIdForCreate(null);
-    setProjectPanelProjectId(null);
-    setIsProjectCreating(false);
   };
 
   return (
@@ -180,7 +157,6 @@ export default function App() {
         dragStore.clear();
       }}
     >
-      {/* 左側 Project & Task 清單 */}
       <TaskPool
         assignmentStore={assignmentStore}
         taskStore={taskStore}
@@ -192,7 +168,6 @@ export default function App() {
         onEditProject={openEditProject}
       />
 
-      {/* 中間 schedule */}
       <div class="flex-1 overflow-hidden">
         <ScheduleTable
           personStore={personStore}
@@ -204,24 +179,21 @@ export default function App() {
         />
       </div>
 
-      {/* --- Task Details Panel --- */}
-      <Show when={taskPanelTaskId() || taskPanelProjectIdForCreate()}>
+      <Show when={taskPanelIsOpen()}>
         <TaskDetailsPanel
           taskId={taskPanelTaskId()}
-          projectIdForCreate={taskPanelProjectIdForCreate()}
+          projectIdForCreate={projectIdForCreate()}
           taskStore={taskStore}
           projectStore={projectStore}
-          onClose={closePanel}
+          onClose={closePanels}
         />
       </Show>
 
-      {/* --- Project Details Panel --- */}
-      <Show when={isProjectCreating() || selectedProject()}>
+      <Show when={projectPanelIsOpen()}>
         <ProjectDetailsPanel
-          project={selectedProject()}
-          isCreating={isProjectCreating()}
+          projectId={projectPanelProjectId()}
           projectStore={projectStore}
-          onClose={closePanel}
+          onClose={closePanels}
         />
       </Show>
     </div>

@@ -1,23 +1,29 @@
 import { client } from "@frontend/client";
-import { createEffect, createSignal } from "solid-js";
+import { Show, createEffect, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
-import type { Project } from "../../../backend/src/schemas/Project";
 import type { ProjectStore } from "../stores/projectStore";
 
-export default function ProjectDetailsPanel(props: {
-  project: Project | null;
+export type ProjectDetailsPanelProps = {
+  projectId: string | null;
   projectStore: ProjectStore;
-  isCreating: boolean;
   onClose: () => void;
-}) {
+};
+
+export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
+  const isEditing = () => props.projectId !== null;
+  const isCreating = () => props.projectId === null;
+
+  const project = () =>
+    props.projectId ? props.projectStore.getProject(props.projectId) : null;
+
   const [form, setForm] = createSignal({
-    name: props.project?.name ?? "",
-    description: props.project?.description ?? "",
+    name: project()?.name ?? "",
+    description: project()?.description ?? "",
   });
 
   createEffect(() => {
-    const p = props.project;
+    const p = project();
     setForm({
       name: p?.name ?? "",
       description: p?.description ?? "",
@@ -28,14 +34,14 @@ export default function ProjectDetailsPanel(props: {
   const commit = async () => {
     const data = form();
 
-    if (props.isCreating) {
+    if (isCreating()) {
       await client.api.projects.post({
         id: ulid(),
         name: data.name,
         description: data.description,
       });
-    } else if (props.project) {
-      await client.api.projects({ id: props.project.id }).patch({
+    } else if (isEditing()) {
+      await client.api.projects({ id: props.projectId! }).patch({
         name: data.name,
         description: data.description,
       });
@@ -43,11 +49,16 @@ export default function ProjectDetailsPanel(props: {
     props.onClose();
   };
 
+  const removeProject = async () => {
+    await client.api.tasks({ id: props.projectId! }).delete();
+    props.onClose();
+  };
+
   return (
     <div class="w-[420px] h-full border-l bg-white flex flex-col">
       <div class="p-3 border-b flex justify-between items-center bg-gray-50">
         <div class="font-semibold text-gray-700">
-          {props.isCreating ? "新增專案" : "編輯專案"}
+          {isCreating() ? "新增專案" : "編輯專案"}
         </div>
         <button class="text-gray-500" onClick={props.onClose}>
           ✕
@@ -75,6 +86,14 @@ export default function ProjectDetailsPanel(props: {
       </div>
 
       <div class="p-3 border-t flex justify-end gap-2">
+        <Show when={isEditing()}>
+          <button
+            class="px-3 py-1 bg-red-300 text-white rounded"
+            onClick={removeProject}
+          >
+            刪除
+          </button>
+        </Show>
         <button class="px-3 py-1 bg-gray-200 rounded" onClick={props.onClose}>
           取消
         </button>

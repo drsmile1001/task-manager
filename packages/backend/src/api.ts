@@ -173,6 +173,15 @@ export function buildApi(logger: Logger) {
     )
     .delete("/api/projects/:id", async ({ params }) => {
       await projectRepo.remove(params.id);
+      const tasks = await taskRepo.list();
+      const otherProjectTasks = tasks.filter((t) => t.projectId !== params.id);
+      await taskRepo.replaceAll(otherProjectTasks);
+      const otherProjectTaskIdSet = new Set(otherProjectTasks.map((t) => t.id));
+      const assignments = await assignmentRepo.list();
+      const otherProjectAssignments = assignments.filter((a) =>
+        otherProjectTaskIdSet.has(a.taskId)
+      );
+      await assignmentRepo.replaceAll(otherProjectAssignments);
       broadcastMutation({
         type: "project",
         action: "delete",

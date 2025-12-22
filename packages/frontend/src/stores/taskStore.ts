@@ -44,6 +44,7 @@ export function createTaskStore() {
     deleteTask,
     getTask,
     listByProject,
+    loadTasks,
   };
 }
 
