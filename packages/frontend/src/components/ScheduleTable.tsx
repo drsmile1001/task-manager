@@ -1,7 +1,7 @@
 import { client } from "@frontend/client";
 import type { FilterStore } from "@frontend/stores/filterStore";
 import type { PersonStore } from "@frontend/stores/personStore";
-import { addDays, format, isAfter } from "date-fns";
+import { addDays, format, isAfter, startOfDay } from "date-fns";
 import { For, createMemo } from "solid-js";
 import { ulid } from "ulid";
 
@@ -43,12 +43,20 @@ export default function ScheduleTable(props: Props) {
 
   const days = createMemo(() => {
     const { startDate, endDate } = filterStore.filter();
-    const dates: { key: string; label: string }[] = [];
+    const dates: {
+      key: string;
+      label: string;
+      isWeekend: boolean;
+      isToday: boolean;
+    }[] = [];
     let curr = startDate;
     while (!isAfter(curr, endDate)) {
       dates.push({
         key: format(curr, "yyyy-MM-dd"),
-        label: format(curr, "MM/dd"),
+        label: format(curr, "MM/dd E"),
+        isWeekend: [0, 6].includes(curr.getDay()),
+        isToday:
+          startOfDay(curr).valueOf() === startOfDay(new Date()).valueOf(),
       });
       curr = addDays(curr, 1);
     }
@@ -121,7 +129,15 @@ export default function ScheduleTable(props: Props) {
 
           <For each={days()}>
             {(d) => (
-              <div class="border-b border-r p-2 bg-gray-100 text-sm text-center w-30">
+              <div
+                class="border-b border-r border-black p-2 bg-gray-100 text-sm text-center w-30"
+                classList={{
+                  "font-bold": d.isToday,
+                  "text-blue-500": d.isToday,
+                  "bg-red-100": d.isWeekend,
+                  "bg-gray-100": !d.isWeekend,
+                }}
+              >
                 {d.label}
               </div>
             )}
@@ -144,7 +160,11 @@ export default function ScheduleTable(props: Props) {
 
                     return (
                       <div
-                        class="border-b border-r p-1 min-h-[60px] bg-white"
+                        class="border-b border-r p-1 min-h-[60px]"
+                        classList={{
+                          "bg-red-50": d.isWeekend,
+                          "bg-white": !d.isWeekend,
+                        }}
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={async (e) => {
                           e.preventDefault();
