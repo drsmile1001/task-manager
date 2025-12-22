@@ -197,10 +197,11 @@ export default function ScheduleTable(props: Props) {
                         {/* 該格中的所有 assignment */}
                         <For each={items()}>
                           {(a) => {
-                            const { task, project } = tasksMap()[a.taskId];
+                            const task = tasksMap()[a.taskId];
+
                             const cssClass =
                               "bg-blue-100 border border-blue-300 text-xs p-1 rounded mb-1 cursor-pointer" +
-                              (task.isDone ? " line-through" : "");
+                              (task?.task.isDone ? " line-through" : "");
 
                             return (
                               <div
@@ -217,7 +218,7 @@ export default function ScheduleTable(props: Props) {
                                   props.onClickAssignment?.(a.id);
                                 }}
                               >
-                                {project?.name}:{task.name}
+                                {task?.project?.name}:{task?.task.name}
                               </div>
                             );
                           }}
