@@ -17,6 +17,7 @@ export type Props = {
   taskStore: TaskStore;
   projectStore: ProjectStore;
   dragStore: DragStore;
+  onClickAssignment?: (assignmentId: string) => void;
 };
 
 export default function ScheduleTable(props: Props) {
@@ -211,6 +212,9 @@ export default function ScheduleTable(props: Props) {
                                     personId: a.personId,
                                     date: a.date,
                                   });
+                                }}
+                                onClick={() => {
+                                  props.onClickAssignment?.(a.id);
                                 }}
                               >
                                 {project?.name}:{task.name}

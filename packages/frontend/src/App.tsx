@@ -144,6 +144,13 @@ export default function App() {
     setProjectPanelIsOpen(true);
   };
 
+  const handleClickAssignment = (assignmentId: string) => {
+    const assignment = assignmentStore.getAssignment(assignmentId);
+    if (!assignment) return;
+    closePanels();
+    openEditTask(assignment.taskId);
+  };
+
   return (
     <div
       class="flex h-screen"
@@ -176,6 +183,7 @@ export default function App() {
           projectStore={projectStore}
           taskStore={taskStore}
           dragStore={dragStore}
+          onClickAssignment={handleClickAssignment}
         />
       </div>
 
