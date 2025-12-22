@@ -50,7 +50,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
   };
 
   const removeProject = async () => {
-    await client.api.tasks({ id: props.projectId! }).delete();
+    await client.api.projects({ id: props.projectId! }).delete();
     props.onClose();
   };
 
