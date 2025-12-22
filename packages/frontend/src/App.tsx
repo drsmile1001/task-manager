@@ -133,15 +133,15 @@ export default function App() {
   const openCreateProject = () => {
     closePanels();
 
-    setProjectPanelIsOpen(true);
     setProjectPanelProjectId(null);
+    setProjectPanelIsOpen(true);
   };
 
   const openEditProject = (projectId: string) => {
     closePanels();
 
-    setProjectPanelIsOpen(false);
     setProjectPanelProjectId(projectId);
+    setProjectPanelIsOpen(true);
   };
 
   return (
