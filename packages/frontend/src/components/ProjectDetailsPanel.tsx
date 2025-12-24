@@ -1,12 +1,10 @@
 import { client } from "@frontend/client";
+import { projectStore } from "@frontend/stores/projectStore";
 import { Show, createEffect, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
-import type { ProjectStore } from "../stores/projectStore";
-
 export type ProjectDetailsPanelProps = {
   projectId: string | null;
-  projectStore: ProjectStore;
   onClose: () => void;
 };
 
@@ -15,7 +13,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
   const isCreating = () => props.projectId === null;
 
   const project = () =>
-    props.projectId ? props.projectStore.getProject(props.projectId) : null;
+    props.projectId ? projectStore.getProject(props.projectId) : null;
 
   const [form, setForm] = createSignal({
     name: project()?.name ?? "",

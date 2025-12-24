@@ -4,9 +4,7 @@ import { createSignal } from "solid-js";
 
 import type { Assignment } from "@backend/schemas/Assignment";
 
-export type AssignmentStore = ReturnType<typeof createAssignmentStore>;
-
-export function createAssignmentStore() {
+function createAssignmentStore() {
   const [assignments, setAssignments] = createSignal<Assignment[]>([]);
 
   async function loadAssignments() {
@@ -70,3 +68,5 @@ export function createAssignmentStore() {
     loadAssignments,
   };
 }
+
+export const assignmentStore = createAssignmentStore();

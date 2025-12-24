@@ -6,21 +6,12 @@ import ProjectDetailsPanel from "./components/ProjectDetailsPanel";
 import ScheduleTable from "./components/ScheduleTable";
 import TaskDetailsPanel from "./components/TaskDetailsPanel";
 import TaskPool from "./components/TaskPool";
-import { createAssignmentStore } from "./stores/assignmentStore";
-import { createDragStore } from "./stores/dragStore";
-import { createFilterStore } from "./stores/filterStore";
-import { createPersonStore } from "./stores/personStore";
-import { createProjectStore } from "./stores/projectStore";
-import { createTaskStore } from "./stores/taskStore";
+import { assignmentStore } from "./stores/assignmentStore";
+import { dragStore } from "./stores/dragStore";
+import { projectStore } from "./stores/projectStore";
+import { taskStore } from "./stores/taskStore";
 
 export default function App() {
-  const taskStore = createTaskStore();
-  const projectStore = createProjectStore();
-  const assignmentStore = createAssignmentStore();
-  const dragStore = createDragStore();
-  const personStore = createPersonStore();
-  const filterStore = createFilterStore();
-
   const wshost =
     window.location.hostname === "localhost"
       ? "ws://localhost:3000/ws"
@@ -165,10 +156,6 @@ export default function App() {
       }}
     >
       <TaskPool
-        assignmentStore={assignmentStore}
-        taskStore={taskStore}
-        projectStore={projectStore}
-        dragStore={dragStore}
         onCreateTask={openCreateTask}
         onEditTask={openEditTask}
         onCreateProject={openCreateProject}
@@ -176,23 +163,13 @@ export default function App() {
       />
 
       <div class="flex-1 overflow-hidden">
-        <ScheduleTable
-          personStore={personStore}
-          filterStore={filterStore}
-          assignmentStore={assignmentStore}
-          projectStore={projectStore}
-          taskStore={taskStore}
-          dragStore={dragStore}
-          onClickAssignment={handleClickAssignment}
-        />
+        <ScheduleTable onClickAssignment={handleClickAssignment} />
       </div>
 
       <Show when={taskPanelIsOpen()}>
         <TaskDetailsPanel
           taskId={taskPanelTaskId()}
           projectIdForCreate={projectIdForCreate()}
-          taskStore={taskStore}
-          projectStore={projectStore}
           onClose={closePanels}
         />
       </Show>
@@ -200,7 +177,6 @@ export default function App() {
       <Show when={projectPanelIsOpen()}>
         <ProjectDetailsPanel
           projectId={projectPanelProjectId()}
-          projectStore={projectStore}
           onClose={closePanels}
         />
       </Show>

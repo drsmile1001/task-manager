@@ -3,7 +3,7 @@ import { createSignal } from "solid-js";
 
 import type { Project } from "@backend/schemas/Project";
 
-export function createProjectStore() {
+function createProjectStore() {
   const [projects, setProjects] = createSignal<Project[]>([]);
 
   async function loadProjects() {
@@ -41,4 +41,4 @@ export function createProjectStore() {
   };
 }
 
-export type ProjectStore = ReturnType<typeof createProjectStore>;
+export const projectStore = createProjectStore();

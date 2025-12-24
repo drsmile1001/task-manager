@@ -1,15 +1,10 @@
+import { assignmentStore } from "@frontend/stores/assignmentStore";
+import { dragStore } from "@frontend/stores/dragStore";
+import { projectStore } from "@frontend/stores/projectStore";
+import { taskStore } from "@frontend/stores/taskStore";
 import { For } from "solid-js";
 
-import type { AssignmentStore } from "../stores/assignmentStore";
-import type { DragStore } from "../stores/dragStore";
-import type { ProjectStore } from "../stores/projectStore";
-import type { TaskStore } from "../stores/taskStore";
-
 export type Props = {
-  dragStore: DragStore;
-  taskStore: TaskStore;
-  projectStore: ProjectStore;
-  assignmentStore: AssignmentStore;
   onCreateTask: (projectId: string) => void;
   onEditTask: (taskId: string) => void;
   onEditProject: (projectId: string) => void;
@@ -17,16 +12,7 @@ export type Props = {
 };
 
 export default function TaskPool(props: Props) {
-  const {
-    dragStore,
-    taskStore,
-    projectStore,
-    assignmentStore,
-    onCreateTask,
-    onEditTask,
-    onEditProject,
-    onCreateProject,
-  } = props;
+  const { onCreateTask, onEditTask, onEditProject, onCreateProject } = props;
 
   return (
     <div class="w-72 border-r h-full overflow-y-auto p-3 bg-gray-50">

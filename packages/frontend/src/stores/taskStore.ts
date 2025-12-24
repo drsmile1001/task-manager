@@ -3,7 +3,7 @@ import { createSignal } from "solid-js";
 
 import type { Task } from "@backend/schemas/Task";
 
-export function createTaskStore() {
+function createTaskStore() {
   const [tasks, setTasks] = createSignal<Task[]>([]);
 
   async function loadTasks() {
@@ -48,4 +48,4 @@ export function createTaskStore() {
   };
 }
 
-export type TaskStore = ReturnType<typeof createTaskStore>;
+export const taskStore = createTaskStore();

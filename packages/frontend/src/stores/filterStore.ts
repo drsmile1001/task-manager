@@ -6,7 +6,7 @@ export type Filter = {
   endDate: Date;
 };
 
-export function createFilterStore() {
+function createFilterStore() {
   const [filter, setFilter] = createSignal<Filter>({
     startDate: startOfWeek(new Date()),
     endDate: addDays(startOfWeek(new Date()), 14),
@@ -18,4 +18,4 @@ export function createFilterStore() {
   };
 }
 
-export type FilterStore = ReturnType<typeof createFilterStore>;
+export const filterStore = createFilterStore();

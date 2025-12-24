@@ -1,15 +1,12 @@
 import { client } from "@frontend/client";
+import { projectStore } from "@frontend/stores/projectStore";
+import { taskStore } from "@frontend/stores/taskStore";
 import { For, Show, createEffect, createSignal } from "solid-js";
 import { ulid } from "ulid";
-
-import type { ProjectStore } from "../stores/projectStore";
-import type { TaskStore } from "../stores/taskStore";
 
 export type TaskDetailsPanelProps = {
   taskId: string | null; // 編輯模式：taskId
   projectIdForCreate: string | null; // 新增模式預設所屬 project
-  taskStore: TaskStore;
-  projectStore: ProjectStore;
   onClose: () => void;
 };
 
@@ -18,8 +15,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   const isCreating = () => props.taskId === null;
 
   // 取得 task，如為新增則為 null
-  const task = () =>
-    props.taskId ? props.taskStore.getTask(props.taskId) : null;
+  const task = () => (props.taskId ? taskStore.getTask(props.taskId) : null);
 
   // 表單狀態
   const [form, setForm] = createSignal({
@@ -95,7 +91,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
             value={form().projectId}
             onInput={(e) => updateField("projectId", e.currentTarget.value)}
           >
-            <For each={props.projectStore.projects()}>
+            <For each={projectStore.projects()}>
               {(p) => <option value={p.id}>{p.name}</option>}
             </For>
           </select>

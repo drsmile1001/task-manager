@@ -4,9 +4,7 @@ import { ulid } from "ulid";
 
 import type { Person } from "@backend/schemas/Person";
 
-export type PersonStore = ReturnType<typeof createPersonStore>;
-
-export function createPersonStore() {
+function createPersonStore() {
   const [persons, setPersons] = createSignal<Person[]>([]);
 
   async function loadPersons() {
@@ -59,3 +57,5 @@ export function createPersonStore() {
     getPerson,
   };
 }
+
+export const personStore = createPersonStore();

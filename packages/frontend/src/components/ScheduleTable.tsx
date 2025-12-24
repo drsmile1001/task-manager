@@ -1,34 +1,25 @@
 import { client } from "@frontend/client";
-import type { FilterStore } from "@frontend/stores/filterStore";
-import type { PersonStore } from "@frontend/stores/personStore";
+import { assignmentStore } from "@frontend/stores/assignmentStore";
+import { dragStore } from "@frontend/stores/dragStore";
+import { filterStore } from "@frontend/stores/filterStore";
+import { personStore } from "@frontend/stores/personStore";
+import { projectStore } from "@frontend/stores/projectStore";
+import { taskStore } from "@frontend/stores/taskStore";
 import { addDays, format, isAfter, startOfDay } from "date-fns";
 import { For, createMemo } from "solid-js";
 import { ulid } from "ulid";
 
-import type { AssignmentStore } from "../stores/assignmentStore";
-import type { DragStore } from "../stores/dragStore";
-import type { ProjectStore } from "../stores/projectStore";
-import type { TaskStore } from "../stores/taskStore";
-
 export type Props = {
-  personStore: PersonStore;
-  filterStore: FilterStore;
-  assignmentStore: AssignmentStore;
-  taskStore: TaskStore;
-  projectStore: ProjectStore;
-  dragStore: DragStore;
   onClickAssignment?: (assignmentId: string) => void;
 };
 
 export default function ScheduleTable(props: Props) {
-  const { personStore, filterStore, assignmentStore, taskStore, dragStore } =
-    props;
-
   // project + task 名稱組合
   const tasksMap = createMemo(() => {
-    const projects = props.projectStore.projects();
+    const projects = projectStore.projects();
+    const tasks = taskStore.tasks();
     return Object.fromEntries(
-      taskStore.tasks().map((t) => {
+      tasks.map((t) => {
         return [
           t.id,
           {
@@ -197,11 +188,11 @@ export default function ScheduleTable(props: Props) {
                         {/* 該格中的所有 assignment */}
                         <For each={items()}>
                           {(a) => {
-                            const task = tasksMap()[a.taskId];
+                            const task = () => tasksMap()[a.taskId];
 
                             const cssClass =
                               "bg-blue-100 border border-blue-300 text-xs p-1 rounded mb-1 cursor-pointer" +
-                              (task?.task.isDone ? " line-through" : "");
+                              (task()?.task.isDone ? " line-through" : "");
 
                             return (
                               <div
@@ -218,7 +209,7 @@ export default function ScheduleTable(props: Props) {
                                   props.onClickAssignment?.(a.id);
                                 }}
                               >
-                                {task?.project?.name}:{task?.task.name}
+                                {task()?.project?.name}:{task()?.task.name}
                               </div>
                             );
                           }}

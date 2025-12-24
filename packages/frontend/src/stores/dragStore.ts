@@ -10,7 +10,7 @@ export type DragState =
       fromDate: string;
     };
 
-export function createDragStore() {
+function createDragStore() {
   const [state, setState] = createSignal<DragState>({ type: "none" });
 
   return {
@@ -37,4 +37,4 @@ export function createDragStore() {
   };
 }
 
-export type DragStore = ReturnType<typeof createDragStore>;
+export const dragStore = createDragStore();
