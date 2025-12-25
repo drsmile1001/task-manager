@@ -3,6 +3,8 @@ import { createSignal } from "solid-js";
 
 import type { Task } from "@backend/schemas/Task";
 
+import { filterStore } from "./filterStore";
+
 function createTaskStore() {
   const [tasks, setTasks] = createSignal<Task[]>([]);
 
@@ -34,6 +36,7 @@ function createTaskStore() {
   function listByProject(projectId: string) {
     return tasks()
       .filter((t) => t.projectId === projectId)
+      .filter((t) => filterStore.filter().includeDoneTasks || !t.isDone)
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 

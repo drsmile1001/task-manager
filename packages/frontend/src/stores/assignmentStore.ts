@@ -35,16 +35,6 @@ function createAssignmentStore() {
     return assignments().find((a) => a.id === id);
   }
 
-  // Query helpers for schedule table -----------
-
-  function listByDate(date: string) {
-    return assignments().filter((a) => a.date === date);
-  }
-
-  function listByPerson(personId: string) {
-    return assignments().filter((a) => a.personId === personId);
-  }
-
   function listByTask(taskId: string) {
     return assignments().filter((a) => a.taskId === taskId);
   }
@@ -61,8 +51,6 @@ function createAssignmentStore() {
     updateAssignment,
     deleteAssignment,
     getAssignment,
-    listByDate,
-    listByPerson,
     listByTask,
     listForPersonOnDate,
     loadAssignments,

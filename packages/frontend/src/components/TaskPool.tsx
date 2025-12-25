@@ -1,5 +1,6 @@
 import { assignmentStore } from "@frontend/stores/assignmentStore";
 import { dragStore } from "@frontend/stores/dragStore";
+import { filterStore } from "@frontend/stores/filterStore";
 import { projectStore } from "@frontend/stores/projectStore";
 import { taskStore } from "@frontend/stores/taskStore";
 import { For } from "solid-js";
@@ -16,6 +17,15 @@ export type Props = {
 export default function TaskPool(props: Props) {
   const { onCreateTask, onEditTask, onEditProject, onCreateProject } = props;
 
+  const filteredProjects = () =>
+    projectStore
+      .projects()
+      .filter(
+        (p) =>
+          !filterStore.filter().projectId ||
+          filterStore.filter().projectId === p.id
+      );
+
   return (
     <div class="h-full flex-none w-[clamp(15rem,15vw,25rem)] border-r overflow-y-auto p-3 bg-gray-50">
       <div class="flex justify-between items-center mb-3">
@@ -29,7 +39,7 @@ export default function TaskPool(props: Props) {
         </Button>
       </div>
 
-      <For each={projectStore.projects()}>
+      <For each={filteredProjects()}>
         {(p) => (
           <div class="mb-4">
             {/* 專案標題 */}

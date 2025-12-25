@@ -14,6 +14,7 @@ import Button from "./Button";
 
 export type Props = {
   onClickAssignment?: (assignmentId: string) => void;
+  onClickShowFilter?: () => void;
 };
 
 export default function ScheduleTable(props: Props) {
@@ -92,6 +93,9 @@ export default function ScheduleTable(props: Props) {
           <Button variant="secondary" onclick={filterStore.toNextWeek}>
             下週
           </Button>
+          <Button variant="secondary" onclick={props.onClickShowFilter}>
+            篩選
+          </Button>
         </div>
       </div>
 
@@ -131,7 +135,17 @@ export default function ScheduleTable(props: Props) {
                 <For each={days()}>
                   {(d) => {
                     const items = () =>
-                      assignmentStore.listForPersonOnDate(p.id, d.key);
+                      assignmentStore
+                        .listForPersonOnDate(p.id, d.key)
+                        .filter((a) => {
+                          const { includeDoneTasks, projectId } =
+                            filterStore.filter();
+                          const task = tasksMap()[a.taskId];
+                          return (
+                            (includeDoneTasks || !task?.task.isDone) &&
+                            (projectId ? task?.project?.id === projectId : true)
+                          );
+                        });
 
                     return (
                       <div

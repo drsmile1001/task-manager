@@ -1,5 +1,6 @@
 import { Show, createSignal } from "solid-js";
 
+import FilterPanel from "./components/FilterPanel";
 import ProjectDetailsPanel from "./components/ProjectDetailsPanel";
 import ScheduleTable from "./components/ScheduleTable";
 import TaskDetailsPanel from "./components/TaskDetailsPanel";
@@ -21,9 +22,12 @@ export default function App() {
     string | null
   >(null);
 
+  const [filterPanelIsOpen, setFilterPanelIsOpen] = createSignal(false);
+
   function closePanels() {
     setProjectPanelIsOpen(false);
     setTaskPanelIsOpen(false);
+    setFilterPanelIsOpen(false);
   }
 
   const openCreateTask = (projectId: string) => {
@@ -62,6 +66,11 @@ export default function App() {
     openEditTask(assignment.taskId);
   };
 
+  const handleShowFilterPanel = () => {
+    closePanels();
+    setFilterPanelIsOpen(true);
+  };
+
   return (
     <div
       class="h-screen flex"
@@ -81,7 +90,10 @@ export default function App() {
         onCreateProject={openCreateProject}
         onEditProject={openEditProject}
       />
-      <ScheduleTable onClickAssignment={handleClickAssignment} />
+      <ScheduleTable
+        onClickAssignment={handleClickAssignment}
+        onClickShowFilter={handleShowFilterPanel}
+      />
 
       <Show when={taskPanelIsOpen()}>
         <TaskDetailsPanel
@@ -95,6 +107,9 @@ export default function App() {
           projectId={projectPanelProjectId()}
           onClose={closePanels}
         />
+      </Show>
+      <Show when={filterPanelIsOpen()}>
+        <FilterPanel onClose={closePanels} />
       </Show>
     </div>
   );
