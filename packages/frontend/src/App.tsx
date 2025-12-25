@@ -64,7 +64,7 @@ export default function App() {
 
   return (
     <div
-      class="flex h-screen"
+      class="h-screen flex"
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault();
@@ -81,10 +81,7 @@ export default function App() {
         onCreateProject={openCreateProject}
         onEditProject={openEditProject}
       />
-
-      <div class="flex-1 overflow-hidden">
-        <ScheduleTable onClickAssignment={handleClickAssignment} />
-      </div>
+      <ScheduleTable onClickAssignment={handleClickAssignment} />
 
       <Show when={taskPanelIsOpen()}>
         <TaskDetailsPanel
@@ -93,7 +90,6 @@ export default function App() {
           onClose={closePanels}
         />
       </Show>
-
       <Show when={projectPanelIsOpen()}>
         <ProjectDetailsPanel
           projectId={projectPanelProjectId()}

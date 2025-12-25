@@ -17,7 +17,7 @@ export default function TaskPool(props: Props) {
   const { onCreateTask, onEditTask, onEditProject, onCreateProject } = props;
 
   return (
-    <div class="w-72 border-r h-full overflow-y-auto p-3 bg-gray-50">
+    <div class="h-full flex-none w-[clamp(15rem,15vw,25rem)] border-r overflow-y-auto p-3 bg-gray-50">
       <div class="flex justify-between items-center mb-3">
         <h2 class="font-bold text-gray-700">專案 & 工作</h2>
         <Button
@@ -29,7 +29,6 @@ export default function TaskPool(props: Props) {
         </Button>
       </div>
 
-      {/* 專案群組 */}
       <For each={projectStore.projects()}>
         {(p) => (
           <div class="mb-4">
@@ -74,7 +73,6 @@ export default function TaskPool(props: Props) {
                 }}
               </For>
 
-              {/* 新增工作 */}
               <Button
                 variant="secondary"
                 size="small"

@@ -56,9 +56,14 @@ export default function ScheduleTable(props: Props) {
     return dates;
   });
 
+  const currentWeekText = () => {
+    const { startDate, endDate } = filterStore.filter();
+    return `${format(startDate, "yyyy-MM-dd")} - ${format(endDate, "yyyy-MM-dd")}`;
+  };
+
   return (
     <div
-      class="flex-1 overflow-auto p-4"
+      class="h-full flex-1 overflow-auto p-4"
       onDragOver={(e) => e.preventDefault()}
       onDrop={async (e) => {
         // 拖拽到空白區域則刪除指派
@@ -78,11 +83,9 @@ export default function ScheduleTable(props: Props) {
         <Button variant="secondary" onclick={filterStore.toPreviousWeek}>
           上週
         </Button>
-        {format(filterStore.filter().startDate, "yyyy-MM-dd")} -{" "}
-        {format(filterStore.filter().endDate, "yyyy-MM-dd")}
+        {currentWeekText()}
         <Button variant="secondary" onclick={filterStore.toNextWeek}>
-          {" "}
-          下週{" "}
+          下週
         </Button>
       </div>
 

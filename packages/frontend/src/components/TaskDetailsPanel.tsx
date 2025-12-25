@@ -5,10 +5,11 @@ import { For, Show, createEffect, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
 import Button from "./Button";
+import DetailPanel from "./DetailPanel";
 
 export type TaskDetailsPanelProps = {
-  taskId: string | null; // 編輯模式：taskId
-  projectIdForCreate: string | null; // 新增模式預設所屬 project
+  taskId: string | null;
+  projectIdForCreate: string | null;
   onClose: () => void;
 };
 
@@ -16,10 +17,8 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   const isEditing = () => props.taskId !== null;
   const isCreating = () => props.taskId === null;
 
-  // 取得 task，如為新增則為 null
   const task = () => (props.taskId ? taskStore.getTask(props.taskId) : null);
 
-  // 表單狀態
   const [form, setForm] = createSignal({
     projectId: props.projectIdForCreate ?? task()?.projectId ?? "",
     name: task()?.name ?? "",
@@ -27,7 +26,6 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
     isDone: task()?.isDone ?? false,
   });
 
-  // ★ props.taskId 改變時重新填入 form（Solid 必須這樣做）
   createEffect(() => {
     const t = task();
     setForm({
@@ -42,7 +40,6 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
     setForm({ ...form(), [key]: value });
   };
 
-  // ★ commit：由 Panel 內處理 create/update
   const commit = async () => {
     const data = form();
 
@@ -72,20 +69,11 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   };
 
   return (
-    <div class="w-[420px] h-full border-l bg-white flex flex-col">
-      {/* Header */}
-      <div class="p-3 border-b flex justify-between items-center bg-gray-50">
-        <div class="font-semibold text-gray-700">
-          {isCreating() ? "新增工作項目" : "編輯工作項目"}
-        </div>
-        <Button variant="secondary" onClick={props.onClose}>
-          ✕
-        </Button>
-      </div>
-
-      {/* Body */}
+    <DetailPanel
+      title={isCreating() ? "新增工作項目" : "編輯工作項目"}
+      onClose={props.onClose}
+    >
       <div class="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* 專案下拉選單 */}
         <div>
           <label class="block text-sm font-medium mb-1">所屬專案</label>
           <select
@@ -99,7 +87,6 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
           </select>
         </div>
 
-        {/* Name */}
         <div>
           <label class="block text-sm font-medium mb-1">名稱</label>
           <input
@@ -109,7 +96,6 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
           />
         </div>
 
-        {/* Description */}
         <div>
           <label class="block text-sm font-medium mb-1">描述</label>
           <textarea
@@ -119,7 +105,6 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
           />
         </div>
 
-        {/* Done checkbox */}
         <div>
           <label class="inline-flex items-center gap-2 text-sm">
             <input
@@ -132,7 +117,6 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         </div>
       </div>
 
-      {/* Footer */}
       <div class="p-3 border-t flex justify-end gap-2">
         <Show when={isEditing()}>
           <Button variant="danger" onClick={removeTask}>
@@ -146,6 +130,6 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
           儲存
         </Button>
       </div>
-    </div>
+    </DetailPanel>
   );
 }

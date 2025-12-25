@@ -4,6 +4,7 @@ import { Show, createEffect, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
 import Button from "./Button";
+import DetailPanel from "./DetailPanel";
 
 export type ProjectDetailsPanelProps = {
   projectId: string | null;
@@ -55,16 +56,10 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
   };
 
   return (
-    <div class="w-[420px] h-full border-l bg-white flex flex-col">
-      <div class="p-3 border-b flex justify-between items-center bg-gray-50">
-        <div class="font-semibold text-gray-700">
-          {isCreating() ? "新增專案" : "編輯專案"}
-        </div>
-        <Button variant="secondary" size="small" onClick={props.onClose}>
-          ✕
-        </Button>
-      </div>
-
+    <DetailPanel
+      title={isCreating() ? "新增專案" : "編輯專案"}
+      onClose={props.onClose}
+    >
       <div class="flex-1 overflow-y-auto p-4 space-y-4">
         <div>
           <label class="block mb-1 text-sm">專案名稱</label>
@@ -98,6 +93,6 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
           儲存
         </Button>
       </div>
-    </div>
+    </DetailPanel>
   );
 }
