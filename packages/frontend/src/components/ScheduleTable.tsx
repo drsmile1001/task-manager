@@ -98,13 +98,13 @@ export default function ScheduleTable(props: Props) {
             "grid-template-columns": `repeat(${days().length + 1}, clamp(6rem, 6vw, 8rem))`,
           }}
         >
-          <div class="border-b border-r p-2 bg-gray-100 font-semibold text-sm">
+          <div class="border-b border-r p-2 sticky left-0 top-0 z-[3] bg-gray-100 font-semibold text-sm">
             人員
           </div>
           <For each={days()}>
             {(d) => (
               <div
-                class="border-b border-r border-black p-2 bg-gray-100 text-sm text-center"
+                class="border-b border-r border-black p-2 sticky top-0 z-[1] bg-gray-100 text-sm text-center"
                 classList={{
                   "font-bold": d.isToday,
                   "text-blue-500": d.isToday,
