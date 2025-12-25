@@ -43,7 +43,6 @@ export default function TaskPool(props: Props) {
       <For each={filteredProjects()}>
         {(p) => (
           <div class="mb-4">
-            {/* 專案標題 */}
             <div
               class="flex justify-between items-center font-medium text-gray-800 cursor-pointer hover:text-blue-600"
               onClick={() => onEditProject(p.id)}
@@ -52,7 +51,6 @@ export default function TaskPool(props: Props) {
               <span class="text-sm text-blue-500 hover:underline">編輯</span>
             </div>
 
-            {/* 該專案的工作清單 */}
             <div class="pl-4 mt-2 space-y-1">
               <For each={taskStore.listByProject(p.id)}>
                 {(t) => {
@@ -74,7 +72,13 @@ export default function TaskPool(props: Props) {
                       .map((labelId) =>
                         labelStore.labels().find((l) => l.id === labelId)
                       )
-                      .filter((l) => !!l);
+                      .filter((l) => !!l)
+                      .sort((a, b) => {
+                        const pa = a.priority ?? Number.MAX_SAFE_INTEGER;
+                        const pb = b.priority ?? Number.MAX_SAFE_INTEGER;
+                        if (pa !== pb) return pa - pb;
+                        return a.name.localeCompare(b.name);
+                      });
 
                   return (
                     <div

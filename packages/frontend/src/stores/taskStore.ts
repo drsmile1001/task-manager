@@ -4,6 +4,7 @@ import { createSignal } from "solid-js";
 import type { Task } from "@backend/schemas/Task";
 
 import { filterStore } from "./filterStore";
+import { labelStore } from "./labelStore";
 
 function createTaskStore() {
   const [tasks, setTasks] = createSignal<Task[]>([]);
@@ -34,10 +35,39 @@ function createTaskStore() {
   }
 
   function listByProject(projectId: string) {
+    const labelPriorityMap = new Map<string, number>(
+      labelStore
+        .labels()
+        .map((label) => [label.id, label.priority ?? Number.MAX_SAFE_INTEGER])
+    );
     return tasks()
       .filter((t) => t.projectId === projectId)
-      .filter((t) => filterStore.filter().includeDoneTasks || !t.isDone)
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .filter((t) => {
+        const filter = filterStore.filter();
+        if (filter.projectId && t.projectId !== filter.projectId) return false;
+        if (!filter.includeDoneTasks && t.isDone) return false;
+        if (filter.labelIds && filter.labelIds.length > 0) {
+          const hasLabel = filter.labelIds.some((labelId) =>
+            t.labelIds?.includes(labelId)
+          );
+          if (!hasLabel) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        const ap = (a.labelIds ?? []).reduce((min, id) => {
+          const p = labelPriorityMap.get(id) ?? Number.MAX_SAFE_INTEGER;
+          return Math.min(min, p);
+        }, Number.MAX_SAFE_INTEGER);
+        const bp = (b.labelIds ?? []).reduce((min, id) => {
+          const p = labelPriorityMap.get(id) ?? Number.MAX_SAFE_INTEGER;
+          return Math.min(min, p);
+        }, Number.MAX_SAFE_INTEGER);
+        if (ap !== bp) {
+          return ap - bp;
+        }
+        return a.name.localeCompare(b.name);
+      });
   }
 
   return {

@@ -22,12 +22,21 @@ export default function ScheduleTable(props: Props) {
   const tasksMap = createMemo(() => {
     const projects = projectStore.projects();
     const tasks = taskStore.tasks();
+    const labels = labelStore.labels();
     return Object.fromEntries(
       tasks.map((t) => {
         return [
           t.id,
           {
             task: t,
+            labels: labels
+              .filter((l) => t.labelIds?.includes(l.id))
+              .sort((a, b) => {
+                const pa = a.priority ?? Number.MAX_SAFE_INTEGER;
+                const pb = b.priority ?? Number.MAX_SAFE_INTEGER;
+                if (pa !== pb) return pa - pb;
+                return a.name.localeCompare(b.name);
+              }),
             project: projects.find((p) => p.id === t.projectId),
           },
         ];
@@ -138,13 +147,43 @@ export default function ScheduleTable(props: Props) {
                     const items = () =>
                       assignmentStore
                         .listForPersonOnDate(p.id, d.key)
-                        .filter((a) => {
-                          const { includeDoneTasks, projectId } =
+                        .map((assignment) => {
+                          const task = tasksMap()[assignment.taskId];
+                          return {
+                            assignment,
+                            task: task?.task,
+                            project: task?.project,
+                            labels: task?.labels,
+                          };
+                        })
+                        .filter(({ task }) => {
+                          const { includeDoneTasks, projectId, labelIds } =
                             filterStore.filter();
-                          const task = tasksMap()[a.taskId];
-                          return (
-                            (includeDoneTasks || !task?.task.isDone) &&
-                            (projectId ? task?.project?.id === projectId : true)
+
+                          if (includeDoneTasks === false && task?.isDone)
+                            return false;
+                          if (projectId && task.projectId !== projectId)
+                            return false;
+                          if (labelIds && labelIds.length > 0) {
+                            const hasLabels = labelIds.some((labelId) =>
+                              task.labelIds?.includes(labelId)
+                            );
+                            if (!hasLabels) return false;
+                          }
+                          return true;
+                        })
+                        .sort((a, b) => {
+                          const pa =
+                            a.labels[0]?.priority ?? Number.MAX_SAFE_INTEGER;
+                          const pb =
+                            b.labels[0]?.priority ?? Number.MAX_SAFE_INTEGER;
+                          if (pa !== pb) return pa - pb;
+                          const projectAName = a.project?.name ?? "";
+                          const projectBName = b.project?.name ?? "";
+                          if (projectAName !== projectBName)
+                            return projectAName.localeCompare(projectBName);
+                          return (a.task?.name ?? "").localeCompare(
+                            b.task?.name ?? ""
                           );
                         });
 
@@ -183,25 +222,11 @@ export default function ScheduleTable(props: Props) {
                           dragStore.clear();
                         }}
                       >
-                        {/* 該格中的所有 assignment */}
                         <For each={items()}>
-                          {(a) => {
-                            const task = () => tasksMap()[a.taskId];
-                            const labels = () => {
-                              const t = task();
-                              if (!t || !t.task.labelIds) return [];
-                              return t.task.labelIds
-                                .map((labelId) =>
-                                  labelStore
-                                    .labels()
-                                    .find((l) => l.id === labelId)
-                                )
-                                .filter((l) => !!l);
-                            };
-
+                          {({ assignment, task, project, labels }) => {
                             const cssClass =
                               "bg-blue-100 border border-blue-300 text-xs p-1 rounded mb-1 cursor-pointer" +
-                              (task()?.task.isDone ? " line-through" : "");
+                              (task?.isDone ? " line-through" : "");
 
                             return (
                               <div
@@ -209,20 +234,20 @@ export default function ScheduleTable(props: Props) {
                                 draggable="true"
                                 onDragStart={() => {
                                   dragStore.startAssignmentDrag({
-                                    assignmentId: a.id,
-                                    personId: a.personId,
-                                    date: a.date,
+                                    assignmentId: assignment.id,
+                                    personId: assignment.personId,
+                                    date: assignment.date,
                                   });
                                 }}
                                 onClick={() => {
-                                  props.onClickAssignment?.(a.id);
+                                  props.onClickAssignment?.(assignment.id);
                                 }}
                               >
                                 <span>
-                                  {task()?.project?.name}:{task()?.task.name}
+                                  {project?.name}:{task?.name}
                                 </span>
                                 <div class="flex justify-end">
-                                  {labels().map((label) => (
+                                  {labels.map((label) => (
                                     <span
                                       class="text-xs px-1 py-0.5 rounded mr-1"
                                       style={{
