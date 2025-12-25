@@ -5,7 +5,7 @@ import { filterStore } from "@frontend/stores/filterStore";
 import { personStore } from "@frontend/stores/personStore";
 import { projectStore } from "@frontend/stores/projectStore";
 import { taskStore } from "@frontend/stores/taskStore";
-import { addDays, format, isAfter, startOfDay } from "date-fns";
+import { addDays, format, isBefore, startOfDay } from "date-fns";
 import { For, createMemo } from "solid-js";
 import { ulid } from "ulid";
 
@@ -43,7 +43,7 @@ export default function ScheduleTable(props: Props) {
       isToday: boolean;
     }[] = [];
     let curr = startDate;
-    while (!isAfter(curr, endDate)) {
+    while (isBefore(curr, endDate)) {
       dates.push({
         key: format(curr, "yyyy-MM-dd"),
         label: format(curr, "MM/dd E"),
@@ -95,18 +95,16 @@ export default function ScheduleTable(props: Props) {
         <div
           class="grid"
           style={{
-            "grid-template-columns": `120px repeat(${days().length}, 1fr)`,
+            "grid-template-columns": `repeat(${days().length + 1}, clamp(6rem, 6vw, 8rem))`,
           }}
         >
-          {/* 表頭：日期 */}
           <div class="border-b border-r p-2 bg-gray-100 font-semibold text-sm">
             人員
           </div>
-
           <For each={days()}>
             {(d) => (
               <div
-                class="border-b border-r border-black p-2 bg-gray-100 text-sm text-center w-30"
+                class="border-b border-r border-black p-2 bg-gray-100 text-sm text-center"
                 classList={{
                   "font-bold": d.isToday,
                   "text-blue-500": d.isToday,
@@ -119,16 +117,12 @@ export default function ScheduleTable(props: Props) {
             )}
           </For>
 
-          {/* Row：每個人 */}
           <For each={persons()}>
             {(p) => (
               <>
-                {/* 左欄：人名 */}
                 <div class="border-b border-r p-2 font-medium sticky left-0 z-[2] bg-white">
                   {p.name}
                 </div>
-
-                {/* 每天 */}
                 <For each={days()}>
                   {(d) => {
                     const items = () =>
