@@ -63,7 +63,7 @@ export default function ScheduleTable(props: Props) {
 
   return (
     <div
-      class="h-full flex-1 overflow-auto p-4"
+      class="h-full flex-1 p-4 overflow-hidden flex flex-col gap-4"
       onDragOver={(e) => e.preventDefault()}
       onDrop={async (e) => {
         // 拖拽到空白區域則刪除指派
@@ -75,21 +75,23 @@ export default function ScheduleTable(props: Props) {
         dragStore.clear();
       }}
     >
-      <div class="text-gray-700 font-bold mb-3">工作表</div>
-      <div class="flex gap-2 mb-4 items-center">
-        <Button variant="secondary" onclick={filterStore.toCurrentWeek}>
-          本週
-        </Button>
-        <Button variant="secondary" onclick={filterStore.toPreviousWeek}>
-          上週
-        </Button>
-        {currentWeekText()}
-        <Button variant="secondary" onclick={filterStore.toNextWeek}>
-          下週
-        </Button>
+      <div class="flex-none flex flex-col gap-2">
+        <div class="text-gray-700 font-bold">工作表</div>
+        <div class="flex gap-2 items-center">
+          <Button variant="secondary" onclick={filterStore.toCurrentWeek}>
+            本週
+          </Button>
+          <Button variant="secondary" onclick={filterStore.toPreviousWeek}>
+            上週
+          </Button>
+          {currentWeekText()}
+          <Button variant="secondary" onclick={filterStore.toNextWeek}>
+            下週
+          </Button>
+        </div>
       </div>
 
-      <div class="border border-gray-300 h-[calc(100vh-100px)] overflow-y-auto">
+      <div class="flex-1 w-full overflow-auto">
         <div
           class="grid"
           style={{
