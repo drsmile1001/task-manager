@@ -14,7 +14,6 @@ export type Props = {
 };
 
 export default function ScheduleTable(props: Props) {
-  // project + task 名稱組合
   const tasksMap = createMemo(() => {
     const projects = projectStore.projects();
     const tasks = taskStore.tasks();
@@ -55,27 +54,6 @@ export default function ScheduleTable(props: Props) {
     return dates;
   });
 
-  function startInput() {
-    return format(filterStore.filter().startDate, "yyyy-MM-dd");
-  }
-  function setStart(value: string) {
-    const date = new Date(value);
-    filterStore.setFilter({
-      ...filterStore.filter(),
-      startDate: date,
-    });
-  }
-  function endInput() {
-    return format(filterStore.filter().endDate, "yyyy-MM-dd");
-  }
-  function setEnd(value: string) {
-    const date = new Date(value);
-    filterStore.setFilter({
-      ...filterStore.filter(),
-      endDate: date,
-    });
-  }
-
   return (
     <div
       class="flex-1 overflow-auto p-4"
@@ -92,19 +70,27 @@ export default function ScheduleTable(props: Props) {
     >
       <div class="text-gray-700 font-bold mb-3">工作表</div>
       <div class="flex gap-2 mb-4 items-center">
-        <label class="mr-2 self-center">日期範圍：</label>
-        <input
-          type="date"
-          class="border"
-          value={startInput()}
-          onInput={(e) => setStart(e.currentTarget.value)}
-        />
-        <input
-          type="date"
-          class="border"
-          value={endInput()}
-          onInput={(e) => setEnd(e.currentTarget.value)}
-        />
+        <button
+          class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+          onclick={filterStore.toCurrentWeek}
+        >
+          本週
+        </button>
+        <button
+          class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+          onclick={filterStore.toPreviousWeek}
+        >
+          上週
+        </button>
+        {format(filterStore.filter().startDate, "yyyy-MM-dd")} -{" "}
+        {format(filterStore.filter().endDate, "yyyy-MM-dd")}
+        <button
+          class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+          onclick={filterStore.toNextWeek}
+        >
+          {" "}
+          下週{" "}
+        </button>
       </div>
 
       <div class="border border-gray-300 h-[calc(100vh-100px)] overflow-y-auto">
