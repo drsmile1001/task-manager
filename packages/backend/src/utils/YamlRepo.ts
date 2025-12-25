@@ -35,9 +35,9 @@ export function createYamlRepo<
       if (!Value.Check(yamlSchema, data)) {
         logger.error(
           {
-            players: data,
+            data,
           },
-          "指派資料格式錯誤，回傳空清單"
+          `${path} 格式錯誤，回傳空清單`
         );
         return [];
       }
@@ -47,7 +47,7 @@ export function createYamlRepo<
         {
           error,
         },
-        "讀取指派資料失敗，回傳空清單"
+        `無法讀取 ${path}，回傳空清單`
       );
       return [];
     }

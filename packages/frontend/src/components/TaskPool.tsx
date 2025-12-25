@@ -1,6 +1,7 @@
 import { assignmentStore } from "@frontend/stores/assignmentStore";
 import { dragStore } from "@frontend/stores/dragStore";
 import { filterStore } from "@frontend/stores/filterStore";
+import { getLabelTextColor, labelStore } from "@frontend/stores/labelStore";
 import { projectStore } from "@frontend/stores/projectStore";
 import { taskStore } from "@frontend/stores/taskStore";
 import { For } from "solid-js";
@@ -68,6 +69,13 @@ export default function TaskPool(props: Props) {
                       ? " line-through text-gray-400"
                       : " text-gray-800");
 
+                  const labels = () =>
+                    (t.labelIds ?? [])
+                      .map((labelId) =>
+                        labelStore.labels().find((l) => l.id === labelId)
+                      )
+                      .filter((l) => !!l);
+
                   return (
                     <div
                       class={className()}
@@ -77,7 +85,20 @@ export default function TaskPool(props: Props) {
                         dragStore.startTaskDrag(t.id);
                       }}
                     >
-                      {t.name}
+                      <span>{t.name}</span>
+                      <div class="flex justify-end">
+                        {labels().map((label) => (
+                          <span
+                            class="text-xs px-1 py-0.5 rounded mr-1"
+                            style={{
+                              "background-color": label.color,
+                              color: getLabelTextColor(label.color),
+                            }}
+                          >
+                            {label.name}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   );
                 }}

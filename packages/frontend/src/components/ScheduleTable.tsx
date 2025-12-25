@@ -3,6 +3,7 @@ import { assignmentStore } from "@frontend/stores/assignmentStore";
 import { dragStore } from "@frontend/stores/dragStore";
 import { filterStore } from "@frontend/stores/filterStore";
 import { holidayStore } from "@frontend/stores/holidayStore";
+import { getLabelTextColor, labelStore } from "@frontend/stores/labelStore";
 import { personStore } from "@frontend/stores/personStore";
 import { projectStore } from "@frontend/stores/projectStore";
 import { taskStore } from "@frontend/stores/taskStore";
@@ -186,6 +187,17 @@ export default function ScheduleTable(props: Props) {
                         <For each={items()}>
                           {(a) => {
                             const task = () => tasksMap()[a.taskId];
+                            const labels = () => {
+                              const t = task();
+                              if (!t || !t.task.labelIds) return [];
+                              return t.task.labelIds
+                                .map((labelId) =>
+                                  labelStore
+                                    .labels()
+                                    .find((l) => l.id === labelId)
+                                )
+                                .filter((l) => !!l);
+                            };
 
                             const cssClass =
                               "bg-blue-100 border border-blue-300 text-xs p-1 rounded mb-1 cursor-pointer" +
@@ -206,7 +218,22 @@ export default function ScheduleTable(props: Props) {
                                   props.onClickAssignment?.(a.id);
                                 }}
                               >
-                                {task()?.project?.name}:{task()?.task.name}
+                                <span>
+                                  {task()?.project?.name}:{task()?.task.name}
+                                </span>
+                                <div class="flex justify-end">
+                                  {labels().map((label) => (
+                                    <span
+                                      class="text-xs px-1 py-0.5 rounded mr-1"
+                                      style={{
+                                        "background-color": label.color,
+                                        color: getLabelTextColor(label.color),
+                                      }}
+                                    >
+                                      {label.name}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
                             );
                           }}

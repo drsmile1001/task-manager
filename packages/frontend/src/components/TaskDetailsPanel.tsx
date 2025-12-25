@@ -1,4 +1,5 @@
 import { client } from "@frontend/client";
+import { getLabelTextColor, labelStore } from "@frontend/stores/labelStore";
 import { projectStore } from "@frontend/stores/projectStore";
 import { taskStore } from "@frontend/stores/taskStore";
 import { For, Show, createEffect, createSignal } from "solid-js";
@@ -11,6 +12,7 @@ export type TaskDetailsPanelProps = {
   taskId: string | null;
   projectIdForCreate: string | null;
   onClose: () => void;
+  onClickEditLabels?: () => void;
 };
 
 export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
@@ -24,6 +26,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
     name: task()?.name ?? "",
     description: task()?.description ?? "",
     isDone: task()?.isDone ?? false,
+    labelIds: task()?.labelIds ?? [],
   });
 
   createEffect(() => {
@@ -33,12 +36,23 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
       name: t?.name ?? "",
       description: t?.description ?? "",
       isDone: t?.isDone ?? false,
+      labelIds: t?.labelIds ?? [],
     });
   });
 
   const updateField = (key: string, value: any) => {
     setForm({ ...form(), [key]: value });
   };
+
+  function setHasLabel(labelId: string, has: boolean) {
+    const currentLabelIds = form().labelIds;
+    setForm({
+      ...form(),
+      labelIds: has
+        ? [...currentLabelIds, labelId]
+        : currentLabelIds.filter((id) => id !== labelId),
+    });
+  }
 
   const commit = async () => {
     const data = form();
@@ -50,6 +64,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         name: data.name,
         description: data.description,
         isDone: data.isDone,
+        labelIds: data.labelIds,
       });
     } else if (isEditing() && props.taskId) {
       await client.api.tasks({ id: props.taskId }).patch({
@@ -57,6 +72,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         name: data.name,
         description: data.description,
         isDone: data.isDone,
+        labelIds: data.labelIds,
       });
     }
 
@@ -67,6 +83,8 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
     await client.api.tasks({ id: props.taskId! }).delete();
     props.onClose();
   };
+
+  const labels = () => labelStore.labels();
 
   return (
     <DetailPanel
@@ -115,6 +133,38 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
             <span>已完成</span>
           </label>
         </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">標籤</label>
+          <div class="flex flex-wrap gap-2">
+            {labels().map((label) => (
+              <label class="inline-flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form().labelIds.includes(label.id)}
+                  onChange={(e) =>
+                    setHasLabel(label.id, e.currentTarget.checked)
+                  }
+                />
+                <span
+                  class="px-2 py-1 rounded"
+                  style={{
+                    "background-color": label.color,
+                    color: getLabelTextColor(label.color),
+                  }}
+                >
+                  {label.name}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <Button
+          variant="secondary"
+          size="small"
+          onclick={props.onClickEditLabels}
+        >
+          編輯標籤
+        </Button>
       </div>
 
       <div class="p-3 border-t flex justify-end gap-2">

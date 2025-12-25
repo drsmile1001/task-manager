@@ -5,11 +5,12 @@ import { taskSchema } from "./schemas/Task";
 import { assignmentSchema } from "./schemas/Assignment";
 import type { Logger } from "~shared/Logger";
 import { personSchema } from "./schemas/Person";
+import { labelSchema } from "./schemas/Label";
 
 let currentBunServer: Bun.Server<unknown> | null = null;
 
 export type MutationMessage = {
-  type: "person" | "project" | "task" | "assignment";
+  type: "person" | "project" | "task" | "assignment" | "label";
   action: "create" | "update" | "delete";
   id: string;
   eneity?: unknown;
@@ -36,9 +37,10 @@ export function buildApi(logger: Logger) {
     logger
   );
   const personRepo = createYamlRepo("data/persons.yaml", personSchema, logger);
+  const labelRepo = createYamlRepo("data/labels.yaml", labelSchema, logger);
 
   function broadcastMutation(message: {
-    type: "person" | "project" | "task" | "assignment";
+    type: "person" | "project" | "task" | "assignment" | "label";
     action: "create" | "update" | "delete";
     id: string;
     eneity?: unknown;
@@ -78,6 +80,79 @@ export function buildApi(logger: Logger) {
           return;
         }
       },
+    })
+    .get("/api/labels", async () => {
+      const labels = await labelRepo.list();
+      labels.sort((a, b) => {
+        return (
+          (a.priority ?? Number.MAX_SAFE_INTEGER) -
+          (b.priority ?? Number.MAX_SAFE_INTEGER)
+        );
+      });
+      return labels;
+    })
+    .post(
+      "/api/labels",
+      async ({ body }) => {
+        await labelRepo.set(body);
+        broadcastMutation({
+          type: "label",
+          action: "create",
+          id: body.id,
+          eneity: body,
+        });
+      },
+      {
+        body: labelSchema,
+      }
+    )
+    .get("/api/labels/:id", async ({ params, status }) => {
+      const label = await labelRepo.get(params.id);
+      if (!label) return status(404);
+      return label;
+    })
+    .patch(
+      "/api/labels/:id",
+      async ({ params, body, status }) => {
+        const existing = await labelRepo.get(params.id);
+        if (!existing) return status(404);
+        const updated = { ...existing, ...body };
+        await labelRepo.set(updated);
+        broadcastMutation({
+          type: "label",
+          action: "update",
+          id: params.id,
+          eneity: updated,
+        });
+      },
+      {
+        body: t.Partial(labelSchema),
+      }
+    )
+    .delete("/api/labels/:id", async ({ params }) => {
+      await labelRepo.remove(params.id);
+      const tasks = await taskRepo.list();
+      const removedLabelTasks = tasks.map((task) => {
+        if (task.labelIds?.includes(params.id)) {
+          return {
+            ...task,
+            labelIds: task.labelIds.filter((lid) => lid !== params.id),
+          };
+        }
+        return task;
+      });
+      await taskRepo.replaceAll(removedLabelTasks);
+
+      broadcastMutation({
+        type: "label",
+        action: "delete",
+        id: params.id,
+      });
+    })
+    .get("/api/projects", async () => {
+      return (await projectRepo.list()).sort((a, b) =>
+        a.name.localeCompare(b.name)
+      );
     })
     .get("/api/persons", async () => {
       return await personRepo.list();

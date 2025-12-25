@@ -1,6 +1,7 @@
 import { Show, createSignal } from "solid-js";
 
 import FilterPanel from "./components/FilterPanel";
+import LabelPanel from "./components/LabelPanel";
 import ProjectDetailsPanel from "./components/ProjectDetailsPanel";
 import ScheduleTable from "./components/ScheduleTable";
 import TaskDetailsPanel from "./components/TaskDetailsPanel";
@@ -23,11 +24,13 @@ export default function App() {
   >(null);
 
   const [filterPanelIsOpen, setFilterPanelIsOpen] = createSignal(false);
+  const [labelPanelIsOpen, setLabelPanelIsOpen] = createSignal(false);
 
   function closePanels() {
     setProjectPanelIsOpen(false);
     setTaskPanelIsOpen(false);
     setFilterPanelIsOpen(false);
+    setLabelPanelIsOpen(false);
   }
 
   const openCreateTask = (projectId: string) => {
@@ -70,6 +73,10 @@ export default function App() {
     closePanels();
     setFilterPanelIsOpen(true);
   };
+  const handleShowLabelPanel = () => {
+    closePanels();
+    setLabelPanelIsOpen(true);
+  };
 
   return (
     <div
@@ -99,6 +106,7 @@ export default function App() {
         <TaskDetailsPanel
           taskId={taskPanelTaskId()}
           projectIdForCreate={projectIdForCreate()}
+          onClickEditLabels={handleShowLabelPanel}
           onClose={closePanels}
         />
       </Show>
@@ -110,6 +118,9 @@ export default function App() {
       </Show>
       <Show when={filterPanelIsOpen()}>
         <FilterPanel onClose={closePanels} />
+      </Show>
+      <Show when={labelPanelIsOpen()}>
+        <LabelPanel onClose={closePanels} />
       </Show>
     </div>
   );

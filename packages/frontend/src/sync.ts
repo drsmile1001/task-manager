@@ -1,6 +1,7 @@
 import type { MutationTopic } from "@backend/api";
 
 import { assignmentStore } from "./stores/assignmentStore";
+import { labelStore } from "./stores/labelStore";
 import { projectStore } from "./stores/projectStore";
 import { taskStore } from "./stores/taskStore";
 
@@ -70,6 +71,21 @@ export function sync() {
               break;
             case "delete":
               assignmentStore.deleteAssignment(m.id);
+              break;
+            default:
+              break;
+          }
+          break;
+        case "label":
+          switch (m.action) {
+            case "create":
+              labelStore.createLabel(m.eneity as any);
+              break;
+            case "update":
+              labelStore.updateLabel(m.eneity as any);
+              break;
+            case "delete":
+              labelStore.deleteLabel(m.id);
               break;
             default:
               break;
