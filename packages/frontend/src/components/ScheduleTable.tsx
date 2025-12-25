@@ -157,12 +157,16 @@ export default function ScheduleTable(props: Props) {
                           };
                         })
                         .filter(({ task }) => {
-                          const { includeDoneTasks, projectId, labelIds } =
+                          const { includeDoneTasks, projectIds, labelIds } =
                             filterStore.filter();
 
                           if (includeDoneTasks === false && task?.isDone)
                             return false;
-                          if (projectId && task.projectId !== projectId)
+                          if (
+                            projectIds &&
+                            projectIds.length > 0 &&
+                            !projectIds?.includes(task.projectId)
+                          )
                             return false;
                           if (labelIds && labelIds.length > 0) {
                             const hasLabels = labelIds.some((labelId) =>

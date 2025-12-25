@@ -1,7 +1,6 @@
 import { filterStore } from "@frontend/stores/filterStore";
 import { getLabelTextColor, labelStore } from "@frontend/stores/labelStore";
 import { projectStore } from "@frontend/stores/projectStore";
-import { For } from "solid-js";
 
 import Button from "./Button";
 import DetailPanel from "./DetailPanel";
@@ -12,6 +11,7 @@ export type FilterPanelProps = {
 
 export default function FilterPanel(props: FilterPanelProps) {
   const labels = () => labelStore.labels();
+  const projects = () => projectStore.projects();
 
   function setHasLabel(labelId: string, has: boolean) {
     const currentLabelIds = filterStore.filter().labelIds ?? [];
@@ -23,10 +23,20 @@ export default function FilterPanel(props: FilterPanelProps) {
     });
   }
 
+  function setHasProject(projectId: string, has: boolean) {
+    const currentProjectIds = filterStore.filter().projectIds ?? [];
+    filterStore.setFilter({
+      ...filterStore.filter(),
+      projectIds: has
+        ? [...currentProjectIds, projectId]
+        : currentProjectIds.filter((id) => id !== projectId),
+    });
+  }
+
   function clearFilter() {
     filterStore.setFilter({
       ...filterStore.filter(),
-      projectId: undefined,
+      projectIds: undefined,
       includeDoneTasks: true,
       labelIds: undefined,
     });
@@ -48,20 +58,23 @@ export default function FilterPanel(props: FilterPanelProps) {
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">所屬專案</label>
-          <select
-            class="border w-full px-2 py-1 rounded"
-            value={filterStore.filter().projectId ?? ""}
-            onInput={(e) =>
-              filterStore.setProjectId(
-                e.currentTarget.value === "" ? undefined : e.currentTarget.value
-              )
-            }
-          >
-            <option value="">全部專案</option>
-            <For each={projectStore.projects()}>
-              {(p) => <option value={p.id}>{p.name}</option>}
-            </For>
-          </select>
+          <div class="flex flex-wrap gap-2">
+            {projects().map((project) => (
+              <label class="inline-flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={
+                    filterStore.filter().projectIds?.includes(project.id) ??
+                    false
+                  }
+                  onChange={(e) =>
+                    setHasProject(project.id, e.currentTarget.checked)
+                  }
+                />
+                {project.name}
+              </label>
+            ))}
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">標籤</label>

@@ -5,7 +5,7 @@ export type Filter = {
   startDate: Date;
   endDate: Date;
   includeDoneTasks: boolean;
-  projectId?: string;
+  projectIds?: string[];
   labelIds?: string[];
 };
 
@@ -50,10 +50,10 @@ function createFilterStore() {
     });
   }
 
-  function setProjectId(projectId?: string) {
+  function setProjectIds(projectIds?: string[]) {
     setFilter({
       ...filter(),
-      projectId,
+      projectIds,
     });
   }
 
@@ -71,7 +71,7 @@ function createFilterStore() {
     toPreviousWeek,
     toNextWeek,
     setIncludeDoneTasks,
-    setProjectId,
+    setProjectIds,
     setLabelIds,
   };
 }

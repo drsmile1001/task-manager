@@ -44,7 +44,12 @@ function createTaskStore() {
       .filter((t) => t.projectId === projectId)
       .filter((t) => {
         const filter = filterStore.filter();
-        if (filter.projectId && t.projectId !== filter.projectId) return false;
+        if (
+          filter.projectIds &&
+          filter.projectIds.length &&
+          !filter.projectIds.includes(t.projectId)
+        )
+          return false;
         if (!filter.includeDoneTasks && t.isDone) return false;
         if (filter.labelIds && filter.labelIds.length > 0) {
           const hasLabel = filter.labelIds.some((labelId) =>

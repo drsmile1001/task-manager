@@ -23,8 +23,9 @@ export default function TaskPool(props: Props) {
       .projects()
       .filter(
         (p) =>
-          !filterStore.filter().projectId ||
-          filterStore.filter().projectId === p.id
+          !filterStore.filter().projectIds ||
+          filterStore.filter().projectIds!.length === 0 ||
+          filterStore.filter().projectIds!.includes(p.id)
       );
 
   return (
