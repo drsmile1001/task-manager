@@ -2,6 +2,7 @@ import { client } from "@frontend/client";
 import { assignmentStore } from "@frontend/stores/assignmentStore";
 import { dragStore } from "@frontend/stores/dragStore";
 import { filterStore } from "@frontend/stores/filterStore";
+import { holidayStore } from "@frontend/stores/holidayStore";
 import { personStore } from "@frontend/stores/personStore";
 import { projectStore } from "@frontend/stores/projectStore";
 import { taskStore } from "@frontend/stores/taskStore";
@@ -39,15 +40,18 @@ export default function ScheduleTable(props: Props) {
     const dates: {
       key: string;
       label: string;
-      isWeekend: boolean;
+      description: string;
+      isHoliday: boolean;
       isToday: boolean;
     }[] = [];
     let curr = startDate;
     while (isBefore(curr, endDate)) {
+      const record = holidayStore.getDateRecord(curr);
       dates.push({
         key: format(curr, "yyyy-MM-dd"),
         label: format(curr, "MM/dd E"),
-        isWeekend: [0, 6].includes(curr.getDay()),
+        description: record?.description ?? "",
+        isHoliday: record?.isHoliday ?? false,
         isToday:
           startOfDay(curr).valueOf() === startOfDay(new Date()).valueOf(),
       });
@@ -104,15 +108,16 @@ export default function ScheduleTable(props: Props) {
           <For each={days()}>
             {(d) => (
               <div
-                class="border-b border-r border-black p-2 sticky top-0 z-[1] bg-gray-100 text-sm text-center"
+                class="border-b border-r border-black p-2 sticky top-0 z-[1] bg-gray-100 text-sm text-center flex flex-col items-center"
                 classList={{
                   "font-bold": d.isToday,
                   "text-blue-500": d.isToday,
-                  "bg-red-100": d.isWeekend,
-                  "bg-gray-100": !d.isWeekend,
+                  "bg-red-100": d.isHoliday,
+                  "bg-gray-100": !d.isHoliday,
                 }}
               >
-                {d.label}
+                <span>{d.label}</span>
+                <span class="text-xs">{d.description}</span>
               </div>
             )}
           </For>
@@ -132,8 +137,8 @@ export default function ScheduleTable(props: Props) {
                       <div
                         class="border-b border-r p-1 min-h-[60px]"
                         classList={{
-                          "bg-red-50": d.isWeekend,
-                          "bg-white": !d.isWeekend,
+                          "bg-red-50": d.isHoliday,
+                          "bg-white": !d.isHoliday,
                         }}
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={async (e) => {
