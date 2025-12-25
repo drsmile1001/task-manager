@@ -1,6 +1,5 @@
 import { client } from "@frontend/client";
 import { labelStore } from "@frontend/stores/labelStore";
-import { createSignal } from "solid-js";
 import { ulid } from "ulid";
 
 import Button from "./Button";
