@@ -3,6 +3,8 @@ import { projectStore } from "@frontend/stores/projectStore";
 import { Show, createEffect, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
+import Button from "./Button";
+
 export type ProjectDetailsPanelProps = {
   projectId: string | null;
   onClose: () => void;
@@ -58,9 +60,9 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
         <div class="font-semibold text-gray-700">
           {isCreating() ? "新增專案" : "編輯專案"}
         </div>
-        <button class="text-gray-500" onClick={props.onClose}>
+        <Button variant="secondary" size="small" onClick={props.onClose}>
           ✕
-        </button>
+        </Button>
       </div>
 
       <div class="flex-1 overflow-y-auto p-4 space-y-4">
@@ -85,22 +87,16 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
 
       <div class="p-3 border-t flex justify-end gap-2">
         <Show when={isEditing()}>
-          <button
-            class="px-3 py-1 bg-red-300 text-white rounded"
-            onClick={removeProject}
-          >
+          <Button variant="danger" onClick={removeProject}>
             刪除
-          </button>
+          </Button>
         </Show>
-        <button class="px-3 py-1 bg-gray-200 rounded" onClick={props.onClose}>
+        <Button variant="secondary" onClick={props.onClose}>
           取消
-        </button>
-        <button
-          class="px-3 py-1 bg-blue-600 text-white rounded"
-          onClick={commit}
-        >
+        </Button>
+        <Button variant="primary" onClick={commit}>
           儲存
-        </button>
+        </Button>
       </div>
     </div>
   );

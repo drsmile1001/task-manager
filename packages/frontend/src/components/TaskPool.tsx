@@ -4,6 +4,8 @@ import { projectStore } from "@frontend/stores/projectStore";
 import { taskStore } from "@frontend/stores/taskStore";
 import { For } from "solid-js";
 
+import Button from "./Button";
+
 export type Props = {
   onCreateTask: (projectId: string) => void;
   onEditTask: (taskId: string) => void;
@@ -18,12 +20,13 @@ export default function TaskPool(props: Props) {
     <div class="w-72 border-r h-full overflow-y-auto p-3 bg-gray-50">
       <div class="flex justify-between items-center mb-3">
         <h2 class="font-bold text-gray-700">專案 & 工作</h2>
-        <button
-          class="px-2 py-1 bg-green-600 text-white rounded text-sm"
+        <Button
+          variant="secondary"
+          size="small"
           onClick={() => onCreateProject()}
         >
           新增專案
-        </button>
+        </Button>
       </div>
 
       {/* 專案群組 */}
@@ -72,12 +75,13 @@ export default function TaskPool(props: Props) {
               </For>
 
               {/* 新增工作 */}
-              <button
-                class="text-blue-600 text-sm mt-1"
+              <Button
+                variant="secondary"
+                size="small"
                 onClick={() => onCreateTask(p.id)}
               >
                 ＋ 新增工作
-              </button>
+              </Button>
             </div>
           </div>
         )}

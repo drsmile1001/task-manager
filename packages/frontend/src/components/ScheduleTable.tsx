@@ -9,6 +9,8 @@ import { addDays, format, isAfter, startOfDay } from "date-fns";
 import { For, createMemo } from "solid-js";
 import { ulid } from "ulid";
 
+import Button from "./Button";
+
 export type Props = {
   onClickAssignment?: (assignmentId: string) => void;
 };
@@ -70,27 +72,18 @@ export default function ScheduleTable(props: Props) {
     >
       <div class="text-gray-700 font-bold mb-3">工作表</div>
       <div class="flex gap-2 mb-4 items-center">
-        <button
-          class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-          onclick={filterStore.toCurrentWeek}
-        >
+        <Button variant="secondary" onclick={filterStore.toCurrentWeek}>
           本週
-        </button>
-        <button
-          class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-          onclick={filterStore.toPreviousWeek}
-        >
+        </Button>
+        <Button variant="secondary" onclick={filterStore.toPreviousWeek}>
           上週
-        </button>
+        </Button>
         {format(filterStore.filter().startDate, "yyyy-MM-dd")} -{" "}
         {format(filterStore.filter().endDate, "yyyy-MM-dd")}
-        <button
-          class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-          onclick={filterStore.toNextWeek}
-        >
+        <Button variant="secondary" onclick={filterStore.toNextWeek}>
           {" "}
           下週{" "}
-        </button>
+        </Button>
       </div>
 
       <div class="border border-gray-300 h-[calc(100vh-100px)] overflow-y-auto">

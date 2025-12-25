@@ -4,6 +4,8 @@ import { taskStore } from "@frontend/stores/taskStore";
 import { For, Show, createEffect, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
+import Button from "./Button";
+
 export type TaskDetailsPanelProps = {
   taskId: string | null; // 編輯模式：taskId
   projectIdForCreate: string | null; // 新增模式預設所屬 project
@@ -76,9 +78,9 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         <div class="font-semibold text-gray-700">
           {isCreating() ? "新增工作項目" : "編輯工作項目"}
         </div>
-        <button class="text-gray-500" onClick={props.onClose}>
+        <Button variant="secondary" onClick={props.onClose}>
           ✕
-        </button>
+        </Button>
       </div>
 
       {/* Body */}
@@ -133,22 +135,16 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
       {/* Footer */}
       <div class="p-3 border-t flex justify-end gap-2">
         <Show when={isEditing()}>
-          <button
-            class="px-3 py-1 bg-red-300 text-white rounded"
-            onClick={removeTask}
-          >
+          <Button variant="danger" onClick={removeTask}>
             刪除
-          </button>
+          </Button>
         </Show>
-        <button class="px-3 py-1 bg-gray-200 rounded" onClick={props.onClose}>
+        <Button variant="secondary" onClick={props.onClose}>
           取消
-        </button>
-        <button
-          class="px-3 py-1 bg-blue-600 text-white rounded"
-          onClick={commit}
-        >
+        </Button>
+        <Button variant="primary" onClick={commit}>
           儲存
-        </button>
+        </Button>
       </div>
     </div>
   );
