@@ -153,7 +153,7 @@ export default function ScheduleTable(props: Props) {
                             assignment,
                             task: task?.task,
                             project: task?.project,
-                            labels: task?.labels,
+                            labels: task?.labels ?? [],
                           };
                         })
                         .filter(({ task }) => {
