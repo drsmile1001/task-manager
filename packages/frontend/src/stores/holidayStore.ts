@@ -1,3 +1,4 @@
+import { singulation } from "@frontend/utils/singulation";
 import { parse } from "date-fns";
 import ky from "ky";
 import { createMemo, createSignal } from "solid-js";
@@ -55,4 +56,4 @@ function createHolidayStore() {
   };
 }
 
-export const holidayStore = createHolidayStore();
+export const useHolidayStore = singulation(createHolidayStore);

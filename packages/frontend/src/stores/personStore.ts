@@ -1,4 +1,5 @@
 import { client } from "@frontend/client";
+import { singulation } from "@frontend/utils/singulation";
 import { createSignal } from "solid-js";
 import { ulid } from "ulid";
 
@@ -58,4 +59,4 @@ function createPersonStore() {
   };
 }
 
-export const personStore = createPersonStore();
+export const usePersonStore = singulation(createPersonStore);

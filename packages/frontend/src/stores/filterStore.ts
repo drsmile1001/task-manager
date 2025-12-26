@@ -1,3 +1,4 @@
+import { singulation } from "@frontend/utils/singulation";
 import { addDays, startOfWeek } from "date-fns";
 import { createSignal } from "solid-js";
 
@@ -76,4 +77,4 @@ function createFilterStore() {
   };
 }
 
-export const filterStore = createFilterStore();
+export const useFilterStore = singulation(createFilterStore);

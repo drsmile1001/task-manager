@@ -1,4 +1,5 @@
 import { client } from "@frontend/client";
+import { singulation } from "@frontend/utils/singulation";
 import { createSignal } from "solid-js";
 
 import type { Project } from "@backend/schemas/Project";
@@ -41,4 +42,4 @@ function createProjectStore() {
   };
 }
 
-export const projectStore = createProjectStore();
+export const useProjectStore = singulation(createProjectStore);

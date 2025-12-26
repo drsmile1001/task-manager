@@ -1,12 +1,12 @@
 import { client } from "@frontend/client";
-import { assignmentStore } from "@frontend/stores/assignmentStore";
-import { dragStore } from "@frontend/stores/dragStore";
-import { filterStore } from "@frontend/stores/filterStore";
-import { holidayStore } from "@frontend/stores/holidayStore";
-import { getLabelTextColor, labelStore } from "@frontend/stores/labelStore";
-import { personStore } from "@frontend/stores/personStore";
-import { projectStore } from "@frontend/stores/projectStore";
-import { taskStore } from "@frontend/stores/taskStore";
+import { useAssignmentStore } from "@frontend/stores/assignmentStore";
+import { useDragStore } from "@frontend/stores/dragStore";
+import { useFilterStore } from "@frontend/stores/filterStore";
+import { useHolidayStore } from "@frontend/stores/holidayStore";
+import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
+import { usePersonStore } from "@frontend/stores/personStore";
+import { useProjectStore } from "@frontend/stores/projectStore";
+import { useTaskStore } from "@frontend/stores/taskStore";
 import { addDays, format, isBefore, startOfDay } from "date-fns";
 import { For, createMemo } from "solid-js";
 import { ulid } from "ulid";
@@ -20,9 +20,9 @@ export type Props = {
 
 export default function ScheduleTable(props: Props) {
   const tasksMap = createMemo(() => {
-    const projects = projectStore.projects();
-    const tasks = taskStore.tasks();
-    const labels = labelStore.labels();
+    const projects = useProjectStore().projects();
+    const tasks = useTaskStore().tasks();
+    const labels = useLabelStore().labels();
     return Object.fromEntries(
       tasks.map((t) => {
         return [
@@ -44,10 +44,10 @@ export default function ScheduleTable(props: Props) {
     );
   });
 
-  const persons = () => personStore.persons();
+  const persons = () => usePersonStore().persons();
 
   const days = createMemo(() => {
-    const { startDate, endDate } = filterStore.filter();
+    const { startDate, endDate } = useFilterStore().filter();
     const dates: {
       key: string;
       label: string;
@@ -57,7 +57,7 @@ export default function ScheduleTable(props: Props) {
     }[] = [];
     let curr = startDate;
     while (isBefore(curr, endDate)) {
-      const record = holidayStore.getDateRecord(curr);
+      const record = useHolidayStore().getDateRecord(curr);
       dates.push({
         key: format(curr, "yyyy-MM-dd"),
         label: format(curr, "MM/dd E"),
@@ -72,7 +72,7 @@ export default function ScheduleTable(props: Props) {
   });
 
   const currentWeekText = () => {
-    const { startDate, endDate } = filterStore.filter();
+    const { startDate, endDate } = useFilterStore().filter();
     return `${format(startDate, "yyyy-MM-dd")} - ${format(endDate, "yyyy-MM-dd")}`;
   };
 
@@ -83,24 +83,24 @@ export default function ScheduleTable(props: Props) {
       onDrop={async (e) => {
         // 拖拽到空白區域則刪除指派
         e.preventDefault();
-        const drag = dragStore.state();
+        const drag = useDragStore().state();
         if (drag.type === "assignment") {
           await client.api.assignments({ id: drag.assignmentId }).delete();
         }
-        dragStore.clear();
+        useDragStore().clear();
       }}
     >
       <div class="flex-none flex flex-col gap-2">
         <div class="text-gray-700 font-bold">工作表</div>
         <div class="flex gap-2 items-center">
-          <Button variant="secondary" onclick={filterStore.toCurrentWeek}>
+          <Button variant="secondary" onclick={useFilterStore().toCurrentWeek}>
             本週
           </Button>
-          <Button variant="secondary" onclick={filterStore.toPreviousWeek}>
+          <Button variant="secondary" onclick={useFilterStore().toPreviousWeek}>
             上週
           </Button>
           {currentWeekText()}
-          <Button variant="secondary" onclick={filterStore.toNextWeek}>
+          <Button variant="secondary" onclick={useFilterStore().toNextWeek}>
             下週
           </Button>
           <Button variant="secondary" onclick={props.onClickShowFilter}>
@@ -145,7 +145,7 @@ export default function ScheduleTable(props: Props) {
                 <For each={days()}>
                   {(d) => {
                     const items = () =>
-                      assignmentStore
+                      useAssignmentStore()
                         .listForPersonOnDate(p.id, d.key)
                         .map((assignment) => {
                           const task = tasksMap()[assignment.taskId];
@@ -158,7 +158,7 @@ export default function ScheduleTable(props: Props) {
                         })
                         .filter(({ task }) => {
                           const { includeDoneTasks, projectIds, labelIds } =
-                            filterStore.filter();
+                            useFilterStore().filter();
 
                           if (includeDoneTasks === false && task?.isDone)
                             return false;
@@ -203,7 +203,7 @@ export default function ScheduleTable(props: Props) {
                           e.preventDefault();
                           e.stopPropagation();
 
-                          const drag = dragStore.state();
+                          const drag = useDragStore().state();
 
                           if (drag.type === "task") {
                             await client.api.assignments.post({
@@ -223,7 +223,7 @@ export default function ScheduleTable(props: Props) {
                               });
                           }
 
-                          dragStore.clear();
+                          useDragStore().clear();
                         }}
                       >
                         <For each={items()}>
@@ -237,7 +237,7 @@ export default function ScheduleTable(props: Props) {
                                 class={cssClass}
                                 draggable="true"
                                 onDragStart={() => {
-                                  dragStore.startAssignmentDrag({
+                                  useDragStore().startAssignmentDrag({
                                     assignmentId: assignment.id,
                                     personId: assignment.personId,
                                     date: assignment.date,

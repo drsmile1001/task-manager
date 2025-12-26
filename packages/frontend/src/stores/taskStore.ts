@@ -1,10 +1,11 @@
 import { client } from "@frontend/client";
+import { singulation } from "@frontend/utils/singulation";
 import { createSignal } from "solid-js";
 
 import type { Task } from "@backend/schemas/Task";
 
-import { filterStore } from "./filterStore";
-import { labelStore } from "./labelStore";
+import { useFilterStore } from "./filterStore";
+import { useLabelStore } from "./labelStore";
 
 function createTaskStore() {
   const [tasks, setTasks] = createSignal<Task[]>([]);
@@ -36,14 +37,14 @@ function createTaskStore() {
 
   function listByProject(projectId: string) {
     const labelPriorityMap = new Map<string, number>(
-      labelStore
+      useLabelStore()
         .labels()
         .map((label) => [label.id, label.priority ?? Number.MAX_SAFE_INTEGER])
     );
     return tasks()
       .filter((t) => t.projectId === projectId)
       .filter((t) => {
-        const filter = filterStore.filter();
+        const filter = useFilterStore().filter();
         if (
           filter.projectIds &&
           filter.projectIds.length &&
@@ -86,4 +87,4 @@ function createTaskStore() {
   };
 }
 
-export const taskStore = createTaskStore();
+export const useTaskStore = singulation(createTaskStore);

@@ -1,4 +1,5 @@
 import { client } from "@frontend/client";
+import { singulation } from "@frontend/utils/singulation";
 import { format } from "date-fns";
 import { createSignal } from "solid-js";
 
@@ -57,4 +58,4 @@ function createAssignmentStore() {
   };
 }
 
-export const assignmentStore = createAssignmentStore();
+export const useAssignmentStore = singulation(createAssignmentStore);

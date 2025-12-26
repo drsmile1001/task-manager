@@ -1,5 +1,5 @@
 import { client } from "@frontend/client";
-import { labelStore } from "@frontend/stores/labelStore";
+import { useLabelStore } from "@frontend/stores/labelStore";
 import { ulid } from "ulid";
 
 import Button from "./Button";
@@ -10,7 +10,7 @@ export type FilterPanelProps = {
 };
 
 export default function LabelPanel(props: FilterPanelProps) {
-  const labels = () => labelStore.labels();
+  const labels = () => useLabelStore().labels();
 
   async function createLabel() {
     await client.api.labels.post({

@@ -6,8 +6,8 @@ import ProjectDetailsPanel from "./components/ProjectDetailsPanel";
 import ScheduleTable from "./components/ScheduleTable";
 import TaskDetailsPanel from "./components/TaskDetailsPanel";
 import TaskPool from "./components/TaskPool";
-import { assignmentStore } from "./stores/assignmentStore";
-import { dragStore } from "./stores/dragStore";
+import { useAssignmentStore } from "./stores/assignmentStore";
+import { useDragStore } from "./stores/dragStore";
 
 export default function App() {
   const [projectPanelProjectId, setProjectPanelProjectId] = createSignal<
@@ -63,7 +63,7 @@ export default function App() {
   };
 
   const handleClickAssignment = (assignmentId: string) => {
-    const assignment = assignmentStore.getAssignment(assignmentId);
+    const assignment = useAssignmentStore().getAssignment(assignmentId);
     if (!assignment) return;
     closePanels();
     openEditTask(assignment.taskId);
@@ -84,11 +84,11 @@ export default function App() {
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault();
-        const drag = dragStore.state();
+        const drag = useDragStore().state();
         if (drag.type === "assignment") {
-          assignmentStore.deleteAssignment(drag.assignmentId);
+          useAssignmentStore().deleteAssignment(drag.assignmentId);
         }
-        dragStore.clear();
+        useDragStore().clear();
       }}
     >
       <TaskPool

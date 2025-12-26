@@ -1,3 +1,4 @@
+import { singulation } from "@frontend/utils/singulation";
 import { createSignal } from "solid-js";
 
 export type DragState =
@@ -37,4 +38,4 @@ function createDragStore() {
   };
 }
 
-export const dragStore = createDragStore();
+export const useDragStore = singulation(createDragStore);

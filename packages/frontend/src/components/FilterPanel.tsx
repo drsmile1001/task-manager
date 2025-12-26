@@ -1,6 +1,6 @@
-import { filterStore } from "@frontend/stores/filterStore";
-import { getLabelTextColor, labelStore } from "@frontend/stores/labelStore";
-import { projectStore } from "@frontend/stores/projectStore";
+import { useFilterStore } from "@frontend/stores/filterStore";
+import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
+import { useProjectStore } from "@frontend/stores/projectStore";
 
 import Button from "./Button";
 import DetailPanel from "./DetailPanel";
@@ -10,13 +10,13 @@ export type FilterPanelProps = {
 };
 
 export default function FilterPanel(props: FilterPanelProps) {
-  const labels = () => labelStore.labels();
-  const projects = () => projectStore.projects();
+  const labels = () => useLabelStore().labels();
+  const projects = () => useProjectStore().projects();
 
   function setHasLabel(labelId: string, has: boolean) {
-    const currentLabelIds = filterStore.filter().labelIds ?? [];
-    filterStore.setFilter({
-      ...filterStore.filter(),
+    const currentLabelIds = useFilterStore().filter().labelIds ?? [];
+    useFilterStore().setFilter({
+      ...useFilterStore().filter(),
       labelIds: has
         ? [...currentLabelIds, labelId]
         : currentLabelIds.filter((id) => id !== labelId),
@@ -24,9 +24,9 @@ export default function FilterPanel(props: FilterPanelProps) {
   }
 
   function setHasProject(projectId: string, has: boolean) {
-    const currentProjectIds = filterStore.filter().projectIds ?? [];
-    filterStore.setFilter({
-      ...filterStore.filter(),
+    const currentProjectIds = useFilterStore().filter().projectIds ?? [];
+    useFilterStore().setFilter({
+      ...useFilterStore().filter(),
       projectIds: has
         ? [...currentProjectIds, projectId]
         : currentProjectIds.filter((id) => id !== projectId),
@@ -34,8 +34,8 @@ export default function FilterPanel(props: FilterPanelProps) {
   }
 
   function clearFilter() {
-    filterStore.setFilter({
-      ...filterStore.filter(),
+    useFilterStore().setFilter({
+      ...useFilterStore().filter(),
       projectIds: undefined,
       includeDoneTasks: true,
       labelIds: undefined,
@@ -48,9 +48,9 @@ export default function FilterPanel(props: FilterPanelProps) {
           <label class="inline-flex items-center gap-2 text-sm">
             <input
               type="checkbox"
-              checked={filterStore.filter().includeDoneTasks}
+              checked={useFilterStore().filter().includeDoneTasks}
               onInput={(e) =>
-                filterStore.setIncludeDoneTasks(e.currentTarget.checked)
+                useFilterStore().setIncludeDoneTasks(e.currentTarget.checked)
               }
             />
             <span>已完成</span>
@@ -64,8 +64,9 @@ export default function FilterPanel(props: FilterPanelProps) {
                 <input
                   type="checkbox"
                   checked={
-                    filterStore.filter().projectIds?.includes(project.id) ??
-                    false
+                    useFilterStore()
+                      .filter()
+                      .projectIds?.includes(project.id) ?? false
                   }
                   onChange={(e) =>
                     setHasProject(project.id, e.currentTarget.checked)
@@ -84,7 +85,8 @@ export default function FilterPanel(props: FilterPanelProps) {
                 <input
                   type="checkbox"
                   checked={
-                    filterStore.filter().labelIds?.includes(label.id) ?? false
+                    useFilterStore().filter().labelIds?.includes(label.id) ??
+                    false
                   }
                   onChange={(e) =>
                     setHasLabel(label.id, e.currentTarget.checked)

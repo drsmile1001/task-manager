@@ -1,7 +1,7 @@
 import { client } from "@frontend/client";
-import { getLabelTextColor, labelStore } from "@frontend/stores/labelStore";
-import { projectStore } from "@frontend/stores/projectStore";
-import { taskStore } from "@frontend/stores/taskStore";
+import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
+import { useProjectStore } from "@frontend/stores/projectStore";
+import { useTaskStore } from "@frontend/stores/taskStore";
 import { For, Show, createEffect, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
@@ -19,7 +19,8 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   const isEditing = () => props.taskId !== null;
   const isCreating = () => props.taskId === null;
 
-  const task = () => (props.taskId ? taskStore.getTask(props.taskId) : null);
+  const task = () =>
+    props.taskId ? useTaskStore().getTask(props.taskId) : null;
 
   const [form, setForm] = createSignal({
     projectId: props.projectIdForCreate ?? task()?.projectId ?? "",
@@ -84,7 +85,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
     props.onClose();
   };
 
-  const labels = () => labelStore.labels();
+  const labels = () => useLabelStore().labels();
 
   return (
     <DetailPanel
@@ -99,7 +100,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
             value={form().projectId}
             onInput={(e) => updateField("projectId", e.currentTarget.value)}
           >
-            <For each={projectStore.projects()}>
+            <For each={useProjectStore().projects()}>
               {(p) => <option value={p.id}>{p.name}</option>}
             </For>
           </select>

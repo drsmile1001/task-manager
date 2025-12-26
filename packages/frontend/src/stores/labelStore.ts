@@ -1,4 +1,5 @@
 import { client } from "@frontend/client";
+import { singulation } from "@frontend/utils/singulation";
 import { createSignal } from "solid-js";
 
 import type { Label } from "@backend/schemas/Label";
@@ -60,4 +61,4 @@ function createLabelStore() {
   };
 }
 
-export const labelStore = createLabelStore();
+export const useLabelStore = singulation(createLabelStore);

@@ -1,9 +1,9 @@
-import { assignmentStore } from "@frontend/stores/assignmentStore";
-import { dragStore } from "@frontend/stores/dragStore";
-import { filterStore } from "@frontend/stores/filterStore";
-import { getLabelTextColor, labelStore } from "@frontend/stores/labelStore";
-import { projectStore } from "@frontend/stores/projectStore";
-import { taskStore } from "@frontend/stores/taskStore";
+import { useAssignmentStore } from "@frontend/stores/assignmentStore";
+import { useDragStore } from "@frontend/stores/dragStore";
+import { useFilterStore } from "@frontend/stores/filterStore";
+import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
+import { useProjectStore } from "@frontend/stores/projectStore";
+import { useTaskStore } from "@frontend/stores/taskStore";
 import { For } from "solid-js";
 
 import Button from "./Button";
@@ -19,13 +19,13 @@ export default function TaskPool(props: Props) {
   const { onCreateTask, onEditTask, onEditProject, onCreateProject } = props;
 
   const filteredProjects = () =>
-    projectStore
+    useProjectStore()
       .projects()
       .filter(
         (p) =>
-          !filterStore.filter().projectIds ||
-          filterStore.filter().projectIds!.length === 0 ||
-          filterStore.filter().projectIds!.includes(p.id)
+          !useFilterStore().filter().projectIds ||
+          useFilterStore().filter().projectIds!.length === 0 ||
+          useFilterStore().filter().projectIds!.includes(p.id)
       );
 
   return (
@@ -53,10 +53,10 @@ export default function TaskPool(props: Props) {
             </div>
 
             <div class="pl-4 mt-2 space-y-1">
-              <For each={taskStore.listByProject(p.id)}>
+              <For each={useTaskStore().listByProject(p.id)}>
                 {(t) => {
                   const assigned = () =>
-                    assignmentStore.listByTask(t.id).length > 0;
+                    useAssignmentStore().listByTask(t.id).length > 0;
                   const isDone = () => t.isDone;
 
                   const className = () =>
@@ -71,7 +71,9 @@ export default function TaskPool(props: Props) {
                   const labels = () =>
                     (t.labelIds ?? [])
                       .map((labelId) =>
-                        labelStore.labels().find((l) => l.id === labelId)
+                        useLabelStore()
+                          .labels()
+                          .find((l) => l.id === labelId)
                       )
                       .filter((l) => !!l)
                       .sort((a, b) => {
@@ -87,7 +89,7 @@ export default function TaskPool(props: Props) {
                       onClick={() => onEditTask(t.id)}
                       draggable="true"
                       onDragStart={() => {
-                        dragStore.startTaskDrag(t.id);
+                        useDragStore().startTaskDrag(t.id);
                       }}
                     >
                       <span>{t.name}</span>
