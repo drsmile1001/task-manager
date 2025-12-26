@@ -35,7 +35,7 @@ async function rewriteBaseUrl(root: string) {
 
 await rewriteBaseUrl("public");
 
-new Elysia()
+const app = new Elysia()
   .use(buildApi(logger))
   .get("/*", async ({ path }) => {
     const allowedExtensions = [
@@ -63,5 +63,21 @@ new Elysia()
   .get("/*", () => file("public/index.html"))
   .listen(3000, (server) => {
     setCurrentBunServer(server);
-    console.log("Server is running on http://localhost:3000");
+    logger.info(`伺服器已啟動，監聽於 http://localhost:3000${baseUrl}`);
   });
+
+let isShuttingDown = false;
+async function shutdown(signal: string) {
+  if (isShuttingDown) {
+    logger.warn(`已經在關閉中，忽略重複的 ${signal} 信號。`);
+    return;
+  }
+  isShuttingDown = true;
+  logger.info(`收到 ${signal} 信號，正在關閉伺服器...`);
+  await app.stop();
+  logger.info("伺服器已成功關閉。");
+  process.exit(0);
+}
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
