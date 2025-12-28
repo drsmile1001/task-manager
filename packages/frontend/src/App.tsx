@@ -3,7 +3,7 @@ import { Show, createSignal } from "solid-js";
 import FilterPanel from "./components/FilterPanel";
 import LabelPanel from "./components/LabelPanel";
 import PersonPanel from "./components/PersonPanel";
-import ProjectDetailsPanel from "./components/ProjectDetailsPanel";
+import ProjectPanel from "./components/ProjectPanel";
 import ScheduleTable from "./components/ScheduleTable";
 import TaskDetailsPanel from "./components/TaskDetailsPanel";
 import TaskPool from "./components/TaskPool";
@@ -11,11 +11,6 @@ import { useAssignmentStore } from "./stores/assignmentStore";
 import { useDragStore } from "./stores/dragStore";
 
 export default function App() {
-  const [projectPanelProjectId, setProjectPanelProjectId] = createSignal<
-    string | null
-  >(null);
-  const [projectPanelIsOpen, setProjectPanelIsOpen] = createSignal(false);
-
   const [taskPanelTaskId, setTaskPanelTaskId] = createSignal<string | null>(
     null
   );
@@ -27,13 +22,14 @@ export default function App() {
   const [filterPanelIsOpen, setFilterPanelIsOpen] = createSignal(false);
   const [labelPanelIsOpen, setLabelPanelIsOpen] = createSignal(false);
   const [personPanelIsOpen, setPersonPanelIsOpen] = createSignal(false);
+  const [projectPanelIsOpen, setProjectPanelIsOpen] = createSignal(false);
 
   function closePanels() {
-    setProjectPanelIsOpen(false);
     setTaskPanelIsOpen(false);
     setFilterPanelIsOpen(false);
     setLabelPanelIsOpen(false);
     setPersonPanelIsOpen(false);
+    setProjectPanelIsOpen(false);
   }
 
   const openCreateTask = (projectId: string) => {
@@ -49,20 +45,6 @@ export default function App() {
 
     setTaskPanelTaskId(taskId);
     setTaskPanelIsOpen(true);
-  };
-
-  const openCreateProject = () => {
-    closePanels();
-
-    setProjectPanelProjectId(null);
-    setProjectPanelIsOpen(true);
-  };
-
-  const openEditProject = (projectId: string) => {
-    closePanels();
-
-    setProjectPanelProjectId(projectId);
-    setProjectPanelIsOpen(true);
   };
 
   const handleClickAssignment = (assignmentId: string) => {
@@ -84,6 +66,10 @@ export default function App() {
     closePanels();
     setPersonPanelIsOpen(true);
   };
+  const handleShowProjectPanel = () => {
+    closePanels();
+    setProjectPanelIsOpen(true);
+  };
 
   return (
     <div
@@ -98,16 +84,13 @@ export default function App() {
         useDragStore().clear();
       }}
     >
-      <TaskPool
-        onCreateTask={openCreateTask}
-        onEditTask={openEditTask}
-        onCreateProject={openCreateProject}
-        onEditProject={openEditProject}
-      />
+      <TaskPool onCreateTask={openCreateTask} onEditTask={openEditTask} />
       <ScheduleTable
         onClickAssignment={handleClickAssignment}
         onClickShowFilter={handleShowFilterPanel}
         onClickShowPerson={handleShowPersonPanel}
+        onClickShowLabel={handleShowLabelPanel}
+        onClickShowProject={handleShowProjectPanel}
       />
 
       <Show when={taskPanelIsOpen()}>
@@ -115,12 +98,6 @@ export default function App() {
           taskId={taskPanelTaskId()}
           projectIdForCreate={projectIdForCreate()}
           onClickEditLabels={handleShowLabelPanel}
-          onClose={closePanels}
-        />
-      </Show>
-      <Show when={projectPanelIsOpen()}>
-        <ProjectDetailsPanel
-          projectId={projectPanelProjectId()}
           onClose={closePanels}
         />
       </Show>
@@ -132,6 +109,9 @@ export default function App() {
       </Show>
       <Show when={personPanelIsOpen()}>
         <PersonPanel onClose={closePanels} />
+      </Show>
+      <Show when={projectPanelIsOpen()}>
+        <ProjectPanel onClose={closePanels} />
       </Show>
     </div>
   );

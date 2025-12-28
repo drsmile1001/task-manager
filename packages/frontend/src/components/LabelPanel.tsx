@@ -47,7 +47,6 @@ export default function LabelPanel(props: FilterPanelProps) {
   return (
     <DetailPanel title="標籤" onClose={props.onClose}>
       <div class="p-2 flex flex-col gap-4">
-        <label class="font-bold">已建立的標籤</label>
         {labels().map((label) => (
           <div class="flex items-center gap-2">
             <input

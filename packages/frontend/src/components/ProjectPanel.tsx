@@ -1,0 +1,98 @@
+import { client } from "@frontend/client";
+import { useProjectStore } from "@frontend/stores/projectStore";
+import { ulid } from "ulid";
+
+import Button from "./Button";
+import DetailPanel from "./DetailPanel";
+
+export type ProjectPanelProps = {
+  onClose: () => void;
+};
+
+export default function ProjectPanel(props: ProjectPanelProps) {
+  const projects = () => useProjectStore().projects();
+
+  async function createProject() {
+    await client.api.projects.post({
+      id: ulid(),
+      name: "新專案",
+      description: "",
+      order: null,
+    });
+  }
+
+  function setProjectName(projectId: string, name: string) {
+    client.api.projects({ id: projectId }).patch({
+      name,
+    });
+  }
+
+  function setProjectOrder(projectId: string, order: string) {
+    const orderNumber = order ? parseInt(order) : null;
+    client.api.projects({ id: projectId }).patch({
+      order: orderNumber,
+    });
+  }
+
+  function setProjectDescription(projectId: string, description: string) {
+    client.api.projects({ id: projectId }).patch({
+      description,
+    });
+  }
+
+  function handleDeleteProject(projectId: string) {
+    client.api.projects({ id: projectId }).delete();
+  }
+
+  return (
+    <DetailPanel title="專案" onClose={props.onClose}>
+      <div class="p-2 flex flex-col gap-4">
+        {projects().map((project) => (
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-2">
+              <input
+                class="border px-2 py-1 w-40 rounded"
+                value={project.name}
+                onBlur={(e) =>
+                  setProjectName(project.id, e.currentTarget.value)
+                }
+                placeholder="專案名稱"
+              />
+              <input
+                class="border px-2 py-1 w-30 rounded"
+                type="number"
+                min="1"
+                value={project.order ?? ""}
+                onInput={(e) =>
+                  setProjectOrder(project.id, e.currentTarget.value)
+                }
+                placeholder="排序 (可選)"
+              />
+              <Button
+                variant="danger"
+                size="small"
+                onClick={() => handleDeleteProject(project.id)}
+              >
+                刪除
+              </Button>
+            </div>
+            <textarea
+              class="border px-2 py-1 w-full rounded resize-none"
+              value={project.description}
+              onBlur={(e) =>
+                setProjectDescription(project.id, e.currentTarget.value)
+              }
+              placeholder="專案描述"
+              rows={2}
+            />
+          </div>
+        ))}
+        <div>
+          <Button variant="secondary" onclick={createProject}>
+            新增
+          </Button>
+        </div>
+      </div>
+    </DetailPanel>
+  );
+}

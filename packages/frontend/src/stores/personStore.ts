@@ -12,15 +12,12 @@ function createPersonStore() {
     const ps = Object.values(map)
       .filter((p): p is Person => !!p)
       .sort((a, b) => {
-        if (typeof a.order === "number" && typeof b.order === "number") {
-          return a.order - b.order;
-        } else if (typeof a.order === "number") {
-          return -1;
-        } else if (typeof b.order === "number") {
-          return 1;
-        } else {
-          return a.name.localeCompare(b.name);
+        const aOrder = a.order ?? Number.MAX_SAFE_INTEGER;
+        const bOrder = b.order ?? Number.MAX_SAFE_INTEGER;
+        if (aOrder !== bOrder) {
+          return aOrder - bOrder;
         }
+        return a.name.localeCompare(b.name);
       });
     return ps;
   });

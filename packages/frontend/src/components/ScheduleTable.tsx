@@ -17,6 +17,8 @@ export type Props = {
   onClickAssignment?: (assignmentId: string) => void;
   onClickShowFilter?: () => void;
   onClickShowPerson?: () => void;
+  onClickShowLabel?: () => void;
+  onClickShowProject?: () => void;
 };
 
 export default function ScheduleTable(props: Props) {
@@ -109,6 +111,12 @@ export default function ScheduleTable(props: Props) {
           </Button>
           <Button variant="secondary" onclick={props.onClickShowPerson}>
             人員
+          </Button>
+          <Button variant="secondary" onclick={props.onClickShowLabel}>
+            標籤
+          </Button>
+          <Button variant="secondary" onclick={props.onClickShowProject}>
+            專案
           </Button>
         </div>
       </div>

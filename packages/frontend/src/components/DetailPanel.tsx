@@ -17,7 +17,7 @@ export default function DetailPanel(props: DetailPanelProps) {
           ✕
         </Button>
       </div>
-      {props.children}
+      <div class="flex-1 overflow-auto">{props.children}</div>
     </div>
   );
 }

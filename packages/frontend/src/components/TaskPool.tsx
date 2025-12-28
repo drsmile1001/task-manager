@@ -13,26 +13,15 @@ import LabelLine from "./LabelLine";
 export type Props = {
   onCreateTask: (projectId: string) => void;
   onEditTask: (taskId: string) => void;
-  onEditProject: (projectId: string) => void;
-  onCreateProject: () => void;
 };
 
 export default function TaskPool(props: Props) {
-  const { onCreateProject } = props;
   const { filteredProjects } = useProjectStore();
 
   return (
     <div class="h-full flex-none w-[clamp(15rem,15vw,25rem)] border-r overflow-y-auto p-3 bg-gray-50">
       <div class="flex justify-between items-center mb-3">
         <h2 class="font-bold text-gray-700">專案 & 工作</h2>
-
-        <Button
-          variant="secondary"
-          size="small"
-          onClick={() => onCreateProject()}
-        >
-          新增專案
-        </Button>
       </div>
       <For each={filteredProjects()}>
         {(p) => <ProjectBlock {...props} p={p} />}
@@ -42,18 +31,11 @@ export default function TaskPool(props: Props) {
 }
 
 function ProjectBlock(props: Props & { p: Project }) {
-  const { onCreateTask, onEditProject, p } = props;
+  const { onCreateTask, p } = props;
   return (
     <div class="mb-4">
       <div class="flex justify-between items-center font-medium text-gray-800">
         <span>{p.name}</span>
-        <Button
-          variant="secondary"
-          size="small"
-          onClick={() => onEditProject(p.id)}
-        >
-          編輯
-        </Button>
       </div>
 
       <div class="pl-4 mt-2 space-y-1">

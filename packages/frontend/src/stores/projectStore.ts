@@ -13,7 +13,14 @@ function createProjectStore() {
   const projects = createMemo(() => {
     return Object.values(map)
       .filter((p): p is Project => p !== undefined)
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => {
+        const aOrder = a.order ?? Number.MAX_SAFE_INTEGER;
+        const bOrder = b.order ?? Number.MAX_SAFE_INTEGER;
+        if (aOrder !== bOrder) {
+          return aOrder - bOrder;
+        }
+        return a.name.localeCompare(b.name);
+      });
   });
 
   async function loadProjects() {

@@ -40,7 +40,6 @@ export default function PersonPanel(props: PersonPanelProps) {
   return (
     <DetailPanel title="人員" onClose={props.onClose}>
       <div class="p-2 flex flex-col gap-4">
-        <label class="font-bold">已建立的人員</label>
         {persons().map((person) => (
           <div class="flex items-center gap-2">
             <input
