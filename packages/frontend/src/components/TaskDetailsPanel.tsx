@@ -2,7 +2,7 @@ import { client } from "@frontend/client";
 import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
-import { For, Show } from "solid-js";
+import { For, Show, onMount } from "solid-js";
 
 import Button from "./Button";
 import DetailPanel from "./DetailPanel";
@@ -15,6 +15,11 @@ export type TaskDetailsPanelProps = {
 export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   const task = () => useTaskStore().getTask(props.taskId);
   const labels = () => useLabelStore().labels();
+  let nameInputRef: HTMLInputElement | undefined;
+
+  onMount(() => {
+    nameInputRef?.focus();
+  });
 
   const removeTask = async () => {
     await client.api.tasks({ id: props.taskId! }).delete();
@@ -83,6 +88,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         <div>
           <label class="block text-sm font-medium mb-1">名稱</label>
           <input
+            ref={nameInputRef}
             class="border w-full px-2 py-1 rounded"
             value={task()?.name}
             onInput={(e) => handleUpdateName(e.currentTarget.value)}
