@@ -1,6 +1,6 @@
 import { client } from "@frontend/client";
 import { useProjectStore } from "@frontend/stores/projectStore";
-import { Show, createMemo, createSignal } from "solid-js";
+import { Show, createEffect, createMemo, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
 import Button from "./Button";
@@ -17,16 +17,31 @@ export default function ProjectPanel(props: ProjectPanelProps) {
       .projects()
       .filter((p) => (showArchived() ? true : !p.isArchived))
   );
+  const nameInputRefs = new Map<string, HTMLInputElement>();
+  let toFocusProjectId: string | null = null;
 
   async function createProject() {
+    const projectId = ulid();
+    toFocusProjectId = projectId;
     await client.api.projects.post({
-      id: ulid(),
+      id: projectId,
       name: "新專案",
       description: "",
       order: null,
       isArchived: false,
     });
   }
+
+  createEffect(() => {
+    projects();
+    if (toFocusProjectId) {
+      const inputRef = nameInputRefs.get(toFocusProjectId);
+      if (inputRef) {
+        inputRef.focus();
+        toFocusProjectId = null;
+      }
+    }
+  });
 
   function setProjectName(projectId: string, name: string) {
     client.api.projects({ id: projectId }).patch({
@@ -64,6 +79,7 @@ export default function ProjectPanel(props: ProjectPanelProps) {
           <div class="flex flex-col gap-1">
             <div class="flex items-center gap-2">
               <input
+                ref={(el) => nameInputRefs.set(project.id, el)}
                 class="border px-2 py-1 w-40 rounded"
                 value={project.name}
                 onBlur={(e) =>

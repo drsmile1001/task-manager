@@ -1,5 +1,6 @@
 import { client } from "@frontend/client";
 import { useLabelStore } from "@frontend/stores/labelStore";
+import { createEffect } from "solid-js";
 import { ulid } from "ulid";
 
 import Button from "./Button";
@@ -11,15 +12,30 @@ export type FilterPanelProps = {
 
 export default function LabelPanel(props: FilterPanelProps) {
   const labels = () => useLabelStore().labels();
+  const nameInputRefs = new Map<string, HTMLInputElement>();
+  let toFocusLabelId: string | null = null;
 
   async function createLabel() {
+    const labelId = ulid();
+    toFocusLabelId = labelId;
     await client.api.labels.post({
-      id: ulid(),
+      id: labelId,
       name: "新標籤",
       color: "#777777",
       priority: null,
     });
   }
+
+  createEffect(() => {
+    labels();
+    if (toFocusLabelId) {
+      const inputRef = nameInputRefs.get(toFocusLabelId);
+      if (inputRef) {
+        inputRef.focus();
+        toFocusLabelId = null;
+      }
+    }
+  });
 
   function setLabelName(labelId: string, name: string) {
     client.api.labels({ id: labelId }).patch({
@@ -50,6 +66,7 @@ export default function LabelPanel(props: FilterPanelProps) {
         {labels().map((label) => (
           <div class="flex items-center gap-2">
             <input
+              ref={(el) => nameInputRefs.set(label.id, el)}
               class="border px-2 py-1 w-30 rounded"
               value={label.name}
               onBlur={(e) => setLabelName(label.id, e.currentTarget.value)}
