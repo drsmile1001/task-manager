@@ -19,6 +19,7 @@ export type Props = {
   onClickShowPerson?: () => void;
   onClickShowLabel?: () => void;
   onClickShowProject?: () => void;
+  onClickShowImportTasks?: () => void;
 };
 
 export default function ScheduleTable(props: Props) {
@@ -117,6 +118,9 @@ export default function ScheduleTable(props: Props) {
           </Button>
           <Button variant="secondary" onclick={props.onClickShowProject}>
             專案
+          </Button>
+          <Button variant="secondary" onclick={props.onClickShowImportTasks}>
+            匯入工作
           </Button>
         </div>
       </div>
