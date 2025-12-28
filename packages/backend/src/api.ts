@@ -197,6 +197,11 @@ export function buildApi(logger: Logger) {
     )
     .delete("/api/persons/:id", async ({ params }) => {
       await personRepo.remove(params.id);
+      const assignments = await assignmentRepo.list();
+      const otherPersonAssignments = assignments.filter(
+        (a) => a.personId !== params.id
+      );
+      await assignmentRepo.replaceAll(otherPersonAssignments);
       broadcastMutation({
         type: "person",
         action: "delete",

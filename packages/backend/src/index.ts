@@ -74,7 +74,7 @@ async function shutdown(signal: string) {
   }
   isShuttingDown = true;
   logger.info(`收到 ${signal} 信號，正在關閉伺服器...`);
-  await app.stop();
+  await app.stop(true);
   logger.info("伺服器已成功關閉。");
   process.exit(0);
 }

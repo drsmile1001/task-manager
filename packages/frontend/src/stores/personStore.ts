@@ -10,8 +10,18 @@ function createPersonStore() {
 
   const persons = createMemo(() => {
     const ps = Object.values(map)
-      .filter((p): p is Person => p !== undefined)
-      .sort((a, b) => a.id.localeCompare(b.id));
+      .filter((p): p is Person => !!p)
+      .sort((a, b) => {
+        if (typeof a.order === "number" && typeof b.order === "number") {
+          return a.order - b.order;
+        } else if (typeof a.order === "number") {
+          return -1;
+        } else if (typeof b.order === "number") {
+          return 1;
+        } else {
+          return a.name.localeCompare(b.name);
+        }
+      });
     return ps;
   });
 

@@ -16,6 +16,7 @@ import Button from "./Button";
 export type Props = {
   onClickAssignment?: (assignmentId: string) => void;
   onClickShowFilter?: () => void;
+  onClickShowPerson?: () => void;
 };
 
 export default function ScheduleTable(props: Props) {
@@ -105,6 +106,9 @@ export default function ScheduleTable(props: Props) {
           </Button>
           <Button variant="secondary" onclick={props.onClickShowFilter}>
             篩選
+          </Button>
+          <Button variant="secondary" onclick={props.onClickShowPerson}>
+            人員
           </Button>
         </div>
       </div>

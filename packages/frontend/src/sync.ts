@@ -50,6 +50,7 @@ export function sync() {
               break;
             case "delete":
               usePersonStore().deletePerson(m.id);
+              useAssignmentStore().loadAssignments();
               break;
             default:
               break;
