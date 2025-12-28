@@ -5,6 +5,8 @@ import { createStore } from "solid-js/store";
 
 import type { Person } from "@backend/schemas/Person";
 
+import { useFilterStore } from "./filterStore";
+
 function createPersonStore() {
   const [map, setMap] = createStore({} as Record<string, Person | undefined>);
 
@@ -45,11 +47,22 @@ function createPersonStore() {
     return map[id];
   }
 
+  const filteredPersons = createMemo(() => {
+    const filter = useFilterStore().filter();
+    return persons().filter(
+      (p) =>
+        !filter.personIds ||
+        filter.personIds.length === 0 ||
+        filter.personIds.includes(p.id)
+    );
+  });
+
   return {
     persons,
     setPerson,
     deletePerson,
     getPerson,
+    filteredPersons,
   };
 }
 

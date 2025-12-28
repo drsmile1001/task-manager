@@ -1,5 +1,6 @@
 import { useFilterStore } from "@frontend/stores/filterStore";
 import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
+import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 
 import Button from "./Button";
@@ -11,8 +12,8 @@ export type FilterPanelProps = {
 
 export default function FilterPanel(props: FilterPanelProps) {
   const { labels } = useLabelStore();
-
-  const projects = () => useProjectStore().projects();
+  const { persons } = usePersonStore();
+  const { projects } = useProjectStore();
 
   function setHasLabel(labelId: string, has: boolean) {
     const currentLabelIds = useFilterStore().filter().labelIds ?? [];
@@ -34,12 +35,23 @@ export default function FilterPanel(props: FilterPanelProps) {
     });
   }
 
+  function setHasPerson(personId: string, has: boolean) {
+    const currentPersonIds = useFilterStore().filter().personIds ?? [];
+    useFilterStore().setFilter({
+      ...useFilterStore().filter(),
+      personIds: has
+        ? [...currentPersonIds, personId]
+        : currentPersonIds.filter((id) => id !== personId),
+    });
+  }
+
   function clearFilter() {
     useFilterStore().setFilter({
       ...useFilterStore().filter(),
       projectIds: undefined,
       includeDoneTasks: true,
       labelIds: undefined,
+      personIds: undefined,
     });
   }
   return (
@@ -102,6 +114,26 @@ export default function FilterPanel(props: FilterPanelProps) {
                 >
                   {label.name}
                 </span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">人員</label>
+          <div class="flex flex-wrap gap-2">
+            {persons().map((person) => (
+              <label class="inline-flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={
+                    useFilterStore().filter().personIds?.includes(person.id) ??
+                    false
+                  }
+                  onChange={(e) =>
+                    setHasPerson(person.id, e.currentTarget.checked)
+                  }
+                />
+                {person.name}
               </label>
             ))}
           </div>

@@ -8,6 +8,7 @@ export type Filter = {
   includeDoneTasks: boolean;
   projectIds?: string[];
   labelIds?: string[];
+  personIds?: string[];
 };
 
 function createFilterStore() {
@@ -65,6 +66,13 @@ function createFilterStore() {
     });
   }
 
+  function setPersonIds(personIds?: string[]) {
+    setFilter({
+      ...filter(),
+      personIds,
+    });
+  }
+
   return {
     filter,
     setFilter,
@@ -74,6 +82,7 @@ function createFilterStore() {
     setIncludeDoneTasks,
     setProjectIds,
     setLabelIds,
+    setPersonIds,
   };
 }
 

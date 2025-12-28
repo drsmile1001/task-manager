@@ -48,7 +48,7 @@ export default function ScheduleTable(props: Props) {
     );
   });
 
-  const persons = () => usePersonStore().persons();
+  const { filteredPersons } = usePersonStore();
 
   const days = createMemo(() => {
     const { startDate, endDate } = useFilterStore().filter();
@@ -152,7 +152,7 @@ export default function ScheduleTable(props: Props) {
             )}
           </For>
 
-          <For each={persons()}>
+          <For each={filteredPersons()}>
             {(p) => (
               <>
                 <div class="border-b border-r p-2 font-medium sticky left-0 z-[2] bg-white">
