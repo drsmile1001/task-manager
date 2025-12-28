@@ -2,7 +2,7 @@ import { client } from "@frontend/client";
 import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
-import { For, createEffect, createSignal } from "solid-js";
+import { For } from "solid-js";
 
 import Button from "./Button";
 import DetailPanel from "./DetailPanel";
