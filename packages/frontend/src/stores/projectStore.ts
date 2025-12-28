@@ -1,44 +1,60 @@
 import { client } from "@frontend/client";
 import { singulation } from "@frontend/utils/singulation";
-import { createSignal } from "solid-js";
+import { createMemo } from "solid-js";
+import { createStore } from "solid-js/store";
 
 import type { Project } from "@backend/schemas/Project";
 
+import { useFilterStore } from "./filterStore";
+
 function createProjectStore() {
-  const [projects, setProjects] = createSignal<Project[]>([]);
+  const [map, setMap] = createStore({} as Record<string, Project | undefined>);
+
+  const projects = createMemo(() => {
+    return Object.values(map)
+      .filter((p): p is Project => p !== undefined)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  });
 
   async function loadProjects() {
     const result = await client.api.projects.get();
     if (result.error) {
       throw new Error("Failed to load projects");
     }
-    setProjects(result.data);
+    setMap(
+      Object.fromEntries(result.data.map((project) => [project.id, project]))
+    );
   }
   loadProjects();
 
-  async function createProject(p: Project) {
-    setProjects((prev) => [...prev, p]);
-    return p;
-  }
-
-  async function updateProject(project: Project) {
-    setProjects((prev) => prev.map((p) => (p.id === project.id ? project : p)));
+  async function setProject(project: Project) {
+    setMap(project.id, project);
   }
 
   async function deleteProject(id: string) {
-    setProjects((prev) => prev.filter((p) => p.id !== id));
+    setMap(id, undefined);
   }
 
-  function getProject(id: string) {
-    return projects().find((p) => p.id === id);
+  function getProject(id: string): Project | undefined {
+    return map[id];
   }
+
+  const filteredProjects = createMemo(() => {
+    const filter = useFilterStore().filter();
+    return projects().filter(
+      (p) =>
+        !filter.projectIds ||
+        filter.projectIds.length === 0 ||
+        filter.projectIds.includes(p.id)
+    );
+  });
 
   return {
     projects,
-    createProject,
-    updateProject,
+    setProject,
     deleteProject,
     getProject,
+    filteredProjects,
   };
 }
 

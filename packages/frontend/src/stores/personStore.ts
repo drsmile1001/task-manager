@@ -1,59 +1,46 @@
 import { client } from "@frontend/client";
 import { singulation } from "@frontend/utils/singulation";
-import { createSignal } from "solid-js";
-import { ulid } from "ulid";
+import { createMemo } from "solid-js";
+import { createStore } from "solid-js/store";
 
 import type { Person } from "@backend/schemas/Person";
 
 function createPersonStore() {
-  const [persons, setPersons] = createSignal<Person[]>([]);
+  const [map, setMap] = createStore({} as Record<string, Person | undefined>);
+
+  const persons = createMemo(() => {
+    const ps = Object.values(map)
+      .filter((p): p is Person => p !== undefined)
+      .sort((a, b) => a.id.localeCompare(b.id));
+    return ps;
+  });
 
   async function loadPersons() {
     const result = await client.api.persons.get();
     if (result.error) {
       throw new Error("Failed to load persons");
     }
-    setPersons(result.data);
+    setMap(
+      Object.fromEntries(result.data.map((person) => [person.id, person]))
+    );
   }
   loadPersons();
 
-  async function createPerson(input: Omit<Person, "id">) {
-    const id = ulid();
-    const p: Person = { id, ...input };
-    const result = await client.api.persons.post(p);
-    if (result.error) {
-      throw new Error("Failed to create person");
-    }
-    setPersons((prev) => [...prev, p]);
-    return p;
-  }
-
-  async function updatePerson(id: string, patch: Partial<Person>) {
-    const result = await client.api.persons({ id }).patch(patch);
-    if (result.error) {
-      throw new Error("Failed to update person");
-    }
-    setPersons((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...patch } : p))
-    );
+  async function setPerson(person: Person) {
+    setMap(person.id, person);
   }
 
   async function deletePerson(id: string) {
-    const result = await client.api.persons({ id }).delete();
-    if (result.error) {
-      throw new Error("Failed to delete person");
-    }
-    setPersons((prev) => prev.filter((p) => p.id !== id));
+    setMap(id, undefined);
   }
 
-  function getPerson(id: string) {
-    return persons().find((p) => p.id === id);
+  function getPerson(id: string): Person | undefined {
+    return map[id];
   }
 
   return {
     persons,
-    createPerson,
-    updatePerson,
+    setPerson,
     deletePerson,
     getPerson,
   };

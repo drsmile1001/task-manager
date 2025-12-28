@@ -10,7 +10,8 @@ export type FilterPanelProps = {
 };
 
 export default function FilterPanel(props: FilterPanelProps) {
-  const labels = () => useLabelStore().labels();
+  const { labels } = useLabelStore();
+
   const projects = () => useProjectStore().projects();
 
   function setHasLabel(labelId: string, has: boolean) {

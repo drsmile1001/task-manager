@@ -1,6 +1,7 @@
 import { client } from "@frontend/client";
 import { singulation } from "@frontend/utils/singulation";
-import { createSignal } from "solid-js";
+import { createMemo } from "solid-js";
+import { createStore } from "solid-js/store";
 
 import type { Label } from "@backend/schemas/Label";
 
@@ -14,50 +15,48 @@ export function getLabelTextColor(backgroundColor: string): string {
 }
 
 function createLabelStore() {
-  const [labels, setLabels] = createSignal<Label[]>([]);
+  const [map, setMap] = createStore({} as Record<string, Label | undefined>);
+  const labels = createMemo(() => {
+    const labels = Object.values(map).filter(
+      (label): label is Label => label !== undefined
+    );
+    labels.sort((a, b) => {
+      const ap = a.priority ?? Number.MAX_SAFE_INTEGER;
+      const bp = b.priority ?? Number.MAX_SAFE_INTEGER;
+      if (ap !== bp) {
+        return ap - bp;
+      }
+      return a.name.localeCompare(b.name);
+    });
+    return labels;
+  });
 
   async function loadLabels() {
     const result = await client.api.labels.get();
     if (result.error) {
       throw new Error("Failed to load projects");
     }
-    setLabels(result.data);
+    setMap(Object.fromEntries(result.data.map((label) => [label.id, label])));
   }
   loadLabels();
 
-  function createLabel(label: Label) {
-    const newLabels = [...labels(), label];
-    newLabels.sort((a, b) => {
-      return (
-        (a.priority ?? Number.MAX_SAFE_INTEGER) -
-        (b.priority ?? Number.MAX_SAFE_INTEGER)
-      );
-    });
-    setLabels(newLabels);
+  function getLabel(id: string): Label | undefined {
+    return map[id];
   }
 
-  function updateLabel(updatedLabel: Label) {
-    const newLabels = labels().map((label) =>
-      label.id === updatedLabel.id ? updatedLabel : label
-    );
-    newLabels.sort((a, b) => {
-      return (
-        (a.priority ?? Number.MAX_SAFE_INTEGER) -
-        (b.priority ?? Number.MAX_SAFE_INTEGER)
-      );
-    });
-    setLabels(newLabels);
+  function setLabel(label: Label) {
+    setMap(label.id, label);
   }
 
   function deleteLabel(id: string) {
-    setLabels(labels().filter((label) => label.id !== id));
+    setMap(id, undefined);
   }
 
   return {
     labels,
-    createLabel,
-    updateLabel,
+    setLabel,
     deleteLabel,
+    getLabel,
   };
 }
 

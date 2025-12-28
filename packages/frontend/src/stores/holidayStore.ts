@@ -1,7 +1,7 @@
 import { singulation } from "@frontend/utils/singulation";
 import { parse } from "date-fns";
 import ky from "ky";
-import { createMemo, createSignal } from "solid-js";
+import { createStore } from "solid-js/store";
 
 export type DateRecord = {
   date: Date;
@@ -11,10 +11,9 @@ export type DateRecord = {
 
 function createHolidayStore() {
   const loadingYears = new Map<number, Promise<void>>();
-  const [dateRecords, setDateRecords] = createSignal<DateRecord[]>([]);
-  const dateRecordMap = createMemo(() => {
-    return new Map(dateRecords().map((dr) => [dr.date.valueOf(), dr]));
-  });
+  const [map, setMap] = createStore<{ [key: number]: DateRecord | undefined }>(
+    {}
+  );
 
   async function load(date: Date) {
     const year = date.getFullYear();
@@ -34,12 +33,20 @@ function createHolidayStore() {
             description: string;
           }[]
         >();
-      const records = fetchedRecord.map((fr) => ({
-        date: parse(fr.date, "yyyyMMdd", new Date()),
-        isHoliday: fr.isHoliday,
-        description: fr.description,
-      }));
-      setDateRecords((prev) => [...prev, ...records]);
+      const records = fetchedRecord
+        .map((fr) => ({
+          date: parse(fr.date, "yyyyMMdd", new Date()),
+          isHoliday: fr.isHoliday,
+          description: fr.description,
+        }))
+        .reduce(
+          (acc, record) => {
+            acc[record.date.valueOf()] = record;
+            return acc;
+          },
+          {} as { [key: number]: DateRecord }
+        );
+      setMap(records);
       resolve();
     });
     loadingYears.set(year, loadPromise);
@@ -48,7 +55,7 @@ function createHolidayStore() {
 
   function getDateRecord(date: Date) {
     load(date);
-    return dateRecordMap().get(date.valueOf());
+    return map[date.valueOf()];
   }
 
   return {

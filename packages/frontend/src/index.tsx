@@ -4,12 +4,25 @@ import { render } from "solid-js/web";
 
 import App from "./App.tsx";
 import "./index.css";
+import { useAssignmentStore } from "./stores/assignmentStore.ts";
+import { useFilterStore } from "./stores/filterStore.ts";
+import { useLabelStore } from "./stores/labelStore.ts";
+import { usePersonStore } from "./stores/personStore.ts";
+import { useProjectStore } from "./stores/projectStore.ts";
+import { useTaskStore } from "./stores/taskStore.ts";
 import { sync } from "./sync.ts";
 
 setDefaultOptions({ locale: zhTW });
 
-sync();
-
 const root = document.getElementById("root");
 
-render(() => <App />, root!);
+render(() => {
+  useFilterStore();
+  useLabelStore();
+  usePersonStore();
+  useProjectStore();
+  useTaskStore();
+  useAssignmentStore();
+  sync();
+  return <App />;
+}, root!);

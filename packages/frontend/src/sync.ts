@@ -2,6 +2,7 @@ import type { MutationTopic } from "@backend/api";
 
 import { useAssignmentStore } from "./stores/assignmentStore";
 import { useLabelStore } from "./stores/labelStore";
+import { usePersonStore } from "./stores/personStore";
 import { useProjectStore } from "./stores/projectStore";
 import { useTaskStore } from "./stores/taskStore";
 
@@ -28,6 +29,47 @@ export function sync() {
     if (message.topic === "mutations") {
       const m = message as MutationTopic;
       switch (m.type) {
+        case "label":
+          switch (m.action) {
+            case "create":
+            case "update":
+              useLabelStore().setLabel(m.eneity as any);
+              break;
+            case "delete":
+              useLabelStore().deleteLabel(m.id);
+              break;
+            default:
+              break;
+          }
+          break;
+        case "person":
+          switch (m.action) {
+            case "create":
+            case "update":
+              usePersonStore().setPerson(m.eneity as any);
+              break;
+            case "delete":
+              usePersonStore().deletePerson(m.id);
+              break;
+            default:
+              break;
+          }
+          break;
+        case "project":
+          switch (m.action) {
+            case "create":
+            case "update":
+              useProjectStore().setProject(m.eneity as any);
+              break;
+            case "delete":
+              useProjectStore().deleteProject(m.id);
+              useTaskStore().loadTasks();
+              useAssignmentStore().loadAssignments();
+              break;
+            default:
+              break;
+          }
+          break;
         case "task":
           switch (m.action) {
             case "create":
@@ -44,23 +86,6 @@ export function sync() {
               break;
           }
           break;
-        case "project":
-          switch (m.action) {
-            case "create":
-              useProjectStore().createProject(m.eneity as any);
-              break;
-            case "update":
-              useProjectStore().updateProject(m.eneity as any);
-              break;
-            case "delete":
-              useProjectStore().deleteProject(m.id);
-              useTaskStore().loadTasks();
-              useAssignmentStore().loadAssignments();
-              break;
-            default:
-              break;
-          }
-          break;
         case "assignment":
           switch (m.action) {
             case "create":
@@ -71,21 +96,6 @@ export function sync() {
               break;
             case "delete":
               useAssignmentStore().deleteAssignment(m.id);
-              break;
-            default:
-              break;
-          }
-          break;
-        case "label":
-          switch (m.action) {
-            case "create":
-              useLabelStore().createLabel(m.eneity as any);
-              break;
-            case "update":
-              useLabelStore().updateLabel(m.eneity as any);
-              break;
-            case "delete":
-              useLabelStore().deleteLabel(m.id);
               break;
             default:
               break;
