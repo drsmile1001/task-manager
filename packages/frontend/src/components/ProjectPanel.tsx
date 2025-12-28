@@ -115,7 +115,7 @@ export default function ProjectPanel(props: ProjectPanelProps) {
           <Button variant="secondary" onclick={createProject}>
             新增
           </Button>
-          <label class="inline-flex items-center gap-2 text-sm">
+          <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
             <input
               type="checkbox"
               checked={showArchived()}

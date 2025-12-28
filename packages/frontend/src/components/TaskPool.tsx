@@ -49,7 +49,13 @@ function ProjectBlock(props: Props & { p: Project }) {
 
   return (
     <div class="mb-4">
-      <div class="flex justify-between items-center font-medium text-gray-800">
+      <div
+        class="flex justify-between items-center font-medium"
+        classList={{
+          "text-gray-800": !p.isArchived,
+          "text-gray-400": p.isArchived,
+        }}
+      >
         <span>{p.name}</span>
       </div>
 
@@ -70,20 +76,20 @@ function ProjectBlock(props: Props & { p: Project }) {
   );
 }
 
-function TaskBlock(props: Props & { t: Task }) {
-  const { onEditTask, t } = props;
+function TaskBlock(props: Props & { t: Task; p: Project }) {
+  const { onEditTask, t, p } = props;
   const assigned = () => useAssignmentStore().listByTask(t.id).length > 0;
-
+  const isArchived = () => t.isArchived || p.isArchived;
   return (
     <div
       class="p-1 border rounded text-sm shadow cursor-pointer"
       classList={{
         "bg-gray-50 border-gray-300 hover:bg-gray-100 text-gray-400":
-          t.isArchived,
+          isArchived(),
         "bg-green-50 border-green-400 hover:bg-green-100":
-          !t.isArchived && assigned(),
+          !isArchived() && assigned(),
         "bg-yellow-50 border-yellow-400 hover:bg-yellow-100":
-          !t.isArchived && !assigned(),
+          !isArchived() && !assigned(),
         "line-through": t.isDone,
       }}
       onClick={() => onEditTask(t.id)}

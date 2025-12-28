@@ -14,6 +14,16 @@ export default function FilterPanel(props: FilterPanelProps) {
   const { labels } = useLabelStore();
   const { persons } = usePersonStore();
   const { projects } = useProjectStore();
+  const { filter } = useFilterStore();
+
+  function filtedProjects() {
+    return projects().filter((project) => {
+      if (filter().includeArchivedProjects) {
+        return true;
+      }
+      return !project.isArchived;
+    });
+  }
 
   function setHasLabel(labelId: string, has: boolean) {
     const currentLabelIds = useFilterStore().filter().labelIds ?? [];
@@ -60,7 +70,7 @@ export default function FilterPanel(props: FilterPanelProps) {
     <DetailPanel title="篩選" onClose={props.onClose}>
       <div class="flex-1 overflow-y-auto p-4 space-y-4">
         <div class="flex items-center gap-2">
-          <label class="inline-flex items-center gap-2 text-sm">
+          <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
             <input
               type="checkbox"
               checked={useFilterStore().filter().includeDoneTasks}
@@ -70,7 +80,7 @@ export default function FilterPanel(props: FilterPanelProps) {
             />
             <span>已完成工作</span>
           </label>
-          <label class="inline-flex items-center gap-2 text-sm">
+          <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
             <input
               type="checkbox"
               checked={useFilterStore().filter().includeArchivedTasks}
@@ -82,7 +92,7 @@ export default function FilterPanel(props: FilterPanelProps) {
             />
             <span>已封存工作</span>
           </label>
-          <label class="inline-flex items-center gap-2 text-sm">
+          <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
             <input
               type="checkbox"
               checked={useFilterStore().filter().includeArchivedProjects}
@@ -98,8 +108,8 @@ export default function FilterPanel(props: FilterPanelProps) {
         <div>
           <label class="block text-sm font-medium mb-1">所屬專案</label>
           <div class="flex flex-wrap gap-2">
-            {projects().map((project) => (
-              <label class="inline-flex items-center gap-2 text-sm">
+            {filtedProjects().map((project) => (
+              <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
                 <input
                   type="checkbox"
                   checked={
@@ -120,7 +130,7 @@ export default function FilterPanel(props: FilterPanelProps) {
           <label class="block text-sm font-medium mb-1">標籤</label>
           <div class="flex flex-wrap gap-2">
             {labels().map((label) => (
-              <label class="inline-flex items-center gap-2 text-sm">
+              <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
                 <input
                   type="checkbox"
                   checked={
@@ -148,7 +158,7 @@ export default function FilterPanel(props: FilterPanelProps) {
           <label class="block text-sm font-medium mb-1">人員</label>
           <div class="flex flex-wrap gap-2">
             {persons().map((person) => (
-              <label class="inline-flex items-center gap-2 text-sm">
+              <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
                 <input
                   type="checkbox"
                   checked={

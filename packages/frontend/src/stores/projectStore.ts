@@ -51,7 +51,7 @@ function createProjectStore() {
     return projects().filter((p) => {
       if (
         filter.projectIds &&
-        filter.personIds?.length &&
+        filter.projectIds.length &&
         !filter.projectIds.includes(p.id)
       ) {
         return false;

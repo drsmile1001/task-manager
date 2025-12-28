@@ -99,7 +99,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         </div>
 
         <div>
-          <label class="inline-flex items-center gap-2 text-sm">
+          <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
             <input
               type="checkbox"
               checked={task()?.isDone}
@@ -112,7 +112,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
           <label class="block text-sm font-medium mb-1">標籤</label>
           <div class="flex flex-wrap gap-2">
             {labels().map((label) => (
-              <label class="inline-flex items-center gap-2 text-sm">
+              <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
                 <input
                   type="checkbox"
                   checked={task()?.labelIds?.includes(label.id)}
