@@ -1,5 +1,6 @@
 import { client } from "@frontend/client";
 import { useProjectStore } from "@frontend/stores/projectStore";
+import { Show, createMemo, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
 import Button from "./Button";
@@ -10,7 +11,12 @@ export type ProjectPanelProps = {
 };
 
 export default function ProjectPanel(props: ProjectPanelProps) {
-  const projects = () => useProjectStore().projects();
+  const [showArchived, setShowArchived] = createSignal(false);
+  const projects = createMemo(() =>
+    useProjectStore()
+      .projects()
+      .filter((p) => (showArchived() ? true : !p.isArchived))
+  );
 
   async function createProject() {
     await client.api.projects.post({
@@ -18,6 +24,7 @@ export default function ProjectPanel(props: ProjectPanelProps) {
       name: "新專案",
       description: "",
       order: null,
+      isArchived: false,
     });
   }
 
@@ -37,6 +44,12 @@ export default function ProjectPanel(props: ProjectPanelProps) {
   function setProjectDescription(projectId: string, description: string) {
     client.api.projects({ id: projectId }).patch({
       description,
+    });
+  }
+
+  function handleSetProjectIsArchived(projectId: string, b: boolean) {
+    client.api.projects({ id: projectId }).patch({
+      isArchived: b,
     });
   }
 
@@ -69,12 +82,23 @@ export default function ProjectPanel(props: ProjectPanelProps) {
                 placeholder="排序 (可選)"
               />
               <Button
-                variant="danger"
+                variant="secondary"
                 size="small"
-                onClick={() => handleDeleteProject(project.id)}
+                onClick={() =>
+                  handleSetProjectIsArchived(project.id, !project.isArchived)
+                }
               >
-                刪除
+                {project.isArchived ? "復原" : "封存"}
               </Button>
+              <Show when={project.isArchived}>
+                <Button
+                  variant="danger"
+                  size="small"
+                  onClick={() => handleDeleteProject(project.id)}
+                >
+                  刪除
+                </Button>
+              </Show>
             </div>
             <textarea
               class="border px-2 py-1 w-full rounded resize-none"
@@ -87,10 +111,18 @@ export default function ProjectPanel(props: ProjectPanelProps) {
             />
           </div>
         ))}
-        <div>
+        <div class="flex items-center gap-2">
           <Button variant="secondary" onclick={createProject}>
             新增
           </Button>
+          <label class="inline-flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={showArchived()}
+              onInput={(e) => setShowArchived(e.currentTarget.checked)}
+            />
+            <span>已封存專案</span>
+          </label>
         </div>
       </div>
     </DetailPanel>

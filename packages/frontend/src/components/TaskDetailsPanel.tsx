@@ -2,7 +2,7 @@ import { client } from "@frontend/client";
 import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
 
 import Button from "./Button";
 import DetailPanel from "./DetailPanel";
@@ -19,6 +19,12 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   const removeTask = async () => {
     await client.api.tasks({ id: props.taskId! }).delete();
     props.onClose();
+  };
+
+  const setTaskIsArchived = async (isArchived: boolean) => {
+    await client.api.tasks({ id: props.taskId! }).patch({
+      isArchived,
+    });
   };
 
   function handleUpdateProjectId(projectId: string) {
@@ -127,10 +133,18 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
             ))}
           </div>
         </div>
-        <div>
-          <Button variant="danger" size="small" onclick={removeTask}>
-            刪除工作項目
+        <div class="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            onclick={() => setTaskIsArchived(!task()?.isArchived)}
+          >
+            {task()?.isArchived ? "還原" : "封存"}
           </Button>
+          <Show when={task()?.isArchived}>
+            <Button variant="danger" onclick={removeTask}>
+              刪除
+            </Button>
+          </Show>
         </div>
       </div>
     </DetailPanel>

@@ -172,11 +172,25 @@ export default function ScheduleTable(props: Props) {
                             labels: task?.labels ?? [],
                           };
                         })
-                        .filter(({ task }) => {
-                          const { includeDoneTasks, projectIds, labelIds } =
-                            useFilterStore().filter();
-
+                        .filter(({ task, project }) => {
+                          const {
+                            includeDoneTasks,
+                            includeArchivedProjects,
+                            includeArchivedTasks,
+                            projectIds,
+                            labelIds,
+                          } = useFilterStore().filter();
                           if (includeDoneTasks === false && task?.isDone)
+                            return false;
+                          if (
+                            includeArchivedProjects === false &&
+                            project?.isArchived
+                          )
+                            return false;
+                          if (
+                            includeArchivedTasks === false &&
+                            task?.isArchived
+                          )
                             return false;
                           if (
                             projectIds &&
@@ -244,13 +258,14 @@ export default function ScheduleTable(props: Props) {
                       >
                         <For each={items()}>
                           {({ assignment, task, project, labels }) => {
-                            const cssClass =
-                              "bg-blue-100 border border-blue-300 text-xs p-1 rounded mb-1 cursor-pointer" +
-                              (task?.isDone ? " line-through" : "");
-
                             return (
                               <div
-                                class={cssClass}
+                                class="bg-blue-50 border border-blue-300 text-xs shadow p-1 rounded mb-1 cursor-pointer hover:bg-blue-100"
+                                classList={{
+                                  "bg-gray-50 border-gray-300 text-gray-400 hover:bg-gray-100":
+                                    task.isArchived || project?.isArchived,
+                                  "line-through": task?.isDone,
+                                }}
                                 draggable="true"
                                 onDragStart={() => {
                                   useDragStore().startAssignmentDrag({

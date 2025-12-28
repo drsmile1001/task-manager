@@ -48,12 +48,19 @@ function createProjectStore() {
 
   const filteredProjects = createMemo(() => {
     const filter = useFilterStore().filter();
-    return projects().filter(
-      (p) =>
-        !filter.projectIds ||
-        filter.projectIds.length === 0 ||
-        filter.projectIds.includes(p.id)
-    );
+    return projects().filter((p) => {
+      if (
+        filter.projectIds &&
+        filter.personIds?.length &&
+        !filter.projectIds.includes(p.id)
+      ) {
+        return false;
+      }
+      if (!filter.includeArchivedProjects && p.isArchived) {
+        return false;
+      }
+      return true;
+    });
   });
 
   return {

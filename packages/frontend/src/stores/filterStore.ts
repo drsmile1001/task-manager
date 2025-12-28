@@ -6,6 +6,8 @@ export type Filter = {
   startDate: Date;
   endDate: Date;
   includeDoneTasks: boolean;
+  includeArchivedTasks: boolean;
+  includeArchivedProjects: boolean;
   projectIds?: string[];
   labelIds?: string[];
   personIds?: string[];
@@ -16,6 +18,8 @@ function createFilterStore() {
     startDate: startOfWeek(new Date()),
     endDate: addDays(startOfWeek(new Date()), 14),
     includeDoneTasks: true,
+    includeArchivedTasks: false,
+    includeArchivedProjects: false,
   });
 
   function toCurrentWeek() {
@@ -52,6 +56,20 @@ function createFilterStore() {
     });
   }
 
+  function setIncludeArchivedTasks(b: boolean) {
+    setFilter({
+      ...filter(),
+      includeArchivedTasks: b,
+    });
+  }
+
+  function setIncludeArchivedProjects(b: boolean) {
+    setFilter({
+      ...filter(),
+      includeArchivedProjects: b,
+    });
+  }
+
   function setProjectIds(projectIds?: string[]) {
     setFilter({
       ...filter(),
@@ -80,6 +98,8 @@ function createFilterStore() {
     toPreviousWeek,
     toNextWeek,
     setIncludeDoneTasks,
+    setIncludeArchivedTasks,
+    setIncludeArchivedProjects,
     setProjectIds,
     setLabelIds,
     setPersonIds,

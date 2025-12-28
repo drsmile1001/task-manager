@@ -6,6 +6,7 @@ export const taskSchema = t.Object({
   name: t.String(),
   description: t.String(),
   isDone: t.Boolean(),
+  isArchived: t.Optional(t.Boolean()),
   labelIds: t.Optional(t.Array(t.String())),
 });
 

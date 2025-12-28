@@ -50,6 +50,8 @@ export default function FilterPanel(props: FilterPanelProps) {
       ...useFilterStore().filter(),
       projectIds: undefined,
       includeDoneTasks: true,
+      includeArchivedProjects: false,
+      includeArchivedTasks: false,
       labelIds: undefined,
       personIds: undefined,
     });
@@ -57,7 +59,7 @@ export default function FilterPanel(props: FilterPanelProps) {
   return (
     <DetailPanel title="篩選" onClose={props.onClose}>
       <div class="flex-1 overflow-y-auto p-4 space-y-4">
-        <div>
+        <div class="flex items-center gap-2">
           <label class="inline-flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -66,7 +68,31 @@ export default function FilterPanel(props: FilterPanelProps) {
                 useFilterStore().setIncludeDoneTasks(e.currentTarget.checked)
               }
             />
-            <span>已完成</span>
+            <span>已完成工作</span>
+          </label>
+          <label class="inline-flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={useFilterStore().filter().includeArchivedTasks}
+              onInput={(e) =>
+                useFilterStore().setIncludeArchivedTasks(
+                  e.currentTarget.checked
+                )
+              }
+            />
+            <span>已封存工作</span>
+          </label>
+          <label class="inline-flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={useFilterStore().filter().includeArchivedProjects}
+              onInput={(e) =>
+                useFilterStore().setIncludeArchivedProjects(
+                  e.currentTarget.checked
+                )
+              }
+            />
+            <span>已封存專案</span>
           </label>
         </div>
         <div>

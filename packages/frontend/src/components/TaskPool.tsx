@@ -73,18 +73,19 @@ function ProjectBlock(props: Props & { p: Project }) {
 function TaskBlock(props: Props & { t: Task }) {
   const { onEditTask, t } = props;
   const assigned = () => useAssignmentStore().listByTask(t.id).length > 0;
-  const isDone = () => t.isDone;
-
-  const className = () =>
-    "p-1 border rounded text-sm shadow cursor-pointer " +
-    (assigned() || isDone()
-      ? "bg-green-50 border-green-400 hover:bg-green-100"
-      : "bg-yellow-50 border-yellow-400 hover:bg-yellow-100") +
-    (isDone() ? " line-through text-gray-400" : " text-gray-800");
 
   return (
     <div
-      class={className()}
+      class="p-1 border rounded text-sm shadow cursor-pointer"
+      classList={{
+        "bg-gray-50 border-gray-300 hover:bg-gray-100 text-gray-400":
+          t.isArchived,
+        "bg-green-50 border-green-400 hover:bg-green-100":
+          !t.isArchived && assigned(),
+        "bg-yellow-50 border-yellow-400 hover:bg-yellow-100":
+          !t.isArchived && !assigned(),
+        "line-through": t.isDone,
+      }}
       onClick={() => onEditTask(t.id)}
       draggable="true"
       onDragStart={() => {

@@ -52,6 +52,7 @@ function createTaskStore() {
         )
           return false;
         if (!filter.includeDoneTasks && t.isDone) return false;
+        if (!filter.includeArchivedTasks && t.isArchived) return false;
         if (filter.labelIds && filter.labelIds.length > 0) {
           const hasLabel = filter.labelIds.some((labelId) =>
             t.labelIds?.includes(labelId)
