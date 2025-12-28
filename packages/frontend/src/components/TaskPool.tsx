@@ -1,8 +1,10 @@
+import { client } from "@frontend/client";
 import { useAssignmentStore } from "@frontend/stores/assignmentStore";
 import { useDragStore } from "@frontend/stores/dragStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
 import { For } from "solid-js";
+import { ulid } from "ulid";
 
 import type { Project } from "@backend/schemas/Project";
 import type { Task } from "@backend/schemas/Task";
@@ -11,7 +13,6 @@ import Button from "./Button";
 import LabelLine from "./LabelLine";
 
 export type Props = {
-  onCreateTask: (projectId: string) => void;
   onEditTask: (taskId: string) => void;
 };
 
@@ -31,7 +32,21 @@ export default function TaskPool(props: Props) {
 }
 
 function ProjectBlock(props: Props & { p: Project }) {
-  const { onCreateTask, p } = props;
+  const { p } = props;
+
+  async function onCreateTask(projectId: string) {
+    const taskId = ulid();
+    await client.api.tasks.post({
+      id: taskId,
+      projectId: projectId,
+      name: "新工作",
+      description: "",
+      isDone: false,
+      labelIds: [],
+    });
+    props.onEditTask(taskId);
+  }
+
   return (
     <div class="mb-4">
       <div class="flex justify-between items-center font-medium text-gray-800">

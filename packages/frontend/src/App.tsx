@@ -84,7 +84,7 @@ export default function App() {
         useDragStore().clear();
       }}
     >
-      <TaskPool onCreateTask={openCreateTask} onEditTask={openEditTask} />
+      <TaskPool onEditTask={openEditTask} />
       <ScheduleTable
         onClickAssignment={handleClickAssignment}
         onClickShowFilter={handleShowFilterPanel}
@@ -93,13 +93,8 @@ export default function App() {
         onClickShowProject={handleShowProjectPanel}
       />
 
-      <Show when={taskPanelIsOpen()}>
-        <TaskDetailsPanel
-          taskId={taskPanelTaskId()}
-          projectIdForCreate={projectIdForCreate()}
-          onClickEditLabels={handleShowLabelPanel}
-          onClose={closePanels}
-        />
+      <Show when={taskPanelIsOpen() && !!taskPanelTaskId()}>
+        <TaskDetailsPanel taskId={taskPanelTaskId()!} onClose={closePanels} />
       </Show>
       <Show when={filterPanelIsOpen()}>
         <FilterPanel onClose={closePanels} />

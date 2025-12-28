@@ -2,103 +2,71 @@ import { client } from "@frontend/client";
 import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
-import { For, Show, createEffect, createSignal } from "solid-js";
-import { ulid } from "ulid";
+import { For, createEffect, createSignal } from "solid-js";
 
 import Button from "./Button";
 import DetailPanel from "./DetailPanel";
 
 export type TaskDetailsPanelProps = {
-  taskId: string | null;
-  projectIdForCreate: string | null;
+  taskId: string;
   onClose: () => void;
-  onClickEditLabels?: () => void;
 };
 
 export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
-  const isEditing = () => props.taskId !== null;
-  const isCreating = () => props.taskId === null;
-
-  const task = () =>
-    props.taskId ? useTaskStore().getTask(props.taskId) : null;
-
-  const [form, setForm] = createSignal({
-    projectId: props.projectIdForCreate ?? task()?.projectId ?? "",
-    name: task()?.name ?? "",
-    description: task()?.description ?? "",
-    isDone: task()?.isDone ?? false,
-    labelIds: task()?.labelIds ?? [],
-  });
-
-  createEffect(() => {
-    const t = task();
-    setForm({
-      projectId: t?.projectId ?? props.projectIdForCreate ?? "",
-      name: t?.name ?? "",
-      description: t?.description ?? "",
-      isDone: t?.isDone ?? false,
-      labelIds: t?.labelIds ?? [],
-    });
-  });
-
-  const updateField = (key: string, value: any) => {
-    setForm({ ...form(), [key]: value });
-  };
-
-  function setHasLabel(labelId: string, has: boolean) {
-    const currentLabelIds = form().labelIds;
-    setForm({
-      ...form(),
-      labelIds: has
-        ? [...currentLabelIds, labelId]
-        : currentLabelIds.filter((id) => id !== labelId),
-    });
-  }
-
-  const commit = async () => {
-    const data = form();
-
-    if (isCreating()) {
-      await client.api.tasks.post({
-        id: ulid(),
-        projectId: data.projectId,
-        name: data.name,
-        description: data.description,
-        isDone: data.isDone,
-        labelIds: data.labelIds,
-      });
-    } else if (isEditing() && props.taskId) {
-      await client.api.tasks({ id: props.taskId }).patch({
-        projectId: data.projectId,
-        name: data.name,
-        description: data.description,
-        isDone: data.isDone,
-        labelIds: data.labelIds,
-      });
-    }
-
-    props.onClose();
-  };
+  const task = () => useTaskStore().getTask(props.taskId);
+  const labels = () => useLabelStore().labels();
 
   const removeTask = async () => {
     await client.api.tasks({ id: props.taskId! }).delete();
     props.onClose();
   };
 
-  const labels = () => useLabelStore().labels();
+  function handleUpdateProjectId(projectId: string) {
+    client.api.tasks({ id: props.taskId! }).patch({
+      projectId,
+    });
+  }
+
+  function handleUpdateName(name: string) {
+    client.api.tasks({ id: props.taskId! }).patch({
+      name,
+    });
+  }
+
+  function handleUpdateDescription(description: string) {
+    client.api.tasks({ id: props.taskId! }).patch({
+      description,
+    });
+  }
+
+  function handleUpdateIsDone(isDone: boolean) {
+    client.api.tasks({ id: props.taskId! }).patch({
+      isDone,
+    });
+  }
+
+  function setHasLabel(labelId: string, hasLabel: boolean) {
+    const currentLabelIds = task()?.labelIds || [];
+    let newLabelIds: string[];
+    if (hasLabel) {
+      newLabelIds = [...currentLabelIds, labelId];
+    } else {
+      newLabelIds = currentLabelIds.filter((id) => id !== labelId);
+    }
+    client.api.tasks({ id: props.taskId! }).patch({
+      labelIds: newLabelIds,
+    });
+  }
 
   return (
-    <DetailPanel
-      title={isCreating() ? "新增工作項目" : "編輯工作項目"}
-      onClose={props.onClose}
-    >
-      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+    <DetailPanel title="編輯工作項目" onClose={props.onClose}>
+      <div class="flex flex-col gap-4 p-2">
         <div>
           <label class="block text-sm font-medium mb-1">所屬專案</label>
           <select
             class="border w-full px-2 py-1 rounded"
-            value={form().projectId}
-            onInput={(e) => updateField("projectId", e.currentTarget.value)}
+            value={task()?.projectId}
+            onInput={(e) => handleUpdateProjectId(e.currentTarget.value)}
           >
             <For each={useProjectStore().projects()}>
               {(p) => <option value={p.id}>{p.name}</option>}
@@ -110,8 +78,8 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
           <label class="block text-sm font-medium mb-1">名稱</label>
           <input
             class="border w-full px-2 py-1 rounded"
-            value={form().name}
-            onInput={(e) => updateField("name", e.currentTarget.value)}
+            value={task()?.name}
+            onInput={(e) => handleUpdateName(e.currentTarget.value)}
           />
         </div>
 
@@ -119,8 +87,8 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
           <label class="block text-sm font-medium mb-1">描述</label>
           <textarea
             class="border w-full px-2 py-1 rounded h-32"
-            value={form().description}
-            onInput={(e) => updateField("description", e.currentTarget.value)}
+            value={task()?.description}
+            onInput={(e) => handleUpdateDescription(e.currentTarget.value)}
           />
         </div>
 
@@ -128,20 +96,20 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
           <label class="inline-flex items-center gap-2 text-sm">
             <input
               type="checkbox"
-              checked={form().isDone}
-              onChange={(e) => updateField("isDone", e.currentTarget.checked)}
+              checked={task()?.isDone}
+              onChange={(e) => handleUpdateIsDone(e.currentTarget.checked)}
             />
             <span>已完成</span>
           </label>
         </div>
-        <div>
+        <div class="flex flex-col gap-2">
           <label class="block text-sm font-medium mb-1">標籤</label>
           <div class="flex flex-wrap gap-2">
             {labels().map((label) => (
               <label class="inline-flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
-                  checked={form().labelIds.includes(label.id)}
+                  checked={task()?.labelIds?.includes(label.id)}
                   onChange={(e) =>
                     setHasLabel(label.id, e.currentTarget.checked)
                   }
@@ -159,27 +127,11 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
             ))}
           </div>
         </div>
-        <Button
-          variant="secondary"
-          size="small"
-          onclick={props.onClickEditLabels}
-        >
-          編輯標籤
-        </Button>
-      </div>
-
-      <div class="p-3 border-t flex justify-end gap-2">
-        <Show when={isEditing()}>
-          <Button variant="danger" onClick={removeTask}>
-            刪除
+        <div>
+          <Button variant="danger" size="small" onclick={removeTask}>
+            刪除工作項目
           </Button>
-        </Show>
-        <Button variant="secondary" onClick={props.onClose}>
-          取消
-        </Button>
-        <Button variant="primary" onClick={commit}>
-          儲存
-        </Button>
+        </div>
       </div>
     </DetailPanel>
   );
