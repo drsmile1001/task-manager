@@ -17,7 +17,7 @@ export default function LabelLine(props: { labelIds: Accessor<string[]> }) {
       });
 
   return (
-    <div class="flex justify-end">
+    <div class="flex flex-wrap justify-end">
       <For each={mappedLabels()}>{(label) => <LabelBlock {...label} />}</For>
     </div>
   );

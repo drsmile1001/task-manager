@@ -1,7 +1,9 @@
 import { client } from "@frontend/client";
 import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
+import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
+import { format } from "date-fns";
 import { For, Show, onMount } from "solid-js";
 
 import Button from "./Button";
@@ -14,7 +16,8 @@ export type TaskDetailsPanelProps = {
 
 export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   const task = () => useTaskStore().getTask(props.taskId);
-  const labels = () => useLabelStore().labels();
+  const { labels } = useLabelStore();
+  const { persons } = usePersonStore();
   let nameInputRef: HTMLInputElement | undefined;
 
   onMount(() => {
@@ -50,6 +53,12 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
     });
   }
 
+  function handleUpdateDueDate(dueDate: string) {
+    client.api.tasks({ id: props.taskId! }).patch({
+      dueDate: dueDate ? new Date(dueDate) : null,
+    });
+  }
+
   function handleUpdateIsDone(isDone: boolean) {
     client.api.tasks({ id: props.taskId! }).patch({
       isDone,
@@ -69,6 +78,19 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
     });
   }
 
+  function setHasAssignee(personId: string, hasAssignee: boolean) {
+    const currentAssigneeIds = task()?.assigneeIds || [];
+    let newAssigneeIds: string[];
+    if (hasAssignee) {
+      newAssigneeIds = [...currentAssigneeIds, personId];
+    } else {
+      newAssigneeIds = currentAssigneeIds.filter((id) => id !== personId);
+    }
+    client.api.tasks({ id: props.taskId! }).patch({
+      assigneeIds: newAssigneeIds,
+    });
+  }
+
   return (
     <DetailPanel title="編輯工作項目" onClose={props.onClose}>
       <div class="flex flex-col gap-4 p-2">
@@ -79,7 +101,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
             value={task()?.projectId}
             onInput={(e) => handleUpdateProjectId(e.currentTarget.value)}
           >
-            <For each={useProjectStore().projects()}>
+            <For each={useProjectStore().filteredProjects()}>
               {(p) => <option value={p.id}>{p.name}</option>}
             </For>
           </select>
@@ -103,6 +125,17 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
             onInput={(e) => handleUpdateDescription(e.currentTarget.value)}
           />
         </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">到期日</label>
+          <input
+            class="border w-full px-2 py-1 rounded"
+            type="date"
+            value={
+              task()?.dueDate ? format(task()!.dueDate!, "yyyy-MM-dd") : ""
+            }
+            onInput={(e) => handleUpdateDueDate(e.currentTarget.value)}
+          />
+        </div>
 
         <div>
           <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
@@ -113,6 +146,23 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
             />
             <span>已完成</span>
           </label>
+        </div>
+        <div class="flex flex-col gap-2">
+          <label class="block text-sm font-medium mb-1">指派</label>
+          <div class="flex flex-wrap gap-2">
+            {persons().map((person) => (
+              <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={task()?.assigneeIds?.includes(person.id)}
+                  onChange={(e) =>
+                    setHasAssignee(person.id, e.currentTarget.checked)
+                  }
+                />
+                {person.name}
+              </label>
+            ))}
+          </div>
         </div>
         <div class="flex flex-col gap-2">
           <label class="block text-sm font-medium mb-1">標籤</label>

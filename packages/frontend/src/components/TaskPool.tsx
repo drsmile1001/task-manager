@@ -1,8 +1,10 @@
 import { client } from "@frontend/client";
 import { useAssignmentStore } from "@frontend/stores/assignmentStore";
 import { useDragStore } from "@frontend/stores/dragStore";
+import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
+import { differenceInDays, format, isBefore, startOfDay } from "date-fns";
 import { For } from "solid-js";
 import { ulid } from "ulid";
 
@@ -80,19 +82,25 @@ function ProjectBlock(props: Props & { p: Project }) {
 }
 
 function TaskBlock(props: Props & { t: Task; p: Project }) {
+  const today = startOfDay(new Date());
   const { onEditTask, t, p } = props;
   const assigned = () => useAssignmentStore().listByTask(t.id).length > 0;
   const isArchived = () => t.isArchived || p.isArchived;
+  const isOverdue = () => (t.dueDate ? isBefore(t.dueDate, today) : false);
+  const dayDiff = () =>
+    t.dueDate ? differenceInDays(new Date(t.dueDate), today) : null;
   return (
     <div
       class="p-1 border rounded text-sm shadow cursor-pointer"
       classList={{
         "bg-gray-50 border-gray-300 hover:bg-gray-100 text-gray-400":
           isArchived(),
+        "bg-red-50 border-red-400 hover:bg-red-100":
+          !isArchived() && isOverdue(),
         "bg-green-50 border-green-400 hover:bg-green-100":
-          !isArchived() && assigned(),
+          !isArchived() && !isOverdue() && assigned(),
         "bg-yellow-50 border-yellow-400 hover:bg-yellow-100":
-          !isArchived() && !assigned(),
+          !isArchived() && !isOverdue() && !assigned(),
         "line-through": t.isDone,
       }}
       onClick={() => onEditTask(t.id)}
@@ -101,8 +109,29 @@ function TaskBlock(props: Props & { t: Task; p: Project }) {
         useDragStore().startTaskDrag(t.id);
       }}
     >
-      <span>{t.name}</span>
-      <LabelLine labelIds={() => t.labelIds ?? []} />
+      <div class="flex justify-between items-center mb-1">
+        <span>{t.name}</span>
+        <span>
+          {t.dueDate ? `${format(t.dueDate, "MM-dd")} (${dayDiff()})` : ""}
+        </span>
+      </div>
+      <div class="flex justify-between items-center">
+        <div class="flex gap-1">
+          <For each={t.assigneeIds}>
+            {(assigneeId) => {
+              const { getPerson } = usePersonStore();
+              const person = getPerson(assigneeId);
+              if (!person) return null;
+              return (
+                <span class="px-1 py-0.5 rounded text-xs bg-gray-300 text-gray-800">
+                  {person.name}
+                </span>
+              );
+            }}
+          </For>
+        </div>
+        <LabelLine labelIds={() => t.labelIds ?? []} />
+      </div>
     </div>
   );
 }

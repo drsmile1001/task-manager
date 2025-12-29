@@ -281,18 +281,35 @@ export default function ScheduleTable(props: Props) {
                                 <span>
                                   {project?.name}:{task?.name}
                                 </span>
-                                <div class="flex justify-end">
-                                  {labels.map((label) => (
-                                    <span
-                                      class="text-xs px-1 py-0.5 rounded mr-1"
-                                      style={{
-                                        "background-color": label.color,
-                                        color: getLabelTextColor(label.color),
-                                      }}
-                                    >
-                                      {label.name}
-                                    </span>
-                                  ))}
+                                <div class="flex flex-wrap items-center justify-between mt-1 gap-0.5">
+                                  <div class="flex flex-wrap gap-0.5">
+                                    {(task?.assigneeIds ?? []).map(
+                                      (assigneeId) => {
+                                        const { getPerson } = usePersonStore();
+                                        const person = getPerson(assigneeId);
+                                        if (!person) return null;
+                                        return (
+                                          <span class="px-1 py-0.5 rounded text-xs bg-gray-300 text-gray-800">
+                                            {person.name}
+                                          </span>
+                                        );
+                                      }
+                                    )}
+                                  </div>
+
+                                  <div class="flex justify-end">
+                                    {labels.map((label) => (
+                                      <span
+                                        class="text-xs px-1 py-0.5 rounded mr-1"
+                                        style={{
+                                          "background-color": label.color,
+                                          color: getLabelTextColor(label.color),
+                                        }}
+                                      >
+                                        {label.name}
+                                      </span>
+                                    ))}
+                                  </div>
                                 </div>
                               </div>
                             );
