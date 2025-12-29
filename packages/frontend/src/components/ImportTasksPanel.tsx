@@ -104,6 +104,9 @@ export default function ImportTasksPanel(props: PersonPanelProps) {
           name: task.projectName,
           description: "",
           order: null,
+          isArchived: false,
+          startedAt: null,
+          endedAt: null,
         });
         createdProjectIds.set(task.projectName, pId);
         task.projectId = pId;
@@ -137,6 +140,9 @@ export default function ImportTasksPanel(props: PersonPanelProps) {
         projectId: task.projectId!,
         labelIds,
         isDone: false,
+        isArchived: false,
+        dueDate: null,
+        assigneeIds: [],
       });
       setImportingLog((log) => [
         ...log,

@@ -1,7 +1,7 @@
 import Elysia, { t } from "elysia";
 import { createYamlRepo } from "./utils/YamlRepo";
-import { projectSchema } from "./schemas/Project";
-import { taskSchema } from "./schemas/Task";
+import { projectMigrations, projectSchema } from "./schemas/Project";
+import { taskMigrations, taskSchema } from "./schemas/Task";
 import { assignmentSchema } from "./schemas/Assignment";
 import type { Logger } from "~shared/Logger";
 import { personSchema } from "./schemas/Person";
@@ -24,20 +24,31 @@ export function setCurrentBunServerPublish(server: Bun.Server<unknown>) {
   currentBunServer = server;
 }
 
-export function buildApi(logger: Logger) {
+export async function buildApi(logger: Logger) {
   const projectRepo = createYamlRepo(
     "data/projects.yaml",
     projectSchema,
-    logger
+    logger,
+    projectMigrations
   );
-  const taskRepo = createYamlRepo("data/tasks.yaml", taskSchema, logger);
+  await projectRepo.init();
+  const taskRepo = createYamlRepo(
+    "data/tasks.yaml",
+    taskSchema,
+    logger,
+    taskMigrations
+  );
+  await taskRepo.init();
   const assignmentRepo = createYamlRepo(
     "data/assignments.yaml",
     assignmentSchema,
     logger
   );
+  await assignmentRepo.init();
   const personRepo = createYamlRepo("data/persons.yaml", personSchema, logger);
+  await personRepo.init();
   const labelRepo = createYamlRepo("data/labels.yaml", labelSchema, logger);
+  await labelRepo.init();
 
   function broadcastMutation(message: {
     type: "person" | "project" | "task" | "assignment" | "label";
@@ -106,15 +117,15 @@ export function buildApi(logger: Logger) {
         body: labelSchema,
       }
     )
-    .get("/api/labels/:id", async ({ params, status }) => {
-      const label = await labelRepo.get(params.id);
+    .get("/api/labels/:id", ({ params, status }) => {
+      const label = labelRepo.get(params.id);
       if (!label) return status(404);
       return label;
     })
     .patch(
       "/api/labels/:id",
       async ({ params, body, status }) => {
-        const existing = await labelRepo.get(params.id);
+        const existing = labelRepo.get(params.id);
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await labelRepo.set(updated);
@@ -131,7 +142,7 @@ export function buildApi(logger: Logger) {
     )
     .delete("/api/labels/:id", async ({ params }) => {
       await labelRepo.remove(params.id);
-      const tasks = await taskRepo.list();
+      const tasks = taskRepo.list();
       const removedLabelTasks = tasks.map((task) => {
         if (task.labelIds?.includes(params.id)) {
           return {
@@ -149,13 +160,11 @@ export function buildApi(logger: Logger) {
         id: params.id,
       });
     })
-    .get("/api/projects", async () => {
-      return (await projectRepo.list()).sort((a, b) =>
-        a.name.localeCompare(b.name)
-      );
+    .get("/api/projects", () => {
+      return projectRepo.list();
     })
-    .get("/api/persons", async () => {
-      return await personRepo.list();
+    .get("/api/persons", () => {
+      return personRepo.list();
     })
     .post(
       "/api/persons",
@@ -172,15 +181,15 @@ export function buildApi(logger: Logger) {
         body: personSchema,
       }
     )
-    .get("/api/persons/:id", async ({ params, status }) => {
-      const person = await personRepo.get(params.id);
+    .get("/api/persons/:id", ({ params, status }) => {
+      const person = personRepo.get(params.id);
       if (!person) return status(404);
       return person;
     })
     .patch(
       "/api/persons/:id",
       async ({ params, body, status }) => {
-        const existing = await personRepo.get(params.id);
+        const existing = personRepo.get(params.id);
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await personRepo.set(updated);
@@ -197,7 +206,7 @@ export function buildApi(logger: Logger) {
     )
     .delete("/api/persons/:id", async ({ params }) => {
       await personRepo.remove(params.id);
-      const assignments = await assignmentRepo.list();
+      const assignments = assignmentRepo.list();
       const otherPersonAssignments = assignments.filter(
         (a) => a.personId !== params.id
       );
@@ -208,10 +217,8 @@ export function buildApi(logger: Logger) {
         id: params.id,
       });
     })
-    .get("/api/projects", async () => {
-      return (await projectRepo.list()).sort((a, b) =>
-        a.name.localeCompare(b.name)
-      );
+    .get("/api/projects", () => {
+      return projectRepo.list();
     })
     .post(
       "/api/projects",
@@ -228,15 +235,15 @@ export function buildApi(logger: Logger) {
         body: projectSchema,
       }
     )
-    .get("/api/projects/:id", async ({ params, status }) => {
-      const project = await projectRepo.get(params.id);
+    .get("/api/projects/:id", ({ params, status }) => {
+      const project = projectRepo.get(params.id);
       if (!project) return status(404);
       return project;
     })
     .patch(
       "/api/projects/:id",
       async ({ params, body, status }) => {
-        const existing = await projectRepo.get(params.id);
+        const existing = projectRepo.get(params.id);
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await projectRepo.set(updated);
@@ -253,11 +260,11 @@ export function buildApi(logger: Logger) {
     )
     .delete("/api/projects/:id", async ({ params }) => {
       await projectRepo.remove(params.id);
-      const tasks = await taskRepo.list();
+      const tasks = taskRepo.list();
       const otherProjectTasks = tasks.filter((t) => t.projectId !== params.id);
       await taskRepo.replaceAll(otherProjectTasks);
       const otherProjectTaskIdSet = new Set(otherProjectTasks.map((t) => t.id));
-      const assignments = await assignmentRepo.list();
+      const assignments = assignmentRepo.list();
       const otherProjectAssignments = assignments.filter((a) =>
         otherProjectTaskIdSet.has(a.taskId)
       );
@@ -268,8 +275,8 @@ export function buildApi(logger: Logger) {
         id: params.id,
       });
     })
-    .get("/api/tasks", async () => {
-      return await taskRepo.list();
+    .get("/api/tasks", () => {
+      return taskRepo.list();
     })
     .post(
       "/api/tasks",
@@ -286,15 +293,15 @@ export function buildApi(logger: Logger) {
         body: taskSchema,
       }
     )
-    .get("/api/tasks/:id", async ({ params, status }) => {
-      const task = await taskRepo.get(params.id);
+    .get("/api/tasks/:id", ({ params, status }) => {
+      const task = taskRepo.get(params.id);
       if (!task) return status(404);
       return task;
     })
     .patch(
       "/api/tasks/:id",
       async ({ params, body, status }) => {
-        const existing = await taskRepo.get(params.id);
+        const existing = taskRepo.get(params.id);
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await taskRepo.set(updated);
@@ -311,7 +318,7 @@ export function buildApi(logger: Logger) {
     )
     .delete("/api/tasks/:id", async ({ params }) => {
       await taskRepo.remove(params.id);
-      const assignments = await assignmentRepo.list();
+      const assignments = assignmentRepo.list();
       const otherTaskAssignments = assignments.filter(
         (a) => a.taskId !== params.id
       );
@@ -322,8 +329,8 @@ export function buildApi(logger: Logger) {
         id: params.id,
       });
     })
-    .get("/api/assignments", async () => {
-      return await assignmentRepo.list();
+    .get("/api/assignments", () => {
+      return assignmentRepo.list();
     })
     .post(
       "/api/assignments",
@@ -341,14 +348,14 @@ export function buildApi(logger: Logger) {
       }
     )
     .get("/api/assignments/:id", async ({ params, status }) => {
-      const assignment = await assignmentRepo.get(params.id);
+      const assignment = assignmentRepo.get(params.id);
       if (!assignment) return status(404);
       return assignment;
     })
     .patch(
       "/api/assignments/:id",
       async ({ params, body, status }) => {
-        const existing = await assignmentRepo.get(params.id);
+        const existing = assignmentRepo.get(params.id);
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await assignmentRepo.set(updated);
@@ -375,4 +382,4 @@ export function buildApi(logger: Logger) {
   return api;
 }
 
-export type Api = ReturnType<typeof buildApi>;
+export type Api = Awaited<ReturnType<typeof buildApi>>;

@@ -36,7 +36,7 @@ async function rewriteBaseUrl(root: string) {
 await rewriteBaseUrl("public");
 
 const app = new Elysia()
-  .use(buildApi(logger))
+  .use(await buildApi(logger))
   .get("/*", async ({ path }) => {
     const allowedExtensions = [
       ".js",

@@ -29,6 +29,8 @@ export default function ProjectPanel(props: ProjectPanelProps) {
       description: "",
       order: null,
       isArchived: false,
+      startedAt: null,
+      endedAt: null,
     });
   }
 

@@ -43,6 +43,9 @@ function ProjectBlock(props: Props & { p: Project }) {
       description: "",
       isDone: false,
       labelIds: [],
+      isArchived: false,
+      dueDate: null,
+      assigneeIds: [],
     });
     props.onEditTask(taskId);
   }
