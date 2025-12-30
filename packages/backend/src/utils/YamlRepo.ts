@@ -88,7 +88,7 @@ export function createYamlRepo<
       }
 
       if (data.length && !Value.Check(yamlSchema, data)) {
-        logger.error(`${path} 格式錯誤，回傳空清單`);
+        logger.error(`${path} 資料格式錯誤，回傳空清單`);
         cache.clear();
         return;
       }

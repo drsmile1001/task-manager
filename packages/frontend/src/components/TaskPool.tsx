@@ -1,15 +1,16 @@
 import { client } from "@frontend/client";
 import { useAssignmentStore } from "@frontend/stores/assignmentStore";
 import { useDragStore } from "@frontend/stores/dragStore";
+import { useFilterStore } from "@frontend/stores/filterStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
-import { useTaskStore } from "@frontend/stores/taskStore";
+import {
+  type TaskWithRelation,
+  useTaskStore,
+} from "@frontend/stores/taskStore";
 import { differenceInDays, format, isBefore, startOfDay } from "date-fns";
-import { For } from "solid-js";
+import { For, Show, createMemo, createSignal } from "solid-js";
 import { ulid } from "ulid";
-
-import type { Project } from "@backend/schemas/Project";
-import type { Task } from "@backend/schemas/Task";
 
 import Button from "./Button";
 import LabelLine from "./LabelLine";
@@ -18,74 +19,201 @@ export type Props = {
   onEditTask: (taskId: string) => void;
 };
 
+type GroupType = "BY_PROJECT" | "BY_DUE_DATE";
+
 export default function TaskPool(props: Props) {
-  const { filteredProjects } = useProjectStore();
+  const { tasksWithRelation } = useTaskStore();
+  const { filter } = useFilterStore();
+  const [groupType, setGroupType] = createSignal<GroupType>("BY_PROJECT");
+
+  const groupedTasks = createMemo(() => {
+    const currentGroupType = groupType();
+    const currentFilter = filter();
+    const grouping = tasksWithRelation()
+      .filter((task) => {
+        if (currentFilter.includeDoneTasks === false && task.isDone) {
+          return false;
+        }
+        if (currentFilter.includeArchivedTasks === false && task.isArchived) {
+          return false;
+        }
+        if (
+          currentFilter.projectIds &&
+          currentFilter.projectIds.length > 0 &&
+          !currentFilter.projectIds.includes(task.projectId)
+        ) {
+          return false;
+        }
+        if (
+          !currentFilter.includeArchivedProjects &&
+          task.project?.isArchived
+        ) {
+          return false;
+        }
+        return true;
+      })
+      .reduce(
+        (acc, task) => {
+          const key =
+            currentGroupType === "BY_PROJECT"
+              ? task.projectId
+              : task.dueDate
+                ? format(task.dueDate, "yyyy-MM-dd")
+                : "_";
+          if (!acc[key]) {
+            acc[key] = [];
+          }
+          acc[key].push(task);
+          return acc;
+        },
+        {} as Record<string, TaskWithRelation[]>
+      );
+
+    return Object.entries(grouping)
+      .map(([key, tasks]) => {
+        let group = {
+          type: currentGroupType,
+          name: "",
+          order: 0,
+          key, // 新增 key 欄位
+        };
+        if (currentGroupType === "BY_PROJECT") {
+          const project = useProjectStore().getProject(key);
+          group.name = project ? project.name : "未分類專案";
+          group.order = project?.order ?? Number.MAX_SAFE_INTEGER;
+        } else {
+          group.name = key === "_" ? "無到期日" : key;
+          group.order =
+            key === "_" ? Number.MAX_SAFE_INTEGER : new Date(key).getTime();
+        }
+
+        const sortedTasks = tasks.sort((a, b) => {
+          const priorityA = a.priority;
+          const priorityB = b.priority;
+          const dueDateA = a.dueDate
+            ? a.dueDate.getTime()
+            : Number.MAX_SAFE_INTEGER;
+          const dueDateB = b.dueDate
+            ? b.dueDate.getTime()
+            : Number.MAX_SAFE_INTEGER;
+          if (currentGroupType === "BY_PROJECT") {
+            if (priorityA !== priorityB) {
+              return priorityA - priorityB;
+            }
+            if (dueDateA !== dueDateB) {
+              return dueDateA - dueDateB;
+            }
+            return a.name.localeCompare(b.name);
+          } else {
+            if (dueDateA !== dueDateB) {
+              return dueDateA - dueDateB;
+            }
+            if (priorityA !== priorityB) {
+              return priorityA - priorityB;
+            }
+            const projectAOrder = a.project?.order ?? Number.MAX_SAFE_INTEGER;
+            const projectBOrder = b.project?.order ?? Number.MAX_SAFE_INTEGER;
+            if (projectAOrder !== projectBOrder) {
+              return projectAOrder - projectBOrder;
+            }
+            const projectAName = a.project ? a.project.name : "";
+            const projectBName = b.project ? b.project.name : "";
+            if (projectAName !== projectBName) {
+              return projectAName.localeCompare(projectBName);
+            }
+            return a.name.localeCompare(b.name);
+          }
+        });
+
+        return {
+          group,
+          tasks: sortedTasks,
+        };
+      })
+      .sort((a, b) => {
+        if (a.group.order !== b.group.order) {
+          return a.group.order - b.group.order;
+        }
+        return a.group.name.localeCompare(b.group.name);
+      });
+  });
 
   return (
-    <div class="h-full flex-none w-[clamp(15rem,15vw,25rem)] border-r overflow-y-auto p-3 bg-gray-50">
-      <div class="flex justify-between items-center mb-3">
-        <h2 class="font-bold text-gray-700">專案 & 工作</h2>
+    <div class="h-full flex-none w-[clamp(15rem,15vw,25rem)] border-r flex flex-col p-3 bg-gray-50">
+      <div class="flex-none flex border-b mb-2 pb-2 gap-4 items-center">
+        <h2 class="font-bold text-gray-700 flex-1">專案 & 工作</h2>
+        <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
+          <input
+            type="radio"
+            name="groupType"
+            value="BY_PROJECT"
+            checked={groupType() === "BY_PROJECT"}
+            onInput={() => setGroupType("BY_PROJECT")}
+          />
+          <span>依專案</span>
+        </label>
+        <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
+          <input
+            type="radio"
+            name="groupType"
+            value="BY_DUE_DATE"
+            checked={groupType() === "BY_DUE_DATE"}
+            onInput={() => setGroupType("BY_DUE_DATE")}
+          />
+          <span>依到期日</span>
+        </label>
       </div>
-      <For each={filteredProjects()}>
-        {(p) => <ProjectBlock {...props} p={p} />}
-      </For>
-    </div>
-  );
-}
-
-function ProjectBlock(props: Props & { p: Project }) {
-  const { p } = props;
-
-  async function onCreateTask(projectId: string) {
-    const taskId = ulid();
-    await client.api.tasks.post({
-      id: taskId,
-      projectId: projectId,
-      name: "新工作",
-      description: "",
-      isDone: false,
-      labelIds: [],
-      isArchived: false,
-      dueDate: null,
-      assigneeIds: [],
-    });
-    props.onEditTask(taskId);
-  }
-
-  return (
-    <div class="mb-4">
-      <div
-        class="flex justify-between items-center font-medium"
-        classList={{
-          "text-gray-800": !p.isArchived,
-          "text-gray-400": p.isArchived,
-        }}
-      >
-        <span>{p.name}</span>
-      </div>
-
-      <div class="pl-4 mt-2 space-y-1">
-        <For each={useTaskStore().listByProject(p.id)}>
-          {(t) => <TaskBlock {...props} t={t} />}
+      <div class="flex-1 overflow-y-auto">
+        <For each={groupedTasks()}>
+          {({ group, tasks }) => (
+            <div class="mb-6">
+              <div class="font-semibold text-gray-700 flex items-center justify-between mb-2">
+                <span>{group.name}</span>
+                {groupType() === "BY_PROJECT" && (
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    onClick={async () => {
+                      const projectId = group.key;
+                      const taskId = ulid();
+                      await client.api.tasks.post({
+                        id: taskId,
+                        projectId: projectId,
+                        name: "新工作",
+                        description: "",
+                        isDone: false,
+                        labelIds: [],
+                        isArchived: false,
+                        dueDate: null,
+                        assigneeIds: [],
+                      });
+                      props.onEditTask(taskId);
+                    }}
+                  >
+                    ＋ 新增工作
+                  </Button>
+                )}
+              </div>
+              <div class="space-y-1 pl-2">
+                <For each={tasks}>
+                  {(t) => <TaskBlock {...props} t={t} groupType={groupType} />}
+                </For>
+              </div>
+            </div>
+          )}
         </For>
-
-        <Button
-          variant="secondary"
-          size="small"
-          onClick={() => onCreateTask(p.id)}
-        >
-          ＋ 新增工作
-        </Button>
       </div>
     </div>
   );
 }
 
-function TaskBlock(props: Props & { t: Task; p: Project }) {
+function TaskBlock(
+  props: Props & { t: TaskWithRelation; groupType: () => GroupType }
+) {
   const today = startOfDay(new Date());
-  const { onEditTask, t, p } = props;
+  const { onEditTask, t, groupType } = props;
   const assigned = () => useAssignmentStore().listByTask(t.id).length > 0;
-  const isArchived = () => t.isArchived || p.isArchived;
+  const isArchived = () => t.isArchived || t.project?.isArchived;
   const isOverdue = () => (t.dueDate ? isBefore(t.dueDate, today) : false);
   const dayDiff = () =>
     t.dueDate ? differenceInDays(new Date(t.dueDate), today) : null;
@@ -110,7 +238,13 @@ function TaskBlock(props: Props & { t: Task; p: Project }) {
       }}
     >
       <div class="flex justify-between items-center mb-1">
-        <span>{t.name}</span>
+        <div>
+          <Show when={groupType() !== "BY_PROJECT"}>
+            <span>{t.project?.name}:</span>
+          </Show>
+          <span>{t.name}</span>
+        </div>
+
         <span>
           {t.dueDate ? `${format(t.dueDate, "MM-dd")} (${dayDiff()})` : ""}
         </span>

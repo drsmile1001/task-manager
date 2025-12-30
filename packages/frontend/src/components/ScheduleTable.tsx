@@ -25,7 +25,7 @@ export type Props = {
 export default function ScheduleTable(props: Props) {
   const tasksMap = createMemo(() => {
     const projects = useProjectStore().projects();
-    const tasks = useTaskStore().tasks();
+    const tasks = useTaskStore().tasksWithRelation();
     const labels = useLabelStore().labels();
     return Object.fromEntries(
       tasks.map((t) => {
