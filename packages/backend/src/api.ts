@@ -6,11 +6,12 @@ import { assignmentSchema } from "./schemas/Assignment";
 import type { Logger } from "~shared/Logger";
 import { personSchema } from "./schemas/Person";
 import { labelSchema } from "./schemas/Label";
+import { milestoneSchema } from "./schemas/Milestone";
 
 let currentBunServer: Bun.Server<unknown> | null = null;
 
 export type MutationMessage = {
-  type: "person" | "project" | "task" | "assignment" | "label";
+  type: "person" | "project" | "task" | "assignment" | "label" | "milestone";
   action: "create" | "update" | "delete";
   id: string;
   eneity?: unknown;
@@ -29,20 +30,16 @@ export async function buildApi(logger: Logger) {
     "data/projects.yaml",
     projectSchema,
     logger,
-    projectMigrations,
-    (p) => ({
-      ...p,
-      startedAt: p.startedAt ? new Date(p.startedAt) : null,
-      endedAt: p.endedAt ? new Date(p.endedAt) : null,
-    }),
-    (p) =>
-      ({
-        ...p,
-        startedAt: p.startedAt ? p.startedAt.toISOString() : null,
-        endedAt: p.endedAt ? p.endedAt.toISOString() : null,
-      }) as any
+    projectMigrations
   );
   await projectRepo.init();
+  const milestoneRepo = createYamlRepo(
+    "data/milestones.yaml",
+    milestoneSchema,
+    logger
+  );
+  await milestoneRepo.init();
+
   const taskRepo = createYamlRepo(
     "data/tasks.yaml",
     taskSchema,
@@ -71,7 +68,7 @@ export async function buildApi(logger: Logger) {
   await labelRepo.init();
 
   function broadcastMutation(message: {
-    type: "person" | "project" | "task" | "assignment" | "label";
+    type: "person" | "project" | "milestone" | "task" | "assignment" | "label";
     action: "create" | "update" | "delete";
     id: string;
     eneity?: unknown;
@@ -180,9 +177,6 @@ export async function buildApi(logger: Logger) {
         id: params.id,
       });
     })
-    .get("/api/projects", () => {
-      return projectRepo.list();
-    })
     .get("/api/persons", () => {
       return personRepo.list();
     })
@@ -289,8 +283,73 @@ export async function buildApi(logger: Logger) {
         otherProjectTaskIdSet.has(a.taskId)
       );
       await assignmentRepo.replaceAll(otherProjectAssignments);
+      const milestones = milestoneRepo.list();
+      const otherProjectMilestones = milestones.filter(
+        (m) => m.projectId !== params.id
+      );
+      await milestoneRepo.replaceAll(otherProjectMilestones);
       broadcastMutation({
         type: "project",
+        action: "delete",
+        id: params.id,
+      });
+    })
+    .get("/api/milestones", () => {
+      return milestoneRepo.list();
+    })
+    .post(
+      "/api/milestones",
+      async ({ body }) => {
+        await milestoneRepo.set(body);
+        broadcastMutation({
+          type: "milestone",
+          action: "create",
+          id: body.id,
+          eneity: body,
+        });
+      },
+      {
+        body: milestoneSchema,
+      }
+    )
+    .get("/api/milestones/:id", ({ params, status }) => {
+      const milestone = milestoneRepo.get(params.id);
+      if (!milestone) return status(404);
+      return milestone;
+    })
+    .patch(
+      "/api/milestones/:id",
+      async ({ params, body, status }) => {
+        const existing = milestoneRepo.get(params.id);
+        if (!existing) return status(404);
+        const updated = { ...existing, ...body };
+        await milestoneRepo.set(updated);
+        broadcastMutation({
+          type: "milestone",
+          action: "update",
+          id: params.id,
+          eneity: updated,
+        });
+      },
+      {
+        body: t.Partial(milestoneSchema),
+      }
+    )
+    .delete("/api/milestones/:id", async ({ params }) => {
+      await milestoneRepo.remove(params.id);
+      const tasks = taskRepo.list();
+      const removeDeletedMilestoneTasks = tasks.map((task) => {
+        if (task.milestoneId === params.id) {
+          return {
+            ...task,
+            milestoneId: null,
+          };
+        }
+        return task;
+      });
+      await taskRepo.replaceAll(removeDeletedMilestoneTasks);
+      broadcastMutation({
+        type: "milestone",
         action: "delete",
         id: params.id,
       });

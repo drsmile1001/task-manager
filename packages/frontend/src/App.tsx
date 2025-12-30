@@ -1,71 +1,46 @@
-import { Show, createSignal } from "solid-js";
-
 import FilterPanel from "./components/FilterPanel";
 import ImportTasksPanel from "./components/ImportTasksPanel";
 import LabelPanel from "./components/LabelPanel";
+import MilestoneDetailsPanel from "./components/MilestoneDetailsPanel";
 import PersonPanel from "./components/PersonPanel";
-import ProjectPanel from "./components/ProjectPanel";
+import ProjectDetailsPanel from "./components/ProjectDetailsPanel";
+import ProjectListPanel from "./components/ProjectListPanel";
 import ScheduleTable from "./components/ScheduleTable";
 import TaskDetailsPanel from "./components/TaskDetailsPanel";
 import TaskPool from "./components/TaskPool";
 import { useAssignmentStore } from "./stores/assignmentStore";
+import {
+  type PanelContext,
+  usePanelController,
+} from "./stores/detailPanelController";
 import { useDragStore } from "./stores/dragStore";
 
 export default function App() {
-  const [taskPanelTaskId, setTaskPanelTaskId] = createSignal<string | null>(
-    null
-  );
-  const [taskPanelIsOpen, setTaskPanelIsOpen] = createSignal(false);
-  const [filterPanelIsOpen, setFilterPanelIsOpen] = createSignal(false);
-  const [labelPanelIsOpen, setLabelPanelIsOpen] = createSignal(false);
-  const [personPanelIsOpen, setPersonPanelIsOpen] = createSignal(false);
-  const [projectPanelIsOpen, setProjectPanelIsOpen] = createSignal(false);
-  const [importTasksPanelIsOpen, setImportTasksPanelIsOpen] =
-    createSignal(false);
+  const { currentContext } = usePanelController();
 
-  function closePanels() {
-    setTaskPanelIsOpen(false);
-    setFilterPanelIsOpen(false);
-    setLabelPanelIsOpen(false);
-    setPersonPanelIsOpen(false);
-    setProjectPanelIsOpen(false);
-    setImportTasksPanelIsOpen(false);
+  function matchPanelComponent(context: PanelContext | null) {
+    if (!context) return <div></div>;
+    switch (context.type) {
+      case "Filter":
+        return <FilterPanel />;
+      case "Label":
+        return <LabelPanel />;
+      case "Person":
+        return <PersonPanel />;
+      case "ProjectList":
+        return <ProjectListPanel />;
+      case "ProjectDetails":
+        return <ProjectDetailsPanel projectId={context.projectId} />;
+      case "ImportTasks":
+        return <ImportTasksPanel />;
+      case "Milestone":
+        return <MilestoneDetailsPanel milestoneId={context.milestoneId} />;
+      case "Task":
+        return <TaskDetailsPanel taskId={context.taskId} />;
+      default:
+        return <div></div>;
+    }
   }
-
-  const openEditTask = (taskId: string) => {
-    closePanels();
-
-    setTaskPanelTaskId(taskId);
-    setTaskPanelIsOpen(true);
-  };
-
-  const handleClickAssignment = (assignmentId: string) => {
-    const assignment = useAssignmentStore().getAssignment(assignmentId);
-    if (!assignment) return;
-    closePanels();
-    openEditTask(assignment.taskId);
-  };
-
-  const handleShowFilterPanel = () => {
-    closePanels();
-    setFilterPanelIsOpen(true);
-  };
-  const handleShowLabelPanel = () => {
-    closePanels();
-    setLabelPanelIsOpen(true);
-  };
-  const handleShowPersonPanel = () => {
-    closePanels();
-    setPersonPanelIsOpen(true);
-  };
-  const handleShowProjectPanel = () => {
-    closePanels();
-    setProjectPanelIsOpen(true);
-  };
-  const handleShowImportTasksPanel = () => {
-    closePanels();
-    setImportTasksPanelIsOpen(true);
-  };
 
   return (
     <div
@@ -80,34 +55,9 @@ export default function App() {
         useDragStore().clear();
       }}
     >
-      <TaskPool onEditTask={openEditTask} />
-      <ScheduleTable
-        onClickAssignment={handleClickAssignment}
-        onClickShowFilter={handleShowFilterPanel}
-        onClickShowPerson={handleShowPersonPanel}
-        onClickShowLabel={handleShowLabelPanel}
-        onClickShowProject={handleShowProjectPanel}
-        onClickShowImportTasks={handleShowImportTasksPanel}
-      />
-
-      <Show when={taskPanelIsOpen() && !!taskPanelTaskId()}>
-        <TaskDetailsPanel taskId={taskPanelTaskId()!} onClose={closePanels} />
-      </Show>
-      <Show when={filterPanelIsOpen()}>
-        <FilterPanel onClose={closePanels} />
-      </Show>
-      <Show when={labelPanelIsOpen()}>
-        <LabelPanel onClose={closePanels} />
-      </Show>
-      <Show when={personPanelIsOpen()}>
-        <PersonPanel onClose={closePanels} />
-      </Show>
-      <Show when={projectPanelIsOpen()}>
-        <ProjectPanel onClose={closePanels} />
-      </Show>
-      <Show when={importTasksPanelIsOpen()}>
-        <ImportTasksPanel onClose={closePanels} />
-      </Show>
+      <TaskPool />
+      <ScheduleTable />
+      {matchPanelComponent(currentContext())}
     </div>
   );
 }

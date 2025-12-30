@@ -2,6 +2,7 @@ import type { MutationTopic } from "@backend/api";
 
 import { useAssignmentStore } from "./stores/assignmentStore";
 import { useLabelStore } from "./stores/labelStore";
+import { useMilestoneStore } from "./stores/milestoneStore";
 import { usePersonStore } from "./stores/personStore";
 import { useProjectStore } from "./stores/projectStore";
 import { useTaskStore } from "./stores/taskStore";
@@ -66,6 +67,20 @@ export function sync() {
               useProjectStore().deleteProject(m.id);
               useTaskStore().loadTasks();
               useAssignmentStore().loadAssignments();
+              break;
+            default:
+              break;
+          }
+          break;
+        case "milestone":
+          switch (m.action) {
+            case "create":
+            case "update":
+              useMilestoneStore().setMilestone(m.eneity as any);
+              break;
+            case "delete":
+              useMilestoneStore().deleteMilestone(m.id);
+              useTaskStore().loadTasks();
               break;
             default:
               break;

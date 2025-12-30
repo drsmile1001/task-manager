@@ -7,10 +7,6 @@ import { ulid } from "ulid";
 import Button from "./Button";
 import DetailPanel from "./DetailPanel";
 
-export type PersonPanelProps = {
-  onClose: () => void;
-};
-
 type ParsedTask = {
   projectName: string;
   projectId: string | null;
@@ -22,7 +18,7 @@ type ParsedTask = {
   description: string;
 };
 
-export default function ImportTasksPanel(props: PersonPanelProps) {
+export default function ImportTasksPanel() {
   const [text, setText] = createSignal("");
   const [parsed, setParsed] = createSignal<ParsedTask[]>([]);
   const { projects } = useProjectStore();
@@ -105,8 +101,6 @@ export default function ImportTasksPanel(props: PersonPanelProps) {
           description: "",
           order: null,
           isArchived: false,
-          startedAt: null,
-          endedAt: null,
         });
         createdProjectIds.set(task.projectName, pId);
         task.projectId = pId;
@@ -138,6 +132,7 @@ export default function ImportTasksPanel(props: PersonPanelProps) {
         name: task.taskName,
         description: task.description,
         projectId: task.projectId!,
+        milestoneId: null,
         labelIds,
         isDone: false,
         isArchived: false,
@@ -161,7 +156,7 @@ export default function ImportTasksPanel(props: PersonPanelProps) {
     setImportingLog([]);
   }
   return (
-    <DetailPanel title="匯入工作" onClose={props.onClose}>
+    <DetailPanel title="匯入工作">
       <div class="p-2 flex flex-col gap-4">
         <textarea
           disabled={importing()}

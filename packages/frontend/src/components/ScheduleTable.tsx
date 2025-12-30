@@ -1,9 +1,11 @@
 import { client } from "@frontend/client";
 import { useAssignmentStore } from "@frontend/stores/assignmentStore";
+import { usePanelController } from "@frontend/stores/detailPanelController";
 import { useDragStore } from "@frontend/stores/dragStore";
 import { useFilterStore } from "@frontend/stores/filterStore";
 import { useHolidayStore } from "@frontend/stores/holidayStore";
 import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
+import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
@@ -11,18 +13,12 @@ import { addDays, format, isBefore, startOfDay } from "date-fns";
 import { For, createMemo } from "solid-js";
 import { ulid } from "ulid";
 
+import type { Milestone } from "@backend/schemas/Milestone";
+
 import Button from "./Button";
 
-export type Props = {
-  onClickAssignment?: (assignmentId: string) => void;
-  onClickShowFilter?: () => void;
-  onClickShowPerson?: () => void;
-  onClickShowLabel?: () => void;
-  onClickShowProject?: () => void;
-  onClickShowImportTasks?: () => void;
-};
-
-export default function ScheduleTable(props: Props) {
+export default function ScheduleTable() {
+  const { openPanel } = usePanelController();
   const tasksMap = createMemo(() => {
     const projects = useProjectStore().projects();
     const tasks = useTaskStore().tasksWithRelation();
@@ -49,19 +45,37 @@ export default function ScheduleTable(props: Props) {
   });
 
   const { filteredPersons } = usePersonStore();
-
+  const { getProject } = useProjectStore();
   const days = createMemo(() => {
     const { startDate, endDate } = useFilterStore().filter();
+    const allMilestones = useMilestoneStore().milestones();
+
     const dates: {
       key: string;
       label: string;
       description: string;
       isHoliday: boolean;
       isToday: boolean;
+      milestonesInDate: {
+        id: string;
+        name: string;
+        projectName: string;
+      }[];
     }[] = [];
     let curr = startDate;
     while (isBefore(curr, endDate)) {
       const record = useHolidayStore().getDateRecord(curr);
+      const milestonesInDate = allMilestones
+        .filter((m) => {
+          if (!m.dueDate) return false;
+          const dueDate = startOfDay(new Date(m.dueDate));
+          return dueDate.valueOf() === startOfDay(curr).valueOf();
+        })
+        .map((m) => ({
+          id: m.id,
+          name: m.name,
+          projectName: getProject(m.projectId)?.name ?? "未知專案",
+        }));
       dates.push({
         key: format(curr, "yyyy-MM-dd"),
         label: format(curr, "MM/dd E"),
@@ -69,6 +83,7 @@ export default function ScheduleTable(props: Props) {
         isHoliday: record?.isHoliday ?? false,
         isToday:
           startOfDay(curr).valueOf() === startOfDay(new Date()).valueOf(),
+        milestonesInDate,
       });
       curr = addDays(curr, 1);
     }
@@ -107,19 +122,34 @@ export default function ScheduleTable(props: Props) {
           <Button variant="secondary" onclick={useFilterStore().toNextWeek}>
             下週
           </Button>
-          <Button variant="secondary" onclick={props.onClickShowFilter}>
+          <Button
+            variant="secondary"
+            onclick={() => openPanel({ type: "Filter" })}
+          >
             篩選
           </Button>
-          <Button variant="secondary" onclick={props.onClickShowPerson}>
+          <Button
+            variant="secondary"
+            onclick={() => openPanel({ type: "Person" })}
+          >
             人員
           </Button>
-          <Button variant="secondary" onclick={props.onClickShowLabel}>
+          <Button
+            variant="secondary"
+            onclick={() => openPanel({ type: "Label" })}
+          >
             標籤
           </Button>
-          <Button variant="secondary" onclick={props.onClickShowProject}>
+          <Button
+            variant="secondary"
+            onclick={() => openPanel({ type: "ProjectList" })}
+          >
             專案
           </Button>
-          <Button variant="secondary" onclick={props.onClickShowImportTasks}>
+          <Button
+            variant="secondary"
+            onclick={() => openPanel({ type: "ImportTasks" })}
+          >
             匯入工作
           </Button>
         </div>
@@ -133,7 +163,7 @@ export default function ScheduleTable(props: Props) {
           }}
         >
           <div class="border-b border-r p-2 sticky left-0 top-0 z-[3] bg-gray-100 font-semibold text-sm">
-            人員
+            人員 \ 日期
           </div>
           <For each={days()}>
             {(d) => (
@@ -148,6 +178,18 @@ export default function ScheduleTable(props: Props) {
               >
                 <span>{d.label}</span>
                 <span class="text-xs">{d.description}</span>
+                <For each={d.milestonesInDate}>
+                  {(m) => (
+                    <div
+                      class="mt-1 px-1 py-0.5 bg-yellow-100 border border-yellow-300 rounded text-xs cursor-pointer hover:bg-yellow-200"
+                      onClick={() =>
+                        openPanel({ type: "Milestone", milestoneId: m.id })
+                      }
+                    >
+                      {m.projectName}:{m.name}
+                    </div>
+                  )}
+                </For>
               </div>
             )}
           </For>
@@ -263,7 +305,7 @@ export default function ScheduleTable(props: Props) {
                                 class="bg-blue-50 border border-blue-300 text-xs shadow p-1 rounded mb-1 cursor-pointer hover:bg-blue-100"
                                 classList={{
                                   "bg-gray-50 border-gray-300 text-gray-400 hover:bg-gray-100":
-                                    task.isArchived || project?.isArchived,
+                                    task?.isArchived || project?.isArchived,
                                   "line-through": task?.isDone,
                                 }}
                                 draggable="true"
@@ -275,7 +317,7 @@ export default function ScheduleTable(props: Props) {
                                   });
                                 }}
                                 onClick={() => {
-                                  props.onClickAssignment?.(assignment.id);
+                                  openPanel({ type: "Task", taskId: task.id });
                                 }}
                               >
                                 <span>

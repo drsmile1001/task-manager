@@ -1,5 +1,6 @@
 import { client } from "@frontend/client";
 import { useAssignmentStore } from "@frontend/stores/assignmentStore";
+import { usePanelController } from "@frontend/stores/detailPanelController";
 import { useDragStore } from "@frontend/stores/dragStore";
 import { useFilterStore } from "@frontend/stores/filterStore";
 import { usePersonStore } from "@frontend/stores/personStore";
@@ -15,16 +16,13 @@ import { ulid } from "ulid";
 import Button from "./Button";
 import LabelLine from "./LabelLine";
 
-export type Props = {
-  onEditTask: (taskId: string) => void;
-};
-
 type GroupType = "BY_PROJECT" | "BY_DUE_DATE";
 
-export default function TaskPool(props: Props) {
+export default function TaskPool() {
   const { tasksWithRelation } = useTaskStore();
   const { filter } = useFilterStore();
   const [groupType, setGroupType] = createSignal<GroupType>("BY_PROJECT");
+  const { openPanel } = usePanelController();
 
   const groupedTasks = createMemo(() => {
     const currentGroupType = groupType();
@@ -179,6 +177,7 @@ export default function TaskPool(props: Props) {
                       await client.api.tasks.post({
                         id: taskId,
                         projectId: projectId,
+                        milestoneId: null,
                         name: "新工作",
                         description: "",
                         isDone: false,
@@ -187,7 +186,7 @@ export default function TaskPool(props: Props) {
                         dueDate: null,
                         assigneeIds: [],
                       });
-                      props.onEditTask(taskId);
+                      openPanel({ type: "Task", taskId });
                     }}
                   >
                     ＋ 新增工作
@@ -196,7 +195,7 @@ export default function TaskPool(props: Props) {
               </div>
               <div class="space-y-1 pl-2">
                 <For each={tasks}>
-                  {(t) => <TaskBlock {...props} t={t} groupType={groupType} />}
+                  {(t) => <TaskBlock t={t} groupType={groupType} />}
                 </For>
               </div>
             </div>
@@ -207,11 +206,10 @@ export default function TaskPool(props: Props) {
   );
 }
 
-function TaskBlock(
-  props: Props & { t: TaskWithRelation; groupType: () => GroupType }
-) {
+function TaskBlock(props: { t: TaskWithRelation; groupType: () => GroupType }) {
+  const { openPanel } = usePanelController();
   const today = startOfDay(new Date());
-  const { onEditTask, t, groupType } = props;
+  const { t, groupType } = props;
   const assigned = () => useAssignmentStore().listByTask(t.id).length > 0;
   const isArchived = () => t.isArchived || t.project?.isArchived;
   const isOverdue = () => (t.dueDate ? isBefore(t.dueDate, today) : false);
@@ -231,7 +229,7 @@ function TaskBlock(
           !isArchived() && !isOverdue() && !assigned(),
         "line-through": t.isDone,
       }}
-      onClick={() => onEditTask(t.id)}
+      onClick={() => openPanel({ type: "Task", taskId: t.id })}
       draggable="true"
       onDragStart={() => {
         useDragStore().startTaskDrag(t.id);

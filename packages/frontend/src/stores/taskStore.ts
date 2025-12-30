@@ -6,6 +6,7 @@ import { createStore } from "solid-js/store";
 import type { Task } from "@backend/schemas/Task";
 
 import { useLabelStore } from "./labelStore";
+import { useMilestoneStore } from "./milestoneStore";
 import { usePersonStore } from "./personStore";
 import { useProjectStore } from "./projectStore";
 
@@ -41,10 +42,14 @@ function createTaskStore() {
     const { getProject } = useProjectStore();
     const { getPerson } = usePersonStore();
     const { getLabel } = useLabelStore();
+    const { getMilestone } = useMilestoneStore();
     return Object.values(map)
       .filter((t): t is Task => t !== undefined)
       .map((task) => {
         const project = getProject(task.projectId);
+        const milestone = task.milestoneId
+          ? getMilestone(task.milestoneId)
+          : undefined;
         const assignees = task.assigneeIds
           .map((personId) => getPerson(personId))
           .filter((p): p is NonNullable<typeof p> => p !== undefined);
@@ -57,6 +62,7 @@ function createTaskStore() {
         return {
           ...task,
           project,
+          milestone,
           assignees,
           labels,
           priority,

@@ -6,11 +6,7 @@ import { ulid } from "ulid";
 import Button from "./Button";
 import DetailPanel from "./DetailPanel";
 
-export type FilterPanelProps = {
-  onClose: () => void;
-};
-
-export default function LabelPanel(props: FilterPanelProps) {
+export default function LabelPanel() {
   const labels = () => useLabelStore().labels();
   const nameInputRefs = new Map<string, HTMLInputElement>();
   let toFocusLabelId: string | null = null;
@@ -61,7 +57,7 @@ export default function LabelPanel(props: FilterPanelProps) {
   }
 
   return (
-    <DetailPanel title="標籤" onClose={props.onClose}>
+    <DetailPanel title="標籤">
       <div class="p-2 flex flex-col gap-4">
         {labels().map((label) => (
           <div class="flex items-center gap-2">

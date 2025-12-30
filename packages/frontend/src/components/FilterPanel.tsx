@@ -6,11 +6,7 @@ import { useProjectStore } from "@frontend/stores/projectStore";
 import Button from "./Button";
 import DetailPanel from "./DetailPanel";
 
-export type FilterPanelProps = {
-  onClose: () => void;
-};
-
-export default function FilterPanel(props: FilterPanelProps) {
+export default function FilterPanel() {
   const { labels } = useLabelStore();
   const { persons } = usePersonStore();
   const { projects } = useProjectStore();
@@ -67,7 +63,7 @@ export default function FilterPanel(props: FilterPanelProps) {
     });
   }
   return (
-    <DetailPanel title="篩選" onClose={props.onClose}>
+    <DetailPanel title="篩選">
       <div class="flex-1 overflow-y-auto p-4 space-y-4">
         <div class="flex items-center gap-2">
           <label class="inline-flex items-center gap-2 text-sm cursor-pointer">

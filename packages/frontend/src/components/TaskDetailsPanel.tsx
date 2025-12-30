@@ -1,4 +1,5 @@
 import { client } from "@frontend/client";
+import { usePanelController } from "@frontend/stores/detailPanelController";
 import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
@@ -11,10 +12,10 @@ import DetailPanel from "./DetailPanel";
 
 export type TaskDetailsPanelProps = {
   taskId: string;
-  onClose: () => void;
 };
 
 export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
+  const { closePanel } = usePanelController();
   const task = () => useTaskStore().getTask(props.taskId);
   const { labels } = useLabelStore();
   const { persons } = usePersonStore();
@@ -26,7 +27,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
 
   const removeTask = async () => {
     await client.api.tasks({ id: props.taskId! }).delete();
-    props.onClose();
+    closePanel();
   };
 
   const setTaskIsArchived = async (isArchived: boolean) => {
@@ -92,7 +93,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   }
 
   return (
-    <DetailPanel title="編輯工作項目" onClose={props.onClose}>
+    <DetailPanel title="編輯工作項目">
       <div class="flex flex-col gap-4 p-2">
         <div>
           <label class="block text-sm font-medium mb-1">所屬專案</label>

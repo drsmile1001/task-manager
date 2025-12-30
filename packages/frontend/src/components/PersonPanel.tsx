@@ -6,11 +6,7 @@ import { ulid } from "ulid";
 import Button from "./Button";
 import DetailPanel from "./DetailPanel";
 
-export type PersonPanelProps = {
-  onClose: () => void;
-};
-
-export default function PersonPanel(props: PersonPanelProps) {
+export default function PersonPanel() {
   const { persons } = usePersonStore();
   const nameInputRefs = new Map<string, HTMLInputElement>();
   let toFocusUserId: string | null = null;
@@ -53,7 +49,7 @@ export default function PersonPanel(props: PersonPanelProps) {
   }
 
   return (
-    <DetailPanel title="人員" onClose={props.onClose}>
+    <DetailPanel title="人員">
       <div class="p-2 flex flex-col gap-4">
         {persons().map((person) => (
           <div class="flex items-center gap-2">

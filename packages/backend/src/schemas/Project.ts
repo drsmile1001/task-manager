@@ -7,8 +7,6 @@ export const projectSchema = t.Object({
   description: t.String(),
   order: t.Nullable(t.Number()),
   isArchived: t.Boolean(),
-  startedAt: t.Nullable(t.Date()),
-  endedAt: t.Nullable(t.Date()),
 });
 
 export type Project = typeof projectSchema.static;
@@ -29,6 +27,15 @@ export const projectMigrations = MigrationBuilder.create<{
       isArchived: item.isArchived ?? false,
       startedAt: null,
       endedAt: null,
+    }))
+  )
+  .addMigration("移除時間區間", (data) =>
+    data.map((item) => ({
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      order: item.order,
+      isArchived: item.isArchived,
     }))
   )
   .build();
