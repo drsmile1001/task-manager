@@ -13,8 +13,6 @@ import { addDays, format, isBefore, startOfDay } from "date-fns";
 import { For, createMemo } from "solid-js";
 import { ulid } from "ulid";
 
-import type { Milestone } from "@backend/schemas/Milestone";
-
 import Button from "./Button";
 
 export default function ScheduleTable() {
