@@ -29,14 +29,34 @@ export async function buildApi(logger: Logger) {
     "data/projects.yaml",
     projectSchema,
     logger,
-    projectMigrations
+    projectMigrations,
+    (p) => ({
+      ...p,
+      startedAt: p.startedAt ? new Date(p.startedAt) : null,
+      endedAt: p.endedAt ? new Date(p.endedAt) : null,
+    }),
+    (p) =>
+      ({
+        ...p,
+        startedAt: p.startedAt ? p.startedAt.toISOString() : null,
+        endedAt: p.endedAt ? p.endedAt.toISOString() : null,
+      }) as any
   );
   await projectRepo.init();
   const taskRepo = createYamlRepo(
     "data/tasks.yaml",
     taskSchema,
     logger,
-    taskMigrations
+    taskMigrations,
+    (t) => ({
+      ...t,
+      dueDate: t.dueDate ? new Date(t.dueDate) : null,
+    }),
+    (t) =>
+      ({
+        ...t,
+        dueDate: t.dueDate ? t.dueDate.toISOString() : null,
+      }) as any
   );
   await taskRepo.init();
   const assignmentRepo = createYamlRepo(

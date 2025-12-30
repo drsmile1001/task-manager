@@ -37,11 +37,12 @@ export function createYamlRepo<
   path: string,
   schema: T,
   baseLogger: Logger,
-  migrations: Migration[] = []
+  migrations: Migration[] = [],
+  fromYaml?: (data: Static<typeof schema>) => Static<typeof schema>,
+  toYaml?: (data: Static<typeof schema>) => Static<typeof schema>
 ): YamlRepo<Static<typeof schema>> {
   type ItemType = Static<typeof schema>;
   const cache = new Map<string, ItemType>();
-  const yamlSchema = t.Array(schema);
   const logger = baseLogger.extend("YamlRepo", { path });
 
   async function init(): Promise<void> {
@@ -86,11 +87,19 @@ export function createYamlRepo<
           logger.info(`執行 migration: ${migration.drscription}`);
         }
       }
-
-      if (data.length && !Value.Check(yamlSchema, data)) {
-        logger.error(`${path} 資料格式錯誤，回傳空清單`);
-        cache.clear();
-        return;
+      if (!migrated) {
+        data = data.map((item) => {
+          const after = fromYaml
+            ? fromYaml(item as ItemType)
+            : (item as ItemType);
+          if (!Value.Check(schema, after)) {
+            logger.error(`${path} 資料格式錯誤，回傳空清單`);
+            logger.log(after);
+            cache.clear();
+            throw new Error("資料格式錯誤");
+          }
+          return after;
+        });
       }
 
       if (migrated) {
@@ -136,7 +145,9 @@ export function createYamlRepo<
   }
 
   async function persist(): Promise<void> {
-    const items = Array.from(cache.values());
+    const items = Array.from(cache.values()).map((item) =>
+      toYaml ? toYaml(item) : item
+    );
     const version = migrations.length;
     const out = { version, data: items };
     const yaml = Bun.YAML.stringify(out, null, 2);
