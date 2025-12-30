@@ -3,7 +3,7 @@ import { usePanelController } from "@frontend/stores/detailPanelController";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { format, parse } from "date-fns";
-import { Show, createEffect, onMount } from "solid-js";
+import { Show, onMount } from "solid-js";
 import { ulid } from "ulid";
 
 import type { Milestone } from "@backend/schemas/Milestone";
