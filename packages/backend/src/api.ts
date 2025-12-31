@@ -36,7 +36,17 @@ export async function buildApi(logger: Logger) {
   const milestoneRepo = createYamlRepo(
     "data/milestones.yaml",
     milestoneSchema,
-    logger
+    logger,
+    [],
+    (data) => ({
+      ...data,
+      dueDate: data.dueDate ? new Date(data.dueDate) : null,
+    }),
+    (data) =>
+      ({
+        ...data,
+        dueDate: data.dueDate ? data.dueDate.toISOString() : null,
+      }) as any
   );
   await milestoneRepo.init();
 
