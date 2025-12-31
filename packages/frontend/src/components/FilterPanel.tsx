@@ -4,7 +4,8 @@ import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 
 import Button from "./Button";
-import DetailPanel from "./DetailPanel";
+import Checkbox from "./Checkbox";
+import DetailPanel, { PanelSections, SectionLabel } from "./DetailPanel";
 
 export default function FilterPanel() {
   const { labels } = useLabelStore();
@@ -63,116 +64,91 @@ export default function FilterPanel() {
     });
   }
   return (
-    <DetailPanel title="篩選">
-      <div class="flex-1 overflow-y-auto p-4 space-y-4">
-        <div class="flex items-center gap-2">
-          <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={useFilterStore().filter().includeDoneTasks}
-              onInput={(e) =>
-                useFilterStore().setIncludeDoneTasks(e.currentTarget.checked)
+    <DetailPanel
+      title="篩選"
+      actions={
+        <Button size="small" onclick={clearFilter}>
+          清除篩選
+        </Button>
+      }
+    >
+      <PanelSections>
+        <SectionLabel>狀態篩選</SectionLabel>
+        <div class="flex flex-wrap gap-2">
+          <Checkbox
+            title="已完成工作"
+            checked={useFilterStore().filter().includeDoneTasks}
+            onInput={(e) =>
+              useFilterStore().setIncludeDoneTasks(e.currentTarget.checked)
+            }
+          />
+          <Checkbox
+            title="已封存工作"
+            checked={useFilterStore().filter().includeArchivedTasks}
+            onInput={(e) =>
+              useFilterStore().setIncludeArchivedTasks(e.currentTarget.checked)
+            }
+          />
+          <Checkbox
+            title="已封存專案"
+            checked={useFilterStore().filter().includeArchivedProjects}
+            onInput={(e) =>
+              useFilterStore().setIncludeArchivedProjects(
+                e.currentTarget.checked
+              )
+            }
+          />
+        </div>
+        <SectionLabel>所屬專案</SectionLabel>
+        <div class="flex flex-wrap gap-2">
+          {filtedProjects().map((project) => (
+            <Checkbox
+              title={project.name}
+              checked={
+                useFilterStore().filter().projectIds?.includes(project.id) ??
+                false
+              }
+              onChange={(e) =>
+                setHasProject(project.id, e.currentTarget.checked)
               }
             />
-            <span>已完成工作</span>
-          </label>
-          <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={useFilterStore().filter().includeArchivedTasks}
-              onInput={(e) =>
-                useFilterStore().setIncludeArchivedTasks(
-                  e.currentTarget.checked
-                )
+          ))}
+        </div>
+        <SectionLabel>標籤</SectionLabel>
+        <div class="flex flex-wrap gap-2">
+          {labels().map((label) => (
+            <Checkbox
+              checked={
+                useFilterStore().filter().labelIds?.includes(label.id) ?? false
               }
-            />
-            <span>已封存工作</span>
-          </label>
-          <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={useFilterStore().filter().includeArchivedProjects}
-              onInput={(e) =>
-                useFilterStore().setIncludeArchivedProjects(
-                  e.currentTarget.checked
-                )
+              onChange={(e) => setHasLabel(label.id, e.currentTarget.checked)}
+            >
+              <span
+                class="px-1 py-0.5 rounded"
+                style={{
+                  "background-color": label.color,
+                  color: getLabelTextColor(label.color),
+                }}
+              >
+                {label.name}
+              </span>
+            </Checkbox>
+          ))}
+        </div>
+        <SectionLabel>人員</SectionLabel>
+        <div class="flex flex-wrap gap-2">
+          {persons().map((person) => (
+            <Checkbox
+              title={person.name}
+              checked={
+                useFilterStore().filter().personIds?.includes(person.id) ??
+                false
               }
+              onChange={(e) => setHasPerson(person.id, e.currentTarget.checked)}
             />
-            <span>已封存專案</span>
-          </label>
+          ))}
         </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">所屬專案</label>
-          <div class="flex flex-wrap gap-2">
-            {filtedProjects().map((project) => (
-              <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={
-                    useFilterStore()
-                      .filter()
-                      .projectIds?.includes(project.id) ?? false
-                  }
-                  onChange={(e) =>
-                    setHasProject(project.id, e.currentTarget.checked)
-                  }
-                />
-                {project.name}
-              </label>
-            ))}
-          </div>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">標籤</label>
-          <div class="flex flex-wrap gap-2">
-            {labels().map((label) => (
-              <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={
-                    useFilterStore().filter().labelIds?.includes(label.id) ??
-                    false
-                  }
-                  onChange={(e) =>
-                    setHasLabel(label.id, e.currentTarget.checked)
-                  }
-                />
-                <span
-                  class="px-2 py-1 rounded"
-                  style={{
-                    "background-color": label.color,
-                    color: getLabelTextColor(label.color),
-                  }}
-                >
-                  {label.name}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">人員</label>
-          <div class="flex flex-wrap gap-2">
-            {persons().map((person) => (
-              <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={
-                    useFilterStore().filter().personIds?.includes(person.id) ??
-                    false
-                  }
-                  onChange={(e) =>
-                    setHasPerson(person.id, e.currentTarget.checked)
-                  }
-                />
-                {person.name}
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <Button onclick={clearFilter}>清除篩選</Button>
-      </div>
+      </PanelSections>
     </DetailPanel>
   );
 }

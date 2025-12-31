@@ -5,7 +5,12 @@ import { createSignal } from "solid-js";
 import { ulid } from "ulid";
 
 import Button from "./Button";
-import DetailPanel from "./DetailPanel";
+import DetailPanel, {
+  PanelList,
+  PanelSections,
+  SectionLabel,
+} from "./DetailPanel";
+import { Textarea } from "./Textarea";
 
 type ParsedTask = {
   projectName: string;
@@ -157,10 +162,11 @@ export default function ImportTasksPanel() {
   }
   return (
     <DetailPanel title="匯入工作">
-      <div class="p-2 flex flex-col gap-4">
-        <textarea
+      <PanelSections>
+        <SectionLabel>工作資料貼上區</SectionLabel>
+        <Textarea
+          class="h-80"
           disabled={importing()}
-          class="w-full h-80 border rounded p-2"
           value={text()}
           onInput={(e) => {
             const v = e.currentTarget.value;
@@ -169,36 +175,52 @@ export default function ImportTasksPanel() {
           }}
           placeholder={hint}
         />
-
-        <label class="font-bold">解析結果</label>
-        <div class="flex flex-col">
-          {parsed().map((item) => (
-            <div class="flex flex-col gap-1 border-b pb-2">
-              <div>
-                專案: {item.projectName} {item.projectId ? "" : "<新增>"}
-              </div>
-              <div>工作: {item.taskName}</div>
-              <div>
-                標籤:{" "}
-                {item.labels.length === 0
-                  ? "無"
-                  : item.labels
-                      .map(
-                        (label) => `${label.name} ${label.id ? "" : "<新增>"}`
-                      )
-                      .join(", ")}
-              </div>
-              <div>描述: {item.description || "<無>"}</div>
-            </div>
-          ))}
+        <SectionLabel>解析結果</SectionLabel>
+        <div class="min-h-40 max-h-80 overflow-y-auto border p-2 bg-gray-100">
+          <PanelList items={parsed}>
+            {(item) => (
+              <>
+                <dl class="grid grid-cols-[auto_1fr] gap-x-4 mb-2">
+                  <dt>專案</dt>
+                  <dd>
+                    <span>{item.projectName}</span>
+                    <span class="text-blue-600">
+                      {item.projectId ? "" : " <新增>"}
+                    </span>
+                  </dd>
+                  <dt>工作</dt>
+                  <dd>{item.taskName}</dd>
+                  <dt>標籤</dt>
+                  <dd>
+                    {item.labels.length === 0
+                      ? "<無>"
+                      : item.labels
+                          .map((label) => (
+                            <>
+                              <span>{label.name}</span>
+                              <span class="text-blue-600">
+                                {label.id ? "" : " <新增>"}
+                              </span>
+                            </>
+                          ))
+                          .reduce((prev, curr) => [prev, ", ", curr] as any)}
+                  </dd>
+                  <dt>描述</dt>
+                  <dd>{item.description || "<無>"}</dd>
+                </dl>
+              </>
+            )}
+          </PanelList>
         </div>
-        <label class="font-bold">匯入日誌</label>
+
+        <SectionLabel>匯入日誌</SectionLabel>
         <div class="h-40 overflow-y-auto border p-2 bg-gray-100">
           {importingLog().map((log) => (
             <div>{log}</div>
           ))}
         </div>
 
+        <SectionLabel>操作</SectionLabel>
         <div class="flex gap-2">
           <Button variant="secondary" disabled={importing()} onclick={clear}>
             清除
@@ -211,7 +233,7 @@ export default function ImportTasksPanel() {
             匯入
           </Button>
         </div>
-      </div>
+      </PanelSections>
     </DetailPanel>
   );
 }

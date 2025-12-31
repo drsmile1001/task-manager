@@ -1,5 +1,6 @@
 import { client } from "@frontend/client";
 import { usePanelController } from "@frontend/stores/detailPanelController";
+import { useFilterStore } from "@frontend/stores/filterStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { format, parse } from "date-fns";
@@ -9,7 +10,13 @@ import { ulid } from "ulid";
 import type { Milestone } from "@backend/schemas/Milestone";
 
 import Button from "./Button";
-import DetailPanel from "./DetailPanel";
+import DetailPanel, {
+  PanelList,
+  PanelSections,
+  SectionLabel,
+} from "./DetailPanel";
+import Input from "./Input";
+import { Textarea } from "./Textarea";
 
 export type ProjectDetailsPanelProps = {
   projectId: string;
@@ -75,89 +82,92 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
 
   const milestones = () => getMilestonesByProjectId(props.projectId);
 
-  return (
-    <DetailPanel title={`專案詳情 - ${project()?.name || ""}`}>
-      <div class="flex flex-col gap-4 p-2">
-        <div>
-          <label class="block text-sm font-medium mb-1">名稱</label>
-          <input
-            ref={nameInputRef}
-            class="border w-full px-2 py-1 rounded"
-            value={project()?.name}
-            onBlur={(e) => handleUpdateName(e.currentTarget.value)}
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">描述</label>
-          <textarea
-            class="border w-full px-2 py-1 rounded h-32"
-            value={project()?.description}
-            onBlur={(e) => handleUpdateDescription(e.currentTarget.value)}
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">排序</label>
-          <input
-            class="border w-full px-2 py-1 rounded"
-            type="number"
-            min="1"
-            value={project()?.order ?? ""}
-            onInput={(e) => handleUpdateOrder(e.currentTarget.value)}
-            placeholder="排序 (可選)"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">里程碑</label>
-          <div class="flex flex-col gap-2 p-2">
-            {milestones().map((milestone) => (
-              <div class="flex gap-2">
-                <input
-                  class="border w-40 px-2 py-1 rounded"
-                  type="text"
-                  value={milestone.name}
-                  placeholder="名稱"
-                  onBlur={(e) =>
-                    handleUpdateMileStone(milestone.id, {
-                      name: e.currentTarget.value,
-                    })
-                  }
-                />
-                <input
-                  class="border w-40 px-2 py-1 rounded"
-                  type="date"
-                  value={
-                    milestone.dueDate
-                      ? format(milestone.dueDate, "yyyy-MM-dd")
-                      : ""
-                  }
-                  placeholder="截止日期"
-                  onBlur={(e) =>
-                    handleUpdateMileStone(milestone.id, {
-                      dueDate: e.currentTarget.value
-                        ? parse(e.currentTarget.value, "yyyy-MM-dd", new Date())
-                        : null,
-                    })
-                  }
-                />
-                <Button
-                  variant="secondary"
-                  onClick={() =>
-                    pushPanel({ type: "Milestone", milestoneId: milestone.id })
-                  }
-                >
-                  詳細
-                </Button>
-              </div>
-            ))}
+  const { setProjectIds } = useFilterStore();
 
-            <div>
-              <Button variant="secondary" onClick={createMilestone}>
-                新增里程碑
+  function applyFilter() {
+    setProjectIds([props.projectId]);
+    pushPanel({ type: "Filter" });
+  }
+
+  return (
+    <DetailPanel
+      title={`專案詳情 - ${project()?.name || ""}`}
+      actions={
+        <Button variant="secondary" size="small" onClick={applyFilter}>
+          套用篩選
+        </Button>
+      }
+    >
+      <PanelSections>
+        <SectionLabel>名稱</SectionLabel>
+        <Input
+          ref={nameInputRef}
+          value={project()?.name}
+          onBlur={(e) => handleUpdateName(e.currentTarget.value)}
+        />
+        <SectionLabel>描述</SectionLabel>
+        <Textarea
+          value={project()?.description}
+          onBlur={(e) => handleUpdateDescription(e.currentTarget.value)}
+        />
+        <SectionLabel>排序</SectionLabel>
+        <Input
+          type="number"
+          min="1"
+          value={project()?.order ?? ""}
+          onInput={(e) => handleUpdateOrder(e.currentTarget.value)}
+          placeholder="排序 (可選)"
+        />
+        <SectionLabel>里程碑</SectionLabel>
+        <PanelList items={milestones}>
+          {(milestone) => (
+            <>
+              <Input
+                class="flex-1"
+                value={milestone.name}
+                placeholder="名稱"
+                onBlur={(e) =>
+                  handleUpdateMileStone(milestone.id, {
+                    name: e.currentTarget.value,
+                  })
+                }
+              />
+              <Input
+                class="w-40"
+                type="date"
+                value={
+                  milestone.dueDate
+                    ? format(milestone.dueDate, "yyyy-MM-dd")
+                    : ""
+                }
+                placeholder="截止日期"
+                onBlur={(e) =>
+                  handleUpdateMileStone(milestone.id, {
+                    dueDate: e.currentTarget.value
+                      ? parse(e.currentTarget.value, "yyyy-MM-dd", new Date())
+                      : null,
+                  })
+                }
+              />
+              <Button
+                variant="secondary"
+                size="small"
+                onClick={() =>
+                  pushPanel({ type: "Milestone", milestoneId: milestone.id })
+                }
+              >
+                詳細
               </Button>
-            </div>
-          </div>
+            </>
+          )}
+        </PanelList>
+        <div>
+          <Button variant="secondary" onClick={createMilestone}>
+            新增里程碑
+          </Button>
         </div>
-        <div class="flex items-center gap-2">
+        <SectionLabel>進階操作</SectionLabel>
+        <div class="flex gap-2">
           <Button
             variant="secondary"
             onclick={() => setProjectIsArchived(!project()?.isArchived)}
@@ -170,7 +180,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
             </Button>
           </Show>
         </div>
-      </div>
+      </PanelSections>
     </DetailPanel>
   );
 }

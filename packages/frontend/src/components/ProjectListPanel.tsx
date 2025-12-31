@@ -5,7 +5,9 @@ import { createEffect, createMemo, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
 import Button from "./Button";
-import DetailPanel from "./DetailPanel";
+import Checkbox from "./Checkbox";
+import DetailPanel, { PanelList } from "./DetailPanel";
+import Input from "./Input";
 
 export default function ProjectListPanel() {
   const { pushPanel } = usePanelController();
@@ -63,58 +65,56 @@ export default function ProjectListPanel() {
   }
 
   return (
-    <DetailPanel title="專案清單">
-      <div class="h-full flex flex-col">
-        <div class="flex-none p-2 flex items-center justify-between border-b">
-          <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showArchived()}
-              onInput={(e) => setShowArchived(e.currentTarget.checked)}
-            />
-            <span>已封存專案</span>
-          </label>
-          <Button variant="secondary" onclick={createProject}>
-            新增
+    <DetailPanel
+      title="專案清單"
+      actions={
+        <div class="flex items-center justify-between">
+          <Checkbox
+            checked={showArchived()}
+            onInput={(e) => setShowArchived(e.currentTarget.checked)}
+            title="已封存專案"
+          />
+          <Button variant="secondary" size="small" onclick={createProject}>
+            + 新增
           </Button>
         </div>
-        <div class="flex-1 p-2 flex flex-col gap-4 overflow-y-auto">
-          {projects().map((project) => (
-            <div class="flex flex-col gap-1">
-              <div class="flex items-center gap-2">
-                <input
-                  ref={(el) => nameInputRefs.set(project.id, el)}
-                  class="border px-2 py-1 w-40 rounded"
-                  value={project.name}
-                  onBlur={(e) =>
-                    setProjectName(project.id, e.currentTarget.value)
-                  }
-                  placeholder="專案名稱"
-                />
-                <input
-                  class="border px-2 py-1 w-30 rounded"
-                  type="number"
-                  min="1"
-                  value={project.order ?? ""}
-                  onInput={(e) =>
-                    setProjectOrder(project.id, e.currentTarget.value)
-                  }
-                  placeholder="排序 (可選)"
-                />
-                <Button
-                  variant="secondary"
-                  size="small"
-                  onClick={() =>
-                    pushPanel({ type: "ProjectDetails", projectId: project.id })
-                  }
-                >
-                  詳細
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      }
+    >
+      <PanelList items={projects}>
+        {(project) => (
+          <>
+            <Input
+              ref={(el) => nameInputRefs.set(project.id, el)}
+              class="flex-1"
+              classList={{
+                "text-gray-500 italic": project.isArchived,
+              }}
+              value={project.name}
+              onBlur={(e) => setProjectName(project.id, e.currentTarget.value)}
+              placeholder="專案名稱"
+            />
+            <Input
+              class="w-20"
+              type="number"
+              min="1"
+              value={project.order ?? ""}
+              onInput={(e) =>
+                setProjectOrder(project.id, e.currentTarget.value)
+              }
+              placeholder="排序"
+            />
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={() =>
+                pushPanel({ type: "ProjectDetails", projectId: project.id })
+              }
+            >
+              詳細
+            </Button>
+          </>
+        )}
+      </PanelList>
     </DetailPanel>
   );
 }

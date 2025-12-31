@@ -4,7 +4,8 @@ import { createEffect } from "solid-js";
 import { ulid } from "ulid";
 
 import Button from "./Button";
-import DetailPanel from "./DetailPanel";
+import DetailPanel, { PanelList } from "./DetailPanel";
+import Input from "./Input";
 
 export default function PersonPanel() {
   const { persons } = usePersonStore();
@@ -49,24 +50,34 @@ export default function PersonPanel() {
   }
 
   return (
-    <DetailPanel title="人員">
-      <div class="p-2 flex flex-col gap-4">
-        {persons().map((person) => (
-          <div class="flex items-center gap-2">
-            <input
+    <DetailPanel
+      title="人員"
+      actions={
+        <div class="flex items-center justify-between">
+          <div></div>
+          <Button variant="secondary" size="small" onclick={createPerson}>
+            + 新增
+          </Button>
+        </div>
+      }
+    >
+      <PanelList items={persons}>
+        {(person) => (
+          <>
+            <Input
               ref={(el) => nameInputRefs.set(person.id, el)}
-              class="border px-2 py-1 w-30 rounded"
+              class="flex-1"
               value={person.name}
               onBlur={(e) => setPersonName(person.id, e.currentTarget.value)}
               placeholder="人員名稱"
             />
-            <input
-              class="border px-2 py-1 w-30 rounded"
+            <Input
+              class="w-20"
               type="number"
               min="1"
               value={person.order ?? ""}
               onInput={(e) => setPersonOrder(person.id, e.currentTarget.value)}
-              placeholder="排序 (可選)"
+              placeholder="排序"
             />
             <Button
               variant="danger"
@@ -75,14 +86,9 @@ export default function PersonPanel() {
             >
               刪除
             </Button>
-          </div>
-        ))}
-        <div>
-          <Button variant="secondary" onclick={createPerson}>
-            新增
-          </Button>
-        </div>
-      </div>
+          </>
+        )}
+      </PanelList>
     </DetailPanel>
   );
 }
