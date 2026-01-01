@@ -27,7 +27,8 @@ export default function MilestoneDetailsPanel(
   props: MilestoneDetailsPanelProps
 ) {
   const { popPanel, pushPanel } = usePanelController();
-  const milestone = () => useMilestoneStore().getMilestone(props.milestoneId);
+  const { getMilestone } = useMilestoneStore();
+  const milestone = createMemo(() => getMilestone(props.milestoneId));
   const project = () =>
     useProjectStore().getProject(milestone()?.projectId ?? "");
   let nameInputRef: HTMLInputElement | undefined;
@@ -73,7 +74,23 @@ export default function MilestoneDetailsPanel(
     <Panel title={`里程碑詳情 - ${milestone()?.name || ""}`}>
       <PanelSections>
         <SectionLabel>所屬專案</SectionLabel>
-        <Input value={project()?.name || ""} disabled />
+        <div class="w-full flex">
+          <Input class="flex-1" value={project()?.name || ""} disabled />
+          <Button
+            variant="secondary"
+            size="small"
+            class="ml-2"
+            onclick={() =>
+              pushPanel({
+                type: "ProjectDetails",
+                projectId: milestone()!.projectId,
+              })
+            }
+          >
+            詳細
+          </Button>
+        </div>
+
         <SectionLabel>名稱</SectionLabel>
         <Input
           ref={nameInputRef}

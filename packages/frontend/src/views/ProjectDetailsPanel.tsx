@@ -1,6 +1,7 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
 import Input from "@frontend/components/Input";
+import { MilestoneBlock } from "@frontend/components/MilestoneBlock";
 import Panel, {
   PanelList,
   PanelSections,
@@ -13,12 +14,10 @@ import { useFilterStore } from "@frontend/stores/filterStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
-import { format, parse } from "date-fns";
 import { debounce } from "lodash";
-import { Show, createEffect, createMemo, onMount } from "solid-js";
+import { Show, createMemo, onMount } from "solid-js";
 import { ulid } from "ulid";
 
-import type { Milestone } from "@backend/schemas/Milestone";
 import type { Project } from "@backend/schemas/Project";
 
 export type ProjectDetailsPanelProps = {
@@ -52,17 +51,9 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
 
   const { getMilestonesByProjectId } = useMilestoneStore();
   const milestones = () => getMilestonesByProjectId(props.projectId);
-  async function handleUpdateMileStone(
-    milestoneId: string,
-    updating: Partial<Milestone>
-  ) {
-    await client.api.milestones({ id: milestoneId }).patch(updating);
-  }
-  const milestoneNameInputRefs = new Map<string, HTMLInputElement>();
-  let toFocusMilestoneId: string | null = null;
+
   async function createMilestone() {
     const milestoneId = ulid();
-    toFocusMilestoneId = milestoneId;
     await client.api.milestones.post({
       id: milestoneId,
       projectId: props.projectId,
@@ -70,17 +61,8 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
       dueDate: null,
       description: "",
     });
+    pushPanel({ type: "Milestone", milestoneId });
   }
-  createEffect(() => {
-    milestones();
-    if (toFocusMilestoneId) {
-      const inputRef = milestoneNameInputRefs.get(toFocusMilestoneId);
-      if (inputRef) {
-        inputRef.focus();
-        toFocusMilestoneId = null;
-      }
-    }
-  });
 
   const { tasksWithRelation } = useTaskStore();
   const tasks = createMemo(() =>
@@ -148,47 +130,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
         <SectionLabel>里程碑</SectionLabel>
         <PanelList items={milestones}>
           {(milestone) => (
-            <>
-              <Input
-                ref={(el) => milestoneNameInputRefs.set(milestone.id, el)}
-                class="flex-1"
-                value={milestone.name}
-                placeholder="名稱"
-                onInput={debounce(
-                  (e) =>
-                    handleUpdateMileStone(milestone.id, {
-                      name: e.currentTarget.value,
-                    }),
-                  300
-                )}
-              />
-              <Input
-                class="w-40"
-                type="date"
-                value={
-                  milestone.dueDate
-                    ? format(milestone.dueDate, "yyyy-MM-dd")
-                    : ""
-                }
-                placeholder="截止日期"
-                onInput={(e) =>
-                  handleUpdateMileStone(milestone.id, {
-                    dueDate: e.currentTarget.value
-                      ? parse(e.currentTarget.value, "yyyy-MM-dd", new Date())
-                      : null,
-                  })
-                }
-              />
-              <Button
-                variant="secondary"
-                size="small"
-                onClick={() =>
-                  pushPanel({ type: "Milestone", milestoneId: milestone.id })
-                }
-              >
-                詳細
-              </Button>
-            </>
+            <MilestoneBlock class="w-full" milestone={milestone} />
           )}
         </PanelList>
         <div>
