@@ -3,6 +3,7 @@ import Button from "@frontend/components/Button";
 import Input from "@frontend/components/Input";
 import Panel, { PanelList } from "@frontend/components/Panel";
 import { usePersonStore } from "@frontend/stores/personStore";
+import { debounce } from "lodash";
 import { createEffect } from "solid-js";
 import { ulid } from "ulid";
 
@@ -67,7 +68,10 @@ export default function PersonPanel() {
               ref={(el) => nameInputRefs.set(person.id, el)}
               class="flex-1"
               value={person.name}
-              onBlur={(e) => setPersonName(person.id, e.currentTarget.value)}
+              onInput={debounce(
+                (e) => setPersonName(person.id, e.currentTarget.value),
+                300
+              )}
               placeholder="人員名稱"
             />
             <Input

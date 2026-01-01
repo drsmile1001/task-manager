@@ -14,6 +14,7 @@ import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
 import { format, parse } from "date-fns";
+import { debounce } from "lodash";
 import { Show, createEffect, createMemo, onMount } from "solid-js";
 import { ulid } from "ulid";
 
@@ -164,12 +165,18 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
         <Input
           ref={nameInputRef}
           value={project()?.name}
-          onBlur={(e) => handleUpdateName(e.currentTarget.value)}
+          onInput={debounce(
+            (e) => handleUpdateName(e.currentTarget.value),
+            300
+          )}
         />
         <SectionLabel>描述</SectionLabel>
         <Textarea
           value={project()?.description}
-          onBlur={(e) => handleUpdateDescription(e.currentTarget.value)}
+          onInput={debounce(
+            (e) => handleUpdateDescription(e.currentTarget.value),
+            300
+          )}
         />
         <SectionLabel>排序</SectionLabel>
         <Input
@@ -188,11 +195,13 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
                 class="flex-1"
                 value={milestone.name}
                 placeholder="名稱"
-                onBlur={(e) =>
-                  handleUpdateMileStone(milestone.id, {
-                    name: e.currentTarget.value,
-                  })
-                }
+                onInput={debounce(
+                  (e) =>
+                    handleUpdateMileStone(milestone.id, {
+                      name: e.currentTarget.value,
+                    }),
+                  300
+                )}
               />
               <Input
                 class="w-40"
@@ -203,7 +212,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
                     : ""
                 }
                 placeholder="截止日期"
-                onBlur={(e) =>
+                onInput={(e) =>
                   handleUpdateMileStone(milestone.id, {
                     dueDate: e.currentTarget.value
                       ? parse(e.currentTarget.value, "yyyy-MM-dd", new Date())
@@ -247,11 +256,13 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
                 }}
                 value={task.name}
                 placeholder="名稱"
-                onBlur={(e) =>
-                  handleUpdateTask(task.id, {
-                    name: e.currentTarget.value,
-                  })
-                }
+                onInput={debounce(
+                  (e) =>
+                    handleUpdateTask(task.id, {
+                      name: e.currentTarget.value,
+                    }),
+                  300
+                )}
               />
               <Button
                 variant="secondary"

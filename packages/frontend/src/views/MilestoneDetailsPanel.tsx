@@ -7,6 +7,7 @@ import { usePanelController } from "@frontend/stores/PanelController";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { format, parse } from "date-fns";
+import { debounce } from "lodash";
 import { onMount } from "solid-js";
 
 export type MilestoneDetailsPanelProps = {
@@ -58,7 +59,10 @@ export default function MilestoneDetailsPanel(
         <Input
           ref={nameInputRef}
           value={milestone()?.name}
-          onBlur={(e) => handleUpdateName(e.currentTarget.value)}
+          onInput={debounce(
+            (e) => handleUpdateName(e.currentTarget.value),
+            300
+          )}
         />
         <SectionLabel>到期日</SectionLabel>
         <Input
@@ -68,13 +72,16 @@ export default function MilestoneDetailsPanel(
               ? format(milestone()!.dueDate!, "yyyy-MM-dd")
               : ""
           }
-          onBlur={(e) => handleUpdateDueDate(e.currentTarget.value)}
+          onInput={(e) => handleUpdateDueDate(e.currentTarget.value)}
           placeholder="到期日 (可選)"
         />
         <SectionLabel>描述</SectionLabel>
         <Textarea
           value={milestone()?.description}
-          onBlur={(e) => handleUpdateDescription(e.currentTarget.value)}
+          onInput={debounce(
+            (e) => handleUpdateDescription(e.currentTarget.value),
+            300
+          )}
         />
         <SectionLabel>進階操作</SectionLabel>
         <div class="flex gap-2">

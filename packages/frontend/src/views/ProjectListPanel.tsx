@@ -5,6 +5,7 @@ import Input from "@frontend/components/Input";
 import Panel, { PanelList } from "@frontend/components/Panel";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useProjectStore } from "@frontend/stores/projectStore";
+import { debounce } from "lodash";
 import { createEffect, createMemo, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
@@ -89,7 +90,10 @@ export default function ProjectListPanel() {
                 "text-gray-500 italic": project.isArchived,
               }}
               value={project.name}
-              onBlur={(e) => setProjectName(project.id, e.currentTarget.value)}
+              onInput={debounce(
+                (e) => setProjectName(project.id, e.currentTarget.value),
+                300
+              )}
               placeholder="專案名稱"
             />
             <Input

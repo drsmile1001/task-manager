@@ -9,8 +9,11 @@ import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
+import { debounce } from "lodash";
 import { For, Show, onMount } from "solid-js";
+
+import type { Task } from "@backend/schemas/Task";
 
 export type TaskDetailsPanelProps = {
   taskId: string;
@@ -38,34 +41,8 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
     });
   };
 
-  function handleUpdateProjectId(projectId: string) {
-    client.api.tasks({ id: props.taskId! }).patch({
-      projectId,
-    });
-  }
-
-  function handleUpdateName(name: string) {
-    client.api.tasks({ id: props.taskId! }).patch({
-      name,
-    });
-  }
-
-  function handleUpdateDescription(description: string) {
-    client.api.tasks({ id: props.taskId! }).patch({
-      description,
-    });
-  }
-
-  function handleUpdateDueDate(dueDate: string) {
-    client.api.tasks({ id: props.taskId! }).patch({
-      dueDate: dueDate ? new Date(dueDate) : null,
-    });
-  }
-
-  function handleUpdateIsDone(isDone: boolean) {
-    client.api.tasks({ id: props.taskId! }).patch({
-      isDone,
-    });
+  function handleUpdateTask(update: Partial<Task>) {
+    client.api.tasks({ id: props.taskId! }).patch(update);
   }
 
   function setHasLabel(labelId: string, hasLabel: boolean) {
@@ -102,7 +79,11 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
           <select
             class="flex-1 border px-2 py-1 rounded"
             value={task()?.projectId}
-            onInput={(e) => handleUpdateProjectId(e.currentTarget.value)}
+            onInput={(e) =>
+              handleUpdateTask({
+                projectId: e.currentTarget.value,
+              })
+            }
           >
             <For each={useProjectStore().filteredProjects()}>
               {(p) => <option value={p.id}>{p.name}</option>}
@@ -127,21 +108,30 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         <Input
           ref={nameInputRef}
           value={task()?.name}
-          onInput={(e) => handleUpdateName(e.currentTarget.value)}
+          onInput={debounce(
+            (e) => handleUpdateTask({ name: e.currentTarget.value }),
+            300
+          )}
         />
 
         <SectionLabel>描述</SectionLabel>
         <Textarea
           class="h-32"
           value={task()?.description}
-          onInput={(e) => handleUpdateDescription(e.currentTarget.value)}
+          onInput={debounce(
+            (e) => handleUpdateTask({ description: e.currentTarget.value }),
+            300
+          )}
         />
 
         <SectionLabel>到期日</SectionLabel>
         <Input
           type="date"
           value={task()?.dueDate ? format(task()!.dueDate!, "yyyy-MM-dd") : ""}
-          onInput={(e) => handleUpdateDueDate(e.currentTarget.value)}
+          onInput={(e) => {
+            const date = new Date(e.currentTarget.value);
+            handleUpdateTask({ dueDate: isValid(date) ? date : null });
+          }}
         />
 
         <SectionLabel>已完成</SectionLabel>
@@ -149,7 +139,9 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
           <input
             type="checkbox"
             checked={task()?.isDone}
-            onChange={(e) => handleUpdateIsDone(e.currentTarget.checked)}
+            onChange={(e) =>
+              handleUpdateTask({ isDone: e.currentTarget.checked })
+            }
           />
           <span>已完成</span>
         </label>

@@ -3,6 +3,7 @@ import Button from "@frontend/components/Button";
 import Input from "@frontend/components/Input";
 import Panel, { PanelList } from "@frontend/components/Panel";
 import { useLabelStore } from "@frontend/stores/labelStore";
+import { debounce } from "lodash";
 import { createEffect } from "solid-js";
 import { ulid } from "ulid";
 
@@ -75,7 +76,10 @@ export default function LabelPanel() {
               ref={(el) => nameInputRefs.set(label.id, el)}
               class="flex-1"
               value={label.name}
-              onBlur={(e) => setLabelName(label.id, e.currentTarget.value)}
+              onInput={debounce(
+                (e) => setLabelName(label.id, e.currentTarget.value),
+                300
+              )}
               placeholder="標籤名稱"
             />
             <Input
