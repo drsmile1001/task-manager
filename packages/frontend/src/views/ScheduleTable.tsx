@@ -15,6 +15,7 @@ import { For, createMemo } from "solid-js";
 import { ulid } from "ulid";
 
 export default function ScheduleTable() {
+  const { dragContext, setDragContext } = useDragController();
   const { openPanel } = usePanelController();
   const tasksMap = createMemo(() => {
     const projects = useProjectStore().projects();
@@ -99,11 +100,13 @@ export default function ScheduleTable() {
       onDrop={async (e) => {
         // 拖拽到空白區域則刪除指派
         e.preventDefault();
-        const drag = useDragController().state();
-        if (drag.type === "assignment") {
-          await client.api.assignments({ id: drag.assignmentId }).delete();
+        const currentDragContext = dragContext();
+        if (currentDragContext?.type === "assignment") {
+          await client.api
+            .assignments({ id: currentDragContext.assignmentId })
+            .delete();
+          setDragContext(null);
         }
-        useDragController().clear();
       }}
     >
       <div class="flex-none flex flex-col gap-2">
@@ -171,12 +174,26 @@ export default function ScheduleTable() {
           <For each={days()}>
             {(d) => (
               <div
-                class="border-b border-r border-black p-2 sticky top-0 z-[1] bg-gray-100 text-sm text-center flex flex-col items-center"
+                class="border-b border-r border-black p-2 sticky top-0 z-[1] bg-gray-100 text-sm text-center flex flex-col items-center select-none"
                 classList={{
                   "font-bold": d.isToday,
                   "text-blue-500": d.isToday,
                   "bg-red-100": d.isHoliday,
                   "bg-gray-100": !d.isHoliday,
+                }}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={async (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const drag = dragContext();
+                  if (drag?.type === "milestone") {
+                    await client.api
+                      .milestones({ id: drag.milestoneId })
+                      .patch({
+                        dueDate: new Date(d.key),
+                      });
+                  }
+                  setDragContext(null);
                 }}
               >
                 <span>{d.label}</span>
@@ -184,10 +201,17 @@ export default function ScheduleTable() {
                 <For each={d.milestonesInDate}>
                   {(m) => (
                     <div
-                      class="mt-1 px-1 py-0.5 bg-yellow-100 border border-yellow-300 rounded text-xs cursor-pointer hover:bg-yellow-200"
+                      class="mt-1 px-1 py-0.5 bg-yellow-100 border border-yellow-300 rounded text-xs cursor-pointer hover:bg-yellow-200 slect-none"
                       onClick={() =>
                         openPanel({ type: "Milestone", milestoneId: m.id })
                       }
+                      draggable="true"
+                      onDragStart={() => {
+                        setDragContext({
+                          type: "milestone",
+                          milestoneId: m.id,
+                        });
+                      }}
                     >
                       {m.projectName}:{m.name}
                     </div>
@@ -278,16 +302,16 @@ export default function ScheduleTable() {
                           e.preventDefault();
                           e.stopPropagation();
 
-                          const drag = useDragController().state();
+                          const drag = dragContext();
 
-                          if (drag.type === "task") {
+                          if (drag?.type === "task") {
                             await client.api.assignments.post({
                               id: ulid(),
                               taskId: drag.taskId,
                               personId: p.id,
                               date: d.key,
                             });
-                          } else if (drag.type === "assignment") {
+                          } else if (drag?.type === "assignment") {
                             await client.api
                               .assignments({
                                 id: drag.assignmentId,
@@ -297,8 +321,7 @@ export default function ScheduleTable() {
                                 date: d.key,
                               });
                           }
-
-                          useDragController().clear();
+                          setDragContext(null);
                         }}
                       >
                         <For each={items()}>
@@ -313,10 +336,11 @@ export default function ScheduleTable() {
                                 }}
                                 draggable="true"
                                 onDragStart={() => {
-                                  useDragController().startAssignmentDrag({
+                                  setDragContext({
+                                    type: "assignment",
                                     assignmentId: assignment.id,
-                                    personId: assignment.personId,
-                                    date: assignment.date,
+                                    fromPersonId: assignment.personId,
+                                    fromDate: assignment.date,
                                   });
                                 }}
                                 onClick={() => {

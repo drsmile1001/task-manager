@@ -5,7 +5,7 @@ import Panel, {
   PanelSections,
   SectionLabel,
 } from "@frontend/components/Panel";
-import { Textarea } from "@frontend/components/Textarea";
+import { baseTextareaClass } from "@frontend/components/Textarea";
 import { useLabelStore } from "@frontend/stores/labelStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { createSignal } from "solid-js";
@@ -163,8 +163,8 @@ export default function ImportTasksPanel() {
     <Panel title="匯入工作">
       <PanelSections>
         <SectionLabel>工作資料貼上區</SectionLabel>
-        <Textarea
-          class="h-80"
+        <textarea
+          class={`${baseTextareaClass} h-80`}
           disabled={importing()}
           value={text()}
           onInput={(e) => {

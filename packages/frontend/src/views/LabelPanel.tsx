@@ -1,6 +1,6 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
-import Input from "@frontend/components/Input";
+import { baseInputClass } from "@frontend/components/Input";
 import Panel, { PanelList } from "@frontend/components/Panel";
 import { useLabelStore } from "@frontend/stores/labelStore";
 import { debounce } from "lodash";
@@ -40,6 +40,8 @@ export default function LabelPanel() {
     client.api.labels({ id: labelId }).patch(update);
   }
 
+  const debouncedHandleUpdateLabel = debounce(handleUpdateLabel, 300);
+
   function hadleDeleteLabel(labelId: string) {
     client.api.labels({ id: labelId }).delete();
   }
@@ -59,18 +61,18 @@ export default function LabelPanel() {
       <PanelList items={labels}>
         {(label) => (
           <>
-            <Input
+            <input
               ref={(el) => nameInputRefs.set(label.id, el)}
-              class="flex-1"
+              class={`${baseInputClass} flex-1`}
               value={label.name}
-              onInput={debounce(
-                (e) =>
-                  handleUpdateLabel(label.id, { name: e.currentTarget.value }),
-                300
-              )}
+              onInput={(e) =>
+                debouncedHandleUpdateLabel(label.id, {
+                  name: e.currentTarget.value,
+                })
+              }
               placeholder="標籤名稱"
             />
-            <Input
+            <input
               class="w-10 cursor-pointer"
               type="color"
               value={label.color}
@@ -78,8 +80,8 @@ export default function LabelPanel() {
                 handleUpdateLabel(label.id, { color: e.currentTarget.value })
               }
             />
-            <Input
-              class="w-20"
+            <input
+              class={`${baseInputClass} w-20`}
               type="number"
               min="1"
               value={label.priority ?? ""}

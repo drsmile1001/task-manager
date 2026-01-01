@@ -1,6 +1,6 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
-import Input from "@frontend/components/Input";
+import { baseInputClass } from "@frontend/components/Input";
 import Panel, { PanelList } from "@frontend/components/Panel";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { debounce } from "lodash";
@@ -38,6 +38,8 @@ export default function PersonPanel() {
     client.api.persons({ id: personId }).patch(update);
   }
 
+  const debouncedHandleUpdatePerson = debounce(handleUpdatePerson, 300);
+
   function handleDeletePerson(personId: string) {
     client.api.persons({ id: personId }).delete();
   }
@@ -57,21 +59,19 @@ export default function PersonPanel() {
       <PanelList items={persons}>
         {(person) => (
           <>
-            <Input
+            <input
               ref={(el) => nameInputRefs.set(person.id, el)}
-              class="flex-1"
+              class={`${baseInputClass} flex-1`}
               value={person.name}
-              onInput={debounce(
-                (e) =>
-                  handleUpdatePerson(person.id, {
-                    name: e.currentTarget.value,
-                  }),
-                300
-              )}
+              onInput={(e) =>
+                debouncedHandleUpdatePerson(person.id, {
+                  name: e.currentTarget.value,
+                })
+              }
               placeholder="人員名稱"
             />
-            <Input
-              class="w-20"
+            <input
+              class={`${baseInputClass} w-20`}
               type="number"
               min="1"
               value={person.order ?? ""}

@@ -14,7 +14,7 @@ export function TaskBlock(props: {
   showProject?: boolean;
 }) {
   const { pushPanel } = usePanelController();
-  const { startTaskDrag } = useDragController();
+  const { setDragContext } = useDragController();
   const { getPerson } = usePersonStore();
   const today = startOfDay(new Date());
   const { task } = props;
@@ -43,7 +43,12 @@ export function TaskBlock(props: {
       }}
       onClick={() => pushPanel({ type: "Task", taskId: task.id })}
       draggable="true"
-      onDragStart={() => startTaskDrag(task.id)}
+      onDragStart={() =>
+        setDragContext({
+          type: "task",
+          taskId: task.id,
+        })
+      }
     >
       <div class="flex justify-between items-center mb-1">
         <div>

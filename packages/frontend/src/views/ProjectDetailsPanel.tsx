@@ -1,6 +1,6 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
-import Input from "@frontend/components/Input";
+import { baseInputClass } from "@frontend/components/Input";
 import { MilestoneBlock } from "@frontend/components/MilestoneBlock";
 import Panel, {
   PanelList,
@@ -8,7 +8,7 @@ import Panel, {
   SectionLabel,
 } from "@frontend/components/Panel";
 import { TaskBlock } from "@frontend/components/TaskBlock";
-import { Textarea } from "@frontend/components/Textarea";
+import { baseTextareaClass } from "@frontend/components/Textarea";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useFilterStore } from "@frontend/stores/filterStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
@@ -48,6 +48,8 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
   function handleUpdateProject(update: Partial<Project>) {
     client.api.projects({ id: props.projectId }).patch(update);
   }
+
+  const debouncedHandleUpdateProject = debounce(handleUpdateProject, 300);
 
   const { getMilestonesByProjectId } = useMilestoneStore();
   const milestones = () => getMilestonesByProjectId(props.projectId);
@@ -98,24 +100,25 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
     >
       <PanelSections>
         <SectionLabel>名稱</SectionLabel>
-        <Input
+        <input
+          class={baseInputClass}
           ref={nameInputRef}
           value={project()?.name}
-          onInput={debounce(
-            (e) => handleUpdateProject({ name: e.currentTarget.value }),
-            300
-          )}
+          onInput={(e) =>
+            debouncedHandleUpdateProject({ name: e.currentTarget.value })
+          }
         />
         <SectionLabel>描述</SectionLabel>
-        <Textarea
+        <textarea
+          class={baseTextareaClass}
           value={project()?.description}
-          onInput={debounce(
-            (e) => handleUpdateProject({ description: e.currentTarget.value }),
-            300
-          )}
+          onInput={(e) =>
+            debouncedHandleUpdateProject({ description: e.currentTarget.value })
+          }
         />
         <SectionLabel>排序</SectionLabel>
-        <Input
+        <input
+          class={baseInputClass}
           type="number"
           min="1"
           value={project()?.order ?? ""}

@@ -1,9 +1,8 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
 import Checkbox from "@frontend/components/Checkbox";
-import Input from "@frontend/components/Input";
+import { baseInputClass } from "@frontend/components/Input";
 import Panel, { PanelSections, SectionLabel } from "@frontend/components/Panel";
-import { Textarea } from "@frontend/components/Textarea";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
@@ -23,7 +22,7 @@ export type TaskDetailsPanelProps = {
 export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   const { popPanel, pushPanel } = usePanelController();
   const { getTask } = useTaskStore();
-  const task = createMemo(() => getTask(props.taskId!));
+  const task = () => getTask(props.taskId!);
   const { nonArchivedProjects } = useProjectStore();
   const { getMilestonesByProjectId } = useMilestoneStore();
   const availableMilestones = createMemo(() => {
@@ -45,8 +44,11 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   };
 
   function handleUpdateTask(update: Partial<Task>) {
+    console.log("updating task", update);
     client.api.tasks({ id: props.taskId! }).patch(update);
   }
+
+  const debouncedHandleUpdateTask = debounce(handleUpdateTask, 300);
 
   function setHasLabel(labelId: string, hasLabel: boolean) {
     const currentLabelIds = task()?.labelIds || [];
@@ -139,27 +141,27 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         </div>
 
         <SectionLabel>名稱</SectionLabel>
-        <Input
+        <input
+          class={baseInputClass}
           ref={nameInputRef}
-          value={task()?.name}
-          onInput={debounce(
-            (e) => handleUpdateTask({ name: e.currentTarget.value }),
-            300
-          )}
+          value={task?.name}
+          onInput={(e) =>
+            debouncedHandleUpdateTask({ name: e.currentTarget.value })
+          }
         />
 
         <SectionLabel>描述</SectionLabel>
-        <Textarea
-          class="h-32"
+        <textarea
+          class={`${baseInputClass} h-32`}
           value={task()?.description}
-          onInput={debounce(
-            (e) => handleUpdateTask({ description: e.currentTarget.value }),
-            300
-          )}
+          onInput={(e) =>
+            debouncedHandleUpdateTask({ description: e.currentTarget.value })
+          }
         />
 
         <SectionLabel>到期日</SectionLabel>
-        <Input
+        <input
+          class={baseInputClass}
           type="date"
           value={task()?.dueDate ? format(task()!.dueDate!, "yyyy-MM-dd") : ""}
           onInput={(e) => {

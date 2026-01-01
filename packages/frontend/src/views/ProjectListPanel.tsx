@@ -1,7 +1,7 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
 import Checkbox from "@frontend/components/Checkbox";
-import Input from "@frontend/components/Input";
+import { baseInputClass } from "@frontend/components/Input";
 import Panel, { PanelList } from "@frontend/components/Panel";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useProjectStore } from "@frontend/stores/projectStore";
@@ -57,6 +57,8 @@ export default function ProjectListPanel() {
     client.api.projects({ id: projectId }).patch(update);
   }
 
+  const debouncedHandleUpdateProject = debounce(handleUpdateProject, 300);
+
   return (
     <Panel
       title="專案清單"
@@ -76,24 +78,22 @@ export default function ProjectListPanel() {
       <PanelList items={projects}>
         {(project) => (
           <>
-            <Input
+            <input
               ref={(el) => nameInputRefs.set(project.id, el)}
-              class="flex-1"
+              class={`${baseInputClass} flex-1`}
               classList={{
                 "text-gray-500 italic": project.isArchived,
               }}
               value={project.name}
-              onInput={debounce(
-                (e) =>
-                  handleUpdateProject(project.id, {
-                    name: e.currentTarget.value,
-                  }),
-                300
-              )}
+              onInput={(e) =>
+                debouncedHandleUpdateProject(project.id, {
+                  name: e.currentTarget.value,
+                })
+              }
               placeholder="專案名稱"
             />
-            <Input
-              class="w-20"
+            <input
+              class={`${baseInputClass} w-20`}
               type="number"
               min="1"
               value={project.order ?? ""}

@@ -1,13 +1,13 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
-import Input from "@frontend/components/Input";
+import { baseInputClass } from "@frontend/components/Input";
 import Panel, {
   PanelList,
   PanelSections,
   SectionLabel,
 } from "@frontend/components/Panel";
 import { TaskBlock } from "@frontend/components/TaskBlock";
-import { Textarea } from "@frontend/components/Textarea";
+import { baseTextareaClass } from "@frontend/components/Textarea";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
@@ -46,6 +46,8 @@ export default function MilestoneDetailsPanel(
     client.api.milestones({ id: props.milestoneId }).patch(update);
   }
 
+  const debouncedHandleUpdateMilestone = debounce(handleUpdateMilestone, 300);
+
   const { tasksWithRelation } = useTaskStore();
   const tasks = createMemo(() =>
     tasksWithRelation().filter(
@@ -75,7 +77,11 @@ export default function MilestoneDetailsPanel(
       <PanelSections>
         <SectionLabel>所屬專案</SectionLabel>
         <div class="w-full flex">
-          <Input class="flex-1" value={project()?.name || ""} disabled />
+          <input
+            class={`${baseInputClass} flex-1`}
+            value={project()?.name || ""}
+            disabled
+          />
           <Button
             variant="secondary"
             size="small"
@@ -92,16 +98,17 @@ export default function MilestoneDetailsPanel(
         </div>
 
         <SectionLabel>名稱</SectionLabel>
-        <Input
+        <input
+          class={baseInputClass}
           ref={nameInputRef}
           value={milestone()?.name}
-          onInput={debounce(
-            (e) => handleUpdateMilestone({ name: e.currentTarget.value }),
-            300
-          )}
+          onInput={(e) =>
+            debouncedHandleUpdateMilestone({ name: e.currentTarget.value })
+          }
         />
         <SectionLabel>到期日</SectionLabel>
-        <Input
+        <input
+          class={baseInputClass}
           type="date"
           value={
             milestone()?.dueDate
@@ -117,13 +124,14 @@ export default function MilestoneDetailsPanel(
           placeholder="到期日 (可選)"
         />
         <SectionLabel>描述</SectionLabel>
-        <Textarea
+        <textarea
+          class={baseTextareaClass}
           value={milestone()?.description}
-          onInput={debounce(
-            (e) =>
-              handleUpdateMilestone({ description: e.currentTarget.value }),
-            300
-          )}
+          onInput={(e) =>
+            debouncedHandleUpdateMilestone({
+              description: e.currentTarget.value,
+            })
+          }
         />
         <SectionLabel>未封存工作</SectionLabel>
         <PanelList items={tasks}>

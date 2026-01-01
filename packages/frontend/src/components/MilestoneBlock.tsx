@@ -12,7 +12,7 @@ export function MilestoneBlock(props: {
   showProject?: boolean;
 }) {
   const { pushPanel } = usePanelController();
-  const { startTaskDrag } = useDragController();
+  const { setDragContext } = useDragController();
   const { getProject } = useProjectStore();
   const today = startOfDay(new Date());
   const { milestone } = props;
@@ -30,8 +30,10 @@ export function MilestoneBlock(props: {
       onClick={() =>
         pushPanel({ type: "Milestone", milestoneId: milestone.id })
       }
-      // draggable="true"
-      // onDragStart={() => startTaskDrag(task.id)}
+      draggable="true"
+      onDragStart={() =>
+        setDragContext({ type: "milestone", milestoneId: milestone.id })
+      }
     >
       <div class="flex justify-between items-center mb-1">
         <div>
