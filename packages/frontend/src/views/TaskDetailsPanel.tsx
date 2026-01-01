@@ -6,12 +6,13 @@ import Panel, { PanelSections, SectionLabel } from "@frontend/components/Panel";
 import { Textarea } from "@frontend/components/Textarea";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
+import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
 import { format, isValid } from "date-fns";
 import { debounce } from "lodash";
-import { For, Show, onMount } from "solid-js";
+import { For, Show, createMemo, onMount } from "solid-js";
 
 import type { Task } from "@backend/schemas/Task";
 
@@ -21,7 +22,15 @@ export type TaskDetailsPanelProps = {
 
 export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   const { popPanel, pushPanel } = usePanelController();
-  const task = () => useTaskStore().getTask(props.taskId);
+  const { getTask } = useTaskStore();
+  const task = createMemo(() => getTask(props.taskId!));
+  const { nonArchivedProjects } = useProjectStore();
+  const { getMilestonesByProjectId } = useMilestoneStore();
+  const availableMilestones = createMemo(() => {
+    const projectId = task()?.projectId;
+    if (!projectId) return [];
+    return getMilestonesByProjectId(projectId);
+  });
   const { labels } = useLabelStore();
   const { persons } = usePersonStore();
   let nameInputRef: HTMLInputElement | undefined;
@@ -75,7 +84,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
     <Panel title={`工作詳情 - ${task()?.name || ""}`}>
       <PanelSections>
         <SectionLabel>所屬專案</SectionLabel>
-        <div class="w-full flex items-center">
+        <div class="w-full flex">
           <select
             class="flex-1 border px-2 py-1 rounded"
             value={task()?.projectId}
@@ -85,7 +94,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
               })
             }
           >
-            <For each={useProjectStore().filteredProjects()}>
+            <For each={nonArchivedProjects()}>
               {(p) => <option value={p.id}>{p.name}</option>}
             </For>
           </select>
@@ -102,6 +111,37 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
           >
             詳細
           </Button>
+        </div>
+
+        <SectionLabel>所屬里程碑</SectionLabel>
+        <div class="w-full flex items-center">
+          <select
+            class="flex-1 border px-2 py-1 rounded"
+            value={task()?.milestoneId || ""}
+            onInput={(e) =>
+              handleUpdateTask({ milestoneId: e.currentTarget.value || null })
+            }
+          >
+            <option value="">{"<無里程碑>"}</option>
+            <For each={availableMilestones()}>
+              {(p) => <option value={p.id}>{p.name}</option>}
+            </For>
+          </select>
+          <Show when={task()?.milestoneId}>
+            <Button
+              variant="secondary"
+              size="small"
+              class="ml-2"
+              onclick={() =>
+                pushPanel({
+                  type: "Milestone",
+                  milestoneId: task()!.milestoneId!,
+                })
+              }
+            >
+              詳細
+            </Button>
+          </Show>
         </div>
 
         <SectionLabel>名稱</SectionLabel>

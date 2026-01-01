@@ -63,11 +63,16 @@ function createProjectStore() {
     });
   });
 
+  const nonArchivedProjects = createMemo(() => {
+    return projects().filter((p) => !p.isArchived);
+  });
+
   return {
     projects,
     setProject,
     deleteProject,
     getProject,
+    nonArchivedProjects,
     filteredProjects,
   };
 }
