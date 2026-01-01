@@ -25,9 +25,9 @@ export default function ProjectListPanel() {
         return a.name.localeCompare(b.name);
       })
   );
+
   const nameInputRefs = new Map<string, HTMLInputElement>();
   let toFocusProjectId: string | null = null;
-
   async function createProject() {
     const projectId = ulid();
     toFocusProjectId = projectId;

@@ -43,21 +43,49 @@ export default function App() {
   }
 
   return (
+    <>
+      <div
+        class="h-screen flex"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          const drag = useDragStore().state();
+          if (drag.type === "assignment") {
+            useAssignmentStore().deleteAssignment(drag.assignmentId);
+          }
+          useDragStore().clear();
+        }}
+      >
+        <TaskPool />
+        <ScheduleTable />
+        {matchPanelComponent(currentContext())}
+      </div>
+      <DragImageRenderer />
+    </>
+  );
+}
+
+function DragImageRenderer() {
+  let containerRef: HTMLDivElement | undefined;
+  const { renderFn, notifyRenderReady } = useDragStore();
+
+  function render() {
+    const state = renderFn();
+    if (!state) return null;
+    queueMicrotask(() => {
+      if (containerRef?.firstElementChild) {
+        notifyRenderReady(containerRef.firstElementChild as HTMLElement);
+      }
+    });
+    return state.render();
+  }
+
+  return (
     <div
-      class="h-screen flex"
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => {
-        e.preventDefault();
-        const drag = useDragStore().state();
-        if (drag.type === "assignment") {
-          useAssignmentStore().deleteAssignment(drag.assignmentId);
-        }
-        useDragStore().clear();
-      }}
+      class="absolute top-[-100vh] left-[-100vw] pointer-events-none"
+      ref={containerRef}
     >
-      <TaskPool />
-      <ScheduleTable />
-      {matchPanelComponent(currentContext())}
+      {render()}
     </div>
   );
 }

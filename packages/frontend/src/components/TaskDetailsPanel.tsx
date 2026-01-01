@@ -15,7 +15,7 @@ export type TaskDetailsPanelProps = {
 };
 
 export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
-  const { closePanel } = usePanelController();
+  const { popPanel } = usePanelController();
   const task = () => useTaskStore().getTask(props.taskId);
   const { labels } = useLabelStore();
   const { persons } = usePersonStore();
@@ -27,7 +27,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
 
   const removeTask = async () => {
     await client.api.tasks({ id: props.taskId! }).delete();
-    closePanel();
+    popPanel();
   };
 
   const setTaskIsArchived = async (isArchived: boolean) => {

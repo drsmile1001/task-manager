@@ -1,5 +1,5 @@
 import { singulation } from "@frontend/utils/singulation";
-import { createSignal } from "solid-js";
+import { type JSX, createSignal } from "solid-js";
 
 export type DragState =
   | { type: "none" }
@@ -13,6 +13,30 @@ export type DragState =
 
 function createDragStore() {
   const [state, setState] = createSignal<DragState>({ type: "none" });
+  const [renderFn, setRenderFn] = createSignal<{
+    render: () => JSX.Element;
+  }>();
+
+  let resolveRender: (el: HTMLElement) => void;
+  async function setDragImage(
+    e: DragEvent,
+    fn: () => JSX.Element
+  ): Promise<void> {
+    const el = await new Promise<HTMLElement>((resolve) => {
+      resolveRender = resolve;
+      setRenderFn({
+        render: fn,
+      });
+    });
+    if (e.dataTransfer) {
+      e.dataTransfer.setDragImage(el, 20, 20);
+    }
+  }
+  function notifyRenderReady(el: HTMLElement) {
+    if (resolveRender) {
+      resolveRender(el);
+    }
+  }
 
   return {
     state,
@@ -35,6 +59,10 @@ function createDragStore() {
     clear() {
       setState({ type: "none" });
     },
+
+    setDragImage,
+    notifyRenderReady,
+    renderFn,
   };
 }
 

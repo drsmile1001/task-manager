@@ -1,13 +1,16 @@
 import { client } from "@frontend/client";
 import { usePanelController } from "@frontend/stores/detailPanelController";
+import { useDragStore } from "@frontend/stores/dragStore";
 import { useFilterStore } from "@frontend/stores/filterStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
+import { useTaskStore } from "@frontend/stores/taskStore";
 import { format, parse } from "date-fns";
-import { Show, onMount } from "solid-js";
+import { Show, createEffect, createMemo, onMount } from "solid-js";
 import { ulid } from "ulid";
 
 import type { Milestone } from "@backend/schemas/Milestone";
+import type { Task } from "@backend/schemas/Task";
 
 import Button from "./Button";
 import DetailPanel, {
@@ -24,9 +27,16 @@ export type ProjectDetailsPanelProps = {
 
 export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
   const { popPanel, pushPanel } = usePanelController();
-  const project = () => useProjectStore().getProject(props.projectId);
-  let nameInputRef: HTMLInputElement | undefined;
+  const { getProject } = useProjectStore();
+  const project = createMemo(() => getProject(props.projectId));
 
+  const { setProjectIds } = useFilterStore();
+  function applyFilter() {
+    setProjectIds([props.projectId]);
+    pushPanel({ type: "Filter" });
+  }
+
+  let nameInputRef: HTMLInputElement | undefined;
   onMount(() => {
     nameInputRef?.focus();
   });
@@ -62,31 +72,83 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
   }
 
   const { getMilestonesByProjectId } = useMilestoneStore();
-
-  async function createMilestone() {
-    await client.api.milestones.post({
-      id: ulid(),
-      projectId: props.projectId,
-      name: "新里程碑",
-      dueDate: null,
-      description: "",
-    });
-  }
-
+  const milestones = () => getMilestonesByProjectId(props.projectId);
   async function handleUpdateMileStone(
     milestoneId: string,
     updating: Partial<Milestone>
   ) {
     await client.api.milestones({ id: milestoneId }).patch(updating);
   }
+  const milestoneNameInputRefs = new Map<string, HTMLInputElement>();
+  let toFocusMilestoneId: string | null = null;
+  async function createMilestone() {
+    const milestoneId = ulid();
+    toFocusMilestoneId = milestoneId;
+    await client.api.milestones.post({
+      id: milestoneId,
+      projectId: props.projectId,
+      name: "新里程碑",
+      dueDate: null,
+      description: "",
+    });
+  }
+  createEffect(() => {
+    milestones();
+    if (toFocusMilestoneId) {
+      const inputRef = milestoneNameInputRefs.get(toFocusMilestoneId);
+      if (inputRef) {
+        inputRef.focus();
+        toFocusMilestoneId = null;
+      }
+    }
+  });
 
-  const milestones = () => getMilestonesByProjectId(props.projectId);
+  const { tasksWithRelation } = useTaskStore();
+  const tasks = createMemo(() =>
+    tasksWithRelation().filter(
+      (task) => task.projectId === props.projectId && !task.isArchived
+    )
+  );
+  function handleUpdateTask(taskId: string, updating: Partial<Task>) {
+    client.api.tasks({ id: taskId }).patch(updating);
+  }
+  async function createTask() {
+    const taskId = ulid();
+    toFocusTaskId = taskId;
+    await client.api.tasks.post({
+      id: taskId,
+      projectId: props.projectId,
+      milestoneId: null,
+      name: "新工作",
+      description: "",
+      dueDate: null,
+      isDone: false,
+      isArchived: false,
+      labelIds: [],
+      assigneeIds: [],
+    });
+  }
+  const taskNameInputRefs = new Map<string, HTMLInputElement>();
+  let toFocusTaskId: string | null = null;
+  createEffect(() => {
+    tasks();
+    if (toFocusTaskId) {
+      const inputRef = taskNameInputRefs.get(toFocusTaskId);
+      if (inputRef) {
+        inputRef.focus();
+        toFocusTaskId = null;
+      }
+    }
+  });
 
-  const { setProjectIds } = useFilterStore();
-
-  function applyFilter() {
-    setProjectIds([props.projectId]);
-    pushPanel({ type: "Filter" });
+  async function handleTaskDragStart(e: DragEvent, task: Task) {
+    const { setDragImage, startTaskDrag } = useDragStore();
+    startTaskDrag(task.id);
+    await setDragImage(e, () => (
+      <span class="rounded bg-gray-200 px-2 py-1 border border-gray-400 shadow-md">
+        {task.name}
+      </span>
+    ));
   }
 
   return (
@@ -123,6 +185,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
           {(milestone) => (
             <>
               <Input
+                ref={(el) => milestoneNameInputRefs.set(milestone.id, el)}
                 class="flex-1"
                 value={milestone.name}
                 placeholder="名稱"
@@ -164,6 +227,46 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
         <div>
           <Button variant="secondary" onClick={createMilestone}>
             新增里程碑
+          </Button>
+        </div>
+        <SectionLabel>未封存工作</SectionLabel>
+        <PanelList items={tasks}>
+          {(task) => (
+            <>
+              <div
+                class="w-2 cursor-grab select-none"
+                draggable="true"
+                ondragstart={(e) => handleTaskDragStart(e, task)}
+              >
+                ::
+              </div>
+              <Input
+                ref={(el) => taskNameInputRefs.set(task.id, el)}
+                class="flex-1"
+                classList={{
+                  "line-through": task.isDone,
+                }}
+                value={task.name}
+                placeholder="名稱"
+                onBlur={(e) =>
+                  handleUpdateTask(task.id, {
+                    name: e.currentTarget.value,
+                  })
+                }
+              />
+              <Button
+                variant="secondary"
+                size="small"
+                onClick={() => pushPanel({ type: "Task", taskId: task.id })}
+              >
+                詳細
+              </Button>
+            </>
+          )}
+        </PanelList>
+        <div>
+          <Button variant="secondary" onClick={createTask}>
+            新增工作
           </Button>
         </div>
         <SectionLabel>進階操作</SectionLabel>
