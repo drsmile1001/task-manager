@@ -8,14 +8,17 @@ import { format } from "date-fns";
 import { For, Show, onMount } from "solid-js";
 
 import Button from "./Button";
-import DetailPanel from "./DetailPanel";
+import Checkbox from "./Checkbox";
+import DetailPanel, { PanelSections, SectionLabel } from "./DetailPanel";
+import Input from "./Input";
+import { Textarea } from "./Textarea";
 
 export type TaskDetailsPanelProps = {
   taskId: string;
 };
 
 export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
-  const { popPanel } = usePanelController();
+  const { popPanel, pushPanel } = usePanelController();
   const task = () => useTaskStore().getTask(props.taskId);
   const { labels } = useLabelStore();
   const { persons } = usePersonStore();
@@ -93,12 +96,12 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   }
 
   return (
-    <DetailPanel title="編輯工作項目">
-      <div class="flex flex-col gap-4 p-2">
-        <div>
-          <label class="block text-sm font-medium mb-1">所屬專案</label>
+    <DetailPanel title={`工作詳情 - ${task()?.name || ""}`}>
+      <PanelSections>
+        <SectionLabel>所屬專案</SectionLabel>
+        <div class="w-full flex items-center">
           <select
-            class="border w-full px-2 py-1 rounded"
+            class="flex-1 border px-2 py-1 rounded"
             value={task()?.projectId}
             onInput={(e) => handleUpdateProjectId(e.currentTarget.value)}
           >
@@ -106,91 +109,86 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
               {(p) => <option value={p.id}>{p.name}</option>}
             </For>
           </select>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium mb-1">名稱</label>
-          <input
-            ref={nameInputRef}
-            class="border w-full px-2 py-1 rounded"
-            value={task()?.name}
-            onInput={(e) => handleUpdateName(e.currentTarget.value)}
-          />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium mb-1">描述</label>
-          <textarea
-            class="border w-full px-2 py-1 rounded h-32"
-            value={task()?.description}
-            onInput={(e) => handleUpdateDescription(e.currentTarget.value)}
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">到期日</label>
-          <input
-            class="border w-full px-2 py-1 rounded"
-            type="date"
-            value={
-              task()?.dueDate ? format(task()!.dueDate!, "yyyy-MM-dd") : ""
+          <Button
+            variant="secondary"
+            size="small"
+            class="ml-2"
+            onclick={() =>
+              pushPanel({
+                type: "ProjectDetails",
+                projectId: task()!.projectId,
+              })
             }
-            onInput={(e) => handleUpdateDueDate(e.currentTarget.value)}
-          />
+          >
+            詳細
+          </Button>
         </div>
 
-        <div>
-          <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={task()?.isDone}
-              onChange={(e) => handleUpdateIsDone(e.currentTarget.checked)}
+        <SectionLabel>名稱</SectionLabel>
+        <Input
+          ref={nameInputRef}
+          value={task()?.name}
+          onInput={(e) => handleUpdateName(e.currentTarget.value)}
+        />
+
+        <SectionLabel>描述</SectionLabel>
+        <Textarea
+          value={task()?.description}
+          onInput={(e) => handleUpdateDescription(e.currentTarget.value)}
+        />
+
+        <SectionLabel>到期日</SectionLabel>
+        <Input
+          type="date"
+          value={task()?.dueDate ? format(task()!.dueDate!, "yyyy-MM-dd") : ""}
+          onInput={(e) => handleUpdateDueDate(e.currentTarget.value)}
+        />
+
+        <SectionLabel>已完成</SectionLabel>
+        <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={task()?.isDone}
+            onChange={(e) => handleUpdateIsDone(e.currentTarget.checked)}
+          />
+          <span>已完成</span>
+        </label>
+
+        <SectionLabel>指派</SectionLabel>
+        <div class="flex flex-wrap gap-2">
+          {persons().map((person) => (
+            <Checkbox
+              title={person.name}
+              checked={task()?.assigneeIds?.includes(person.id) ?? false}
+              onChange={(e) =>
+                setHasAssignee(person.id, e.currentTarget.checked)
+              }
             />
-            <span>已完成</span>
-          </label>
+          ))}
         </div>
-        <div class="flex flex-col gap-2">
-          <label class="block text-sm font-medium mb-1">指派</label>
-          <div class="flex flex-wrap gap-2">
-            {persons().map((person) => (
-              <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={task()?.assigneeIds?.includes(person.id)}
-                  onChange={(e) =>
-                    setHasAssignee(person.id, e.currentTarget.checked)
-                  }
-                />
-                {person.name}
-              </label>
-            ))}
-          </div>
+
+        <SectionLabel>標籤</SectionLabel>
+        <div class="flex flex-wrap gap-2">
+          {labels().map((label) => (
+            <Checkbox
+              checked={task()?.labelIds?.includes(label.id) ?? false}
+              onChange={(e) => setHasLabel(label.id, e.currentTarget.checked)}
+            >
+              <span
+                class="px-1 py-0.5 rounded"
+                style={{
+                  "background-color": label.color,
+                  color: getLabelTextColor(label.color),
+                }}
+              >
+                {label.name}
+              </span>
+            </Checkbox>
+          ))}
         </div>
-        <div class="flex flex-col gap-2">
-          <label class="block text-sm font-medium mb-1">標籤</label>
-          <div class="flex flex-wrap gap-2">
-            {labels().map((label) => (
-              <label class="inline-flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={task()?.labelIds?.includes(label.id)}
-                  onChange={(e) =>
-                    setHasLabel(label.id, e.currentTarget.checked)
-                  }
-                />
-                <span
-                  class="px-2 py-1 rounded"
-                  style={{
-                    "background-color": label.color,
-                    color: getLabelTextColor(label.color),
-                  }}
-                >
-                  {label.name}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
+
+        <SectionLabel>進階操作</SectionLabel>
+        <div class="flex gap-2">
           <Button
             variant="secondary"
             onclick={() => setTaskIsArchived(!task()?.isArchived)}
@@ -203,7 +201,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
             </Button>
           </Show>
         </div>
-      </div>
+      </PanelSections>
     </DetailPanel>
   );
 }
