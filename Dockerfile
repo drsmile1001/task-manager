@@ -8,6 +8,7 @@ RUN bun run build
 
 FROM oven/bun:latest AS runtime
 WORKDIR /app
+ENV NODE_ENV=production
 COPY --from=build /app/dist ./
 EXPOSE 3000
 CMD ["./server"]

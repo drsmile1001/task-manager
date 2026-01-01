@@ -12,6 +12,10 @@ const baseUrl = process.env.BASE_URL || "/";
 const baseUrlPlaceholder = "/__BASE_URL_TO_REPLACE__/";
 
 async function rewriteBaseUrl(root: string) {
+  const rootExists = await exists(root);
+  if (!rootExists && Bun.env.NODE_ENV !== "production") {
+    return;
+  }
   const entries = await readdir(root, { withFileTypes: true });
 
   for (const entry of entries) {
