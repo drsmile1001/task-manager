@@ -3,7 +3,7 @@ import Button from "@frontend/components/Button";
 import Input from "@frontend/components/Input";
 import Panel, { PanelSections, SectionLabel } from "@frontend/components/Panel";
 import { Textarea } from "@frontend/components/Textarea";
-import { usePanelController } from "@frontend/stores/detailPanelController";
+import { usePanelController } from "@frontend/stores/PanelController";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { format, parse } from "date-fns";

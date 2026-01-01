@@ -4,7 +4,7 @@ import Checkbox from "@frontend/components/Checkbox";
 import Input from "@frontend/components/Input";
 import Panel, { PanelSections, SectionLabel } from "@frontend/components/Panel";
 import { Textarea } from "@frontend/components/Textarea";
-import { usePanelController } from "@frontend/stores/detailPanelController";
+import { usePanelController } from "@frontend/stores/PanelController";
 import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";

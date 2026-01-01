@@ -3,7 +3,7 @@ import Button from "@frontend/components/Button";
 import Checkbox from "@frontend/components/Checkbox";
 import Input from "@frontend/components/Input";
 import Panel, { PanelList } from "@frontend/components/Panel";
-import { usePanelController } from "@frontend/stores/detailPanelController";
+import { usePanelController } from "@frontend/stores/PanelController";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { createEffect, createMemo, createSignal } from "solid-js";
 import { ulid } from "ulid";

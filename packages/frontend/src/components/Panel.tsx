@@ -1,5 +1,5 @@
 import Button from "@frontend/components/Button";
-import { usePanelController } from "@frontend/stores/detailPanelController";
+import { usePanelController } from "@frontend/stores/PanelController";
 import { type JSX, Show } from "solid-js";
 
 export interface DetailPanelProps {

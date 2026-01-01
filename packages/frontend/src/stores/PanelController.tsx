@@ -1,0 +1,131 @@
+import { singulation } from "@frontend/utils/singulation";
+import FilterPanel from "@frontend/views/FilterPanel";
+import ImportTasksPanel from "@frontend/views/ImportTasksPanel";
+import LabelPanel from "@frontend/views/LabelPanel";
+import MilestoneDetailsPanel from "@frontend/views/MilestoneDetailsPanel";
+import PersonPanel from "@frontend/views/PersonPanel";
+import ProjectDetailsPanel from "@frontend/views/ProjectDetailsPanel";
+import ProjectListPanel from "@frontend/views/ProjectListPanel";
+import TaskDetailsPanel from "@frontend/views/TaskDetailsPanel";
+import TaskPool from "@frontend/views/TaskPool";
+import { For } from "solid-js";
+import { createStore } from "solid-js/store";
+
+export type PanelOptions =
+  | {
+      type: "Filter";
+    }
+  | {
+      type: "Label";
+    }
+  | {
+      type: "Person";
+    }
+  | {
+      type: "ProjectList";
+    }
+  | {
+      type: "ProjectDetails";
+      projectId: string;
+    }
+  | {
+      type: "ImportTasks";
+    }
+  | {
+      type: "Milestone";
+      milestoneId: string;
+    }
+  | {
+      type: "Task";
+      taskId: string;
+    }
+  | {
+      type: "TaskPool";
+    };
+
+function RenderPanel(options: PanelOptions) {
+  if (!options) return <div></div>;
+  switch (options.type) {
+    case "Filter":
+      return <FilterPanel />;
+    case "Label":
+      return <LabelPanel />;
+    case "Person":
+      return <PersonPanel />;
+    case "ProjectList":
+      return <ProjectListPanel />;
+    case "ProjectDetails":
+      return <ProjectDetailsPanel projectId={options.projectId} />;
+    case "ImportTasks":
+      return <ImportTasksPanel />;
+    case "Milestone":
+      return <MilestoneDetailsPanel milestoneId={options.milestoneId} />;
+    case "Task":
+      return <TaskDetailsPanel taskId={options.taskId} />;
+    case "TaskPool":
+      return <TaskPool />;
+    default:
+      return <div></div>;
+  }
+}
+
+export function Panels() {
+  const { stack } = usePanelController();
+
+  return (
+    <For each={stack}>
+      {(context) => (
+        <div
+          class="absolute top-0 h-full"
+          style={{
+            "z-index": context.deep + 100,
+          }}
+        >
+          {RenderPanel(context)}
+        </div>
+      )}
+    </For>
+  );
+}
+
+export type PanelContext = PanelOptions & {
+  deep: number;
+};
+
+function createPanelController() {
+  const [stack, setState] = createStore<PanelContext[]>([]);
+
+  function openPanel(context: PanelOptions) {
+    setState([
+      {
+        ...context,
+        deep: 0,
+      },
+    ]);
+  }
+
+  function closePanel() {
+    setState([]);
+  }
+
+  function pushPanel(context: PanelOptions) {
+    setState(stack.length, {
+      ...context,
+      deep: stack.length,
+    });
+  }
+
+  function popPanel() {
+    setState(stack.slice(0, -1));
+  }
+
+  return {
+    stack,
+    openPanel,
+    closePanel,
+    pushPanel,
+    popPanel,
+  };
+}
+
+export const usePanelController = singulation(createPanelController);

@@ -7,7 +7,7 @@ import Panel, {
   SectionLabel,
 } from "@frontend/components/Panel";
 import { Textarea } from "@frontend/components/Textarea";
-import { usePanelController } from "@frontend/stores/detailPanelController";
+import { usePanelController } from "@frontend/stores/PanelController";
 import { useDragStore } from "@frontend/stores/dragStore";
 import { useFilterStore } from "@frontend/stores/filterStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";

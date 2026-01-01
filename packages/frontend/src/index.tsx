@@ -2,17 +2,17 @@ import { setDefaultOptions } from "date-fns";
 import { zhTW } from "date-fns/locale";
 import { render } from "solid-js/web";
 
-import App from "./App.tsx";
+import App from "./App";
 import "./index.css";
-import { useAssignmentStore } from "./stores/assignmentStore.ts";
-import { usePanelController } from "./stores/detailPanelController.ts";
-import { useFilterStore } from "./stores/filterStore.ts";
-import { useLabelStore } from "./stores/labelStore.ts";
-import { useMilestoneStore } from "./stores/milestoneStore.ts";
-import { usePersonStore } from "./stores/personStore.ts";
-import { useProjectStore } from "./stores/projectStore.ts";
-import { useTaskStore } from "./stores/taskStore.ts";
-import { sync } from "./sync.ts";
+import { usePanelController } from "./stores/PanelController";
+import { useAssignmentStore } from "./stores/assignmentStore";
+import { useFilterStore } from "./stores/filterStore";
+import { useLabelStore } from "./stores/labelStore";
+import { useMilestoneStore } from "./stores/milestoneStore";
+import { usePersonStore } from "./stores/personStore";
+import { useProjectStore } from "./stores/projectStore";
+import { useTaskStore } from "./stores/taskStore";
+import { sync } from "./sync";
 
 setDefaultOptions({ locale: zhTW });
 

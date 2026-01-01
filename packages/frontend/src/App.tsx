@@ -1,50 +1,10 @@
-import { For } from "solid-js";
-
+import { Panels, usePanelController } from "./stores/PanelController";
 import { useAssignmentStore } from "./stores/assignmentStore";
-import {
-  type PanelOptions,
-  usePanelController,
-} from "./stores/detailPanelController";
 import { useDragStore } from "./stores/dragStore";
-import FilterPanel from "./views/FilterPanel";
-import ImportTasksPanel from "./views/ImportTasksPanel";
-import LabelPanel from "./views/LabelPanel";
-import MilestoneDetailsPanel from "./views/MilestoneDetailsPanel";
-import PersonPanel from "./views/PersonPanel";
-import ProjectDetailsPanel from "./views/ProjectDetailsPanel";
-import ProjectListPanel from "./views/ProjectListPanel";
 import ScheduleTable from "./views/ScheduleTable";
-import TaskDetailsPanel from "./views/TaskDetailsPanel";
-import TaskPool from "./views/TaskPool";
 
 export default function App() {
   const { stack: panelStack } = usePanelController();
-
-  function matchPanelComponent(context: PanelOptions) {
-    if (!context) return <div></div>;
-    switch (context.type) {
-      case "Filter":
-        return <FilterPanel />;
-      case "Label":
-        return <LabelPanel />;
-      case "Person":
-        return <PersonPanel />;
-      case "ProjectList":
-        return <ProjectListPanel />;
-      case "ProjectDetails":
-        return <ProjectDetailsPanel projectId={context.projectId} />;
-      case "ImportTasks":
-        return <ImportTasksPanel />;
-      case "Milestone":
-        return <MilestoneDetailsPanel milestoneId={context.milestoneId} />;
-      case "Task":
-        return <TaskDetailsPanel taskId={context.taskId} />;
-      case "TaskPool":
-        return <TaskPool />;
-      default:
-        return <div></div>;
-    }
-  }
 
   return (
     <>
@@ -67,18 +27,7 @@ export default function App() {
         >
           <ScheduleTable />
         </div>
-        <For each={panelStack}>
-          {(context) => (
-            <div
-              class="absolute top-0 h-full"
-              style={{
-                "z-index": context.deep + 100,
-              }}
-            >
-              {matchPanelComponent(context)}
-            </div>
-          )}
-        </For>
+        <Panels />
       </div>
       <DragImageRenderer />
     </>

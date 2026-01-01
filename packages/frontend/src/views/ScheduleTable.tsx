@@ -1,7 +1,7 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
+import { usePanelController } from "@frontend/stores/PanelController";
 import { useAssignmentStore } from "@frontend/stores/assignmentStore";
-import { usePanelController } from "@frontend/stores/detailPanelController";
 import { useDragStore } from "@frontend/stores/dragStore";
 import { useFilterStore } from "@frontend/stores/filterStore";
 import { useHolidayStore } from "@frontend/stores/holidayStore";
