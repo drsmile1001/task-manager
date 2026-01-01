@@ -7,8 +7,8 @@ import Panel, {
   SectionLabel,
 } from "@frontend/components/Panel";
 import { Textarea } from "@frontend/components/Textarea";
+import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
-import { useDragStore } from "@frontend/stores/dragStore";
 import { useFilterStore } from "@frontend/stores/filterStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
@@ -141,7 +141,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
   });
 
   async function handleTaskDragStart(e: DragEvent, task: Task) {
-    const { setDragImage, startTaskDrag } = useDragStore();
+    const { setDragImage, startTaskDrag } = useDragController();
     startTaskDrag(task.id);
     await setDragImage(e, () => (
       <span class="rounded bg-gray-200 px-2 py-1 border border-gray-400 shadow-md">

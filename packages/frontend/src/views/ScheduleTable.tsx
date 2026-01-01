@@ -1,8 +1,8 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
+import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useAssignmentStore } from "@frontend/stores/assignmentStore";
-import { useDragStore } from "@frontend/stores/dragStore";
 import { useFilterStore } from "@frontend/stores/filterStore";
 import { useHolidayStore } from "@frontend/stores/holidayStore";
 import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
@@ -99,11 +99,11 @@ export default function ScheduleTable() {
       onDrop={async (e) => {
         // 拖拽到空白區域則刪除指派
         e.preventDefault();
-        const drag = useDragStore().state();
+        const drag = useDragController().state();
         if (drag.type === "assignment") {
           await client.api.assignments({ id: drag.assignmentId }).delete();
         }
-        useDragStore().clear();
+        useDragController().clear();
       }}
     >
       <div class="flex-none flex flex-col gap-2">
@@ -278,7 +278,7 @@ export default function ScheduleTable() {
                           e.preventDefault();
                           e.stopPropagation();
 
-                          const drag = useDragStore().state();
+                          const drag = useDragController().state();
 
                           if (drag.type === "task") {
                             await client.api.assignments.post({
@@ -298,7 +298,7 @@ export default function ScheduleTable() {
                               });
                           }
 
-                          useDragStore().clear();
+                          useDragController().clear();
                         }}
                       >
                         <For each={items()}>
@@ -313,7 +313,7 @@ export default function ScheduleTable() {
                                 }}
                                 draggable="true"
                                 onDragStart={() => {
-                                  useDragStore().startAssignmentDrag({
+                                  useDragController().startAssignmentDrag({
                                     assignmentId: assignment.id,
                                     personId: assignment.personId,
                                     date: assignment.date,

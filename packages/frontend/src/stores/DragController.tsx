@@ -11,7 +11,32 @@ export type DragState =
       fromDate: string;
     };
 
-function createDragStore() {
+export function DragImageRenderer() {
+  let containerRef: HTMLDivElement | undefined;
+  const { renderFn, notifyRenderReady } = useDragController();
+
+  function render() {
+    const state = renderFn();
+    if (!state) return null;
+    queueMicrotask(() => {
+      if (containerRef?.firstElementChild) {
+        notifyRenderReady(containerRef.firstElementChild as HTMLElement);
+      }
+    });
+    return state.render();
+  }
+
+  return (
+    <div
+      class="absolute top-[-100vh] left-[-100vw] pointer-events-none"
+      ref={containerRef}
+    >
+      {render()}
+    </div>
+  );
+}
+
+function createDragController() {
   const [state, setState] = createSignal<DragState>({ type: "none" });
   const [renderFn, setRenderFn] = createSignal<{
     render: () => JSX.Element;
@@ -66,4 +91,4 @@ function createDragStore() {
   };
 }
 
-export const useDragStore = singulation(createDragStore);
+export const useDragController = singulation(createDragController);

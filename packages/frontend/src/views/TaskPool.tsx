@@ -2,9 +2,9 @@ import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
 import LabelLine from "@frontend/components/LabelLine";
 import Panel, { PanelList } from "@frontend/components/Panel";
+import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useAssignmentStore } from "@frontend/stores/assignmentStore";
-import { useDragStore } from "@frontend/stores/dragStore";
 import { useFilterStore } from "@frontend/stores/filterStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
@@ -247,7 +247,7 @@ function TaskBlock(props: { t: TaskWithRelation; groupType: () => GroupType }) {
       onClick={() => pushPanel({ type: "Task", taskId: t.id })}
       draggable="true"
       onDragStart={() => {
-        useDragStore().startTaskDrag(t.id);
+        useDragController().startTaskDrag(t.id);
       }}
     >
       <div class="flex justify-between items-center mb-1">
