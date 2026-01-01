@@ -334,6 +334,19 @@ export async function buildApi(logger: Logger) {
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await milestoneRepo.set(updated);
+        if (body.dueDate !== undefined) {
+          const tasks = taskRepo.list();
+          const updatedTasks = tasks.map((task) => {
+            if (task.milestoneId === params.id) {
+              return {
+                ...task,
+                dueDate: body.dueDate ?? null,
+              };
+            }
+            return task;
+          });
+          await taskRepo.replaceAll(updatedTasks);
+        }
         broadcastMutation({
           type: "milestone",
           action: "update",

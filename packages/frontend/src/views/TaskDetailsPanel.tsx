@@ -144,7 +144,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         <input
           class={baseInputClass}
           ref={nameInputRef}
-          value={task?.name}
+          value={task()?.name}
           onInput={(e) =>
             debouncedHandleUpdateTask({ name: e.currentTarget.value })
           }

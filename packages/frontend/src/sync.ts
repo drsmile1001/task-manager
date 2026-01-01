@@ -77,6 +77,7 @@ export function sync() {
             case "create":
             case "update":
               useMilestoneStore().setMilestone(m.eneity as any);
+              useTaskStore().loadTasks();
               break;
             case "delete":
               useMilestoneStore().deleteMilestone(m.id);
