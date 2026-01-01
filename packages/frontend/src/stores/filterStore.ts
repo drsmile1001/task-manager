@@ -11,6 +11,7 @@ export type Filter = {
   projectIds?: string[];
   labelIds?: string[];
   personIds?: string[];
+  milestoneIds?: string[];
 };
 
 function createFilterStore() {
@@ -77,6 +78,13 @@ function createFilterStore() {
     });
   }
 
+  function setMilestoneIds(milestoneIds?: string[]) {
+    setFilter({
+      ...filter(),
+      milestoneIds,
+    });
+  }
+
   function setLabelIds(labelIds?: string[]) {
     setFilter({
       ...filter(),
@@ -101,6 +109,7 @@ function createFilterStore() {
     setIncludeArchivedTasks,
     setIncludeArchivedProjects,
     setProjectIds,
+    setMilestoneIds,
     setLabelIds,
     setPersonIds,
   };

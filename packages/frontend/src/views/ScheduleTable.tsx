@@ -201,7 +201,7 @@ export default function ScheduleTable() {
                 <For each={d.milestonesInDate}>
                   {(m) => (
                     <div
-                      class="mt-1 px-1 py-0.5 bg-yellow-100 border border-yellow-300 rounded text-xs cursor-pointer hover:bg-yellow-200 slect-none"
+                      class="mt-1 px-1 py-0.5 bg-yellow-100 border border-yellow-300 rounded text-xs cursor-pointer hover:bg-yellow-200 select-none"
                       onClick={() =>
                         openPanel({ type: "Milestone", milestoneId: m.id })
                       }
@@ -247,6 +247,7 @@ export default function ScheduleTable() {
                             includeArchivedProjects,
                             includeArchivedTasks,
                             projectIds,
+                            milestoneIds,
                             labelIds,
                           } = useFilterStore().filter();
                           if (includeDoneTasks === false && task?.isDone)
@@ -267,6 +268,11 @@ export default function ScheduleTable() {
                             !projectIds?.includes(task.projectId)
                           )
                             return false;
+                          if (milestoneIds && milestoneIds.length > 0) {
+                            const milestoneId = task.milestoneId || "";
+                            if (!milestoneIds.includes(milestoneId))
+                              return false;
+                          }
                           if (labelIds && labelIds.length > 0) {
                             const hasLabels = labelIds.some((labelId) =>
                               task.labelIds?.includes(labelId)

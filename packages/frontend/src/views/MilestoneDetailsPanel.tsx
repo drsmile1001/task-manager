@@ -9,6 +9,7 @@ import Panel, {
 import { TaskBlock } from "@frontend/components/TaskBlock";
 import { baseTextareaClass } from "@frontend/components/Textarea";
 import { usePanelController } from "@frontend/stores/PanelController";
+import { useFilterStore } from "@frontend/stores/filterStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
@@ -32,10 +33,15 @@ export default function MilestoneDetailsPanel(
   const project = () =>
     useProjectStore().getProject(milestone()?.projectId ?? "");
   let nameInputRef: HTMLInputElement | undefined;
-
   onMount(() => {
     nameInputRef?.focus();
   });
+
+  const { setMilestoneIds } = useFilterStore();
+  function applyFilter() {
+    setMilestoneIds([props.milestoneId]);
+    pushPanel({ type: "Filter" });
+  }
 
   const removeMilestone = async () => {
     await client.api.milestones({ id: props.milestoneId }).delete();
@@ -73,7 +79,14 @@ export default function MilestoneDetailsPanel(
   }
 
   return (
-    <Panel title={`里程碑詳情 - ${milestone()?.name || ""}`}>
+    <Panel
+      title={`里程碑詳情 - ${milestone()?.name || ""}`}
+      actions={
+        <Button variant="secondary" size="small" onClick={applyFilter}>
+          套用篩選
+        </Button>
+      }
+    >
       <PanelSections>
         <SectionLabel>所屬專案</SectionLabel>
         <div class="w-full flex">

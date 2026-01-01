@@ -1,6 +1,6 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
-import Checkbox from "@frontend/components/Checkbox";
+import { checkboxLabelClass } from "@frontend/components/Checkbox";
 import { baseInputClass } from "@frontend/components/Input";
 import Panel, { PanelSections, SectionLabel } from "@frontend/components/Panel";
 import { usePanelController } from "@frontend/stores/PanelController";
@@ -185,23 +185,28 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         <SectionLabel>指派</SectionLabel>
         <div class="flex flex-wrap gap-2">
           {persons().map((person) => (
-            <Checkbox
-              title={person.name}
-              checked={task()?.assigneeIds?.includes(person.id) ?? false}
-              onChange={(e) =>
-                setHasAssignee(person.id, e.currentTarget.checked)
-              }
-            />
+            <label class={checkboxLabelClass}>
+              <input
+                type="checkbox"
+                checked={task()?.assigneeIds?.includes(person.id) ?? false}
+                onChange={(e) =>
+                  setHasAssignee(person.id, e.currentTarget.checked)
+                }
+              />
+              {person.name}
+            </label>
           ))}
         </div>
 
         <SectionLabel>標籤</SectionLabel>
         <div class="flex flex-wrap gap-2">
           {labels().map((label) => (
-            <Checkbox
-              checked={task()?.labelIds?.includes(label.id) ?? false}
-              onChange={(e) => setHasLabel(label.id, e.currentTarget.checked)}
-            >
+            <label class={checkboxLabelClass}>
+              <input
+                type="checkbox"
+                checked={task()?.labelIds?.includes(label.id) ?? false}
+                onChange={(e) => setHasLabel(label.id, e.currentTarget.checked)}
+              />
               <span
                 class="px-1 py-0.5 rounded"
                 style={{
@@ -211,7 +216,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
               >
                 {label.name}
               </span>
-            </Checkbox>
+            </label>
           ))}
         </div>
 

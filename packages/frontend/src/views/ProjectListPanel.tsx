@@ -1,6 +1,6 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
-import Checkbox from "@frontend/components/Checkbox";
+import { checkboxLabelClass } from "@frontend/components/Checkbox";
 import { baseInputClass } from "@frontend/components/Input";
 import Panel, { PanelList } from "@frontend/components/Panel";
 import { usePanelController } from "@frontend/stores/PanelController";
@@ -64,11 +64,14 @@ export default function ProjectListPanel() {
       title="專案清單"
       actions={
         <div class="flex items-center justify-between">
-          <Checkbox
-            checked={showArchived()}
-            onInput={(e) => setShowArchived(e.currentTarget.checked)}
-            title="已封存專案"
-          />
+          <label class={checkboxLabelClass}>
+            <input
+              type="checkbox"
+              checked={showArchived()}
+              onInput={(e) => setShowArchived(e.currentTarget.checked)}
+            />
+            已封存專案
+          </label>
           <Button variant="secondary" size="small" onclick={createProject}>
             + 新增
           </Button>

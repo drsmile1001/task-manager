@@ -4,6 +4,7 @@ import Panel, { PanelList } from "@frontend/components/Panel";
 import { TaskBlock } from "@frontend/components/TaskBlock";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useFilterStore } from "@frontend/stores/filterStore";
+import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import {
   type TaskWithRelation,
@@ -13,13 +14,15 @@ import { format } from "date-fns";
 import { For, Show, createMemo, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
-type GroupType = "BY_PROJECT" | "BY_DUE_DATE";
+type GroupType = "BY_PROJECT" | "BY_PROJECT_MILESTONE" | "BY_DUE_DATE";
 
 export default function TaskPool() {
   const { tasksWithRelation } = useTaskStore();
   const { filter } = useFilterStore();
   const [groupType, setGroupType] = createSignal<GroupType>("BY_PROJECT");
   const { pushPanel } = usePanelController();
+  const { getProject } = useProjectStore();
+  const { getMilestone } = useMilestoneStore();
 
   const groupedTasks = createMemo(() => {
     const currentGroupType = groupType();
@@ -49,12 +52,14 @@ export default function TaskPool() {
       })
       .reduce(
         (acc, task) => {
-          const key =
-            currentGroupType === "BY_PROJECT"
-              ? task.projectId
-              : task.dueDate
-                ? format(task.dueDate, "yyyy-MM-dd")
-                : "_";
+          let key = "_";
+          if (currentGroupType === "BY_PROJECT") {
+            key = task.projectId;
+          } else if (currentGroupType === "BY_PROJECT_MILESTONE") {
+            key = `${task.projectId}::${task.milestoneId ?? "_"}`;
+          } else if (currentGroupType === "BY_DUE_DATE") {
+            key = task.dueDate ? format(task.dueDate, "yyyy-MM-dd") : "_";
+          }
           if (!acc[key]) {
             acc[key] = [];
           }
@@ -73,10 +78,22 @@ export default function TaskPool() {
           key, // 新增 key 欄位
         };
         if (currentGroupType === "BY_PROJECT") {
-          const project = useProjectStore().getProject(key);
+          const project = getProject(key);
           group.name = project ? project.name : "未分類專案";
           group.order = project?.order ?? Number.MAX_SAFE_INTEGER;
-        } else {
+        }
+        if (currentGroupType === "BY_PROJECT_MILESTONE") {
+          const [projectId, milestoneId] = key.split("::");
+          const milestone = getMilestone(milestoneId);
+          const project = getProject(projectId);
+          group.name = milestone
+            ? `${project?.name} ${milestone.name}`
+            : `${project?.name}`;
+          group.order = milestone?.dueDate
+            ? milestone.dueDate.getTime()
+            : Number.MAX_SAFE_INTEGER;
+        }
+        if (currentGroupType === "BY_DUE_DATE") {
           group.name = key === "_" ? "無到期日" : key;
           group.order =
             key === "_" ? Number.MAX_SAFE_INTEGER : new Date(key).getTime();
@@ -99,7 +116,17 @@ export default function TaskPool() {
               return dueDateA - dueDateB;
             }
             return a.name.localeCompare(b.name);
-          } else {
+          }
+          if (currentGroupType === "BY_PROJECT_MILESTONE") {
+            if (priorityA !== priorityB) {
+              return priorityA - priorityB;
+            }
+            if (dueDateA !== dueDateB) {
+              return dueDateA - dueDateB;
+            }
+            return a.name.localeCompare(b.name);
+          }
+          if (currentGroupType === "BY_DUE_DATE") {
             if (dueDateA !== dueDateB) {
               return dueDateA - dueDateB;
             }
@@ -118,6 +145,7 @@ export default function TaskPool() {
             }
             return a.name.localeCompare(b.name);
           }
+          return a.name.localeCompare(b.name);
         });
 
         return {
@@ -147,6 +175,16 @@ export default function TaskPool() {
               onInput={() => setGroupType("BY_PROJECT")}
             />
             <span>依專案</span>
+          </label>
+          <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
+            <input
+              type="radio"
+              name="groupType"
+              value="BY_MILESTONE"
+              checked={groupType() === "BY_PROJECT_MILESTONE"}
+              onInput={() => setGroupType("BY_PROJECT_MILESTONE")}
+            />
+            <span>依專案里程碑</span>
           </label>
           <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
             <input
@@ -205,13 +243,59 @@ export default function TaskPool() {
                   </Button>
                 </div>
               </Show>
+              <Show when={groupType() === "BY_PROJECT_MILESTONE"}>
+                <div class="flex gap-1">
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    onClick={() => {
+                      const [projectId, milestoneId] = group.key.split("::");
+                      if (milestoneId !== "_")
+                        pushPanel({
+                          type: "Milestone",
+                          milestoneId: milestoneId,
+                        });
+                      else
+                        pushPanel({
+                          type: "ProjectDetails",
+                          projectId: projectId,
+                        });
+                    }}
+                  >
+                    詳細
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    onClick={async () => {
+                      const [projectId, milestoneId] = group.key.split("::");
+                      const taskId = ulid();
+                      await client.api.tasks.post({
+                        id: taskId,
+                        projectId: projectId,
+                        milestoneId: milestoneId === "_" ? null : milestoneId,
+                        name: "新工作",
+                        description: "",
+                        isDone: false,
+                        labelIds: [],
+                        isArchived: false,
+                        dueDate: null,
+                        assigneeIds: [],
+                      });
+                      pushPanel({ type: "Task", taskId });
+                    }}
+                  >
+                    ＋ 新增工作
+                  </Button>
+                </div>
+              </Show>
             </div>
             <div class="space-y-1 pl-2">
               <For each={tasks}>
                 {(t) => (
                   <TaskBlock
                     task={t}
-                    showProject={groupType() !== "BY_PROJECT"}
+                    showProject={groupType() === "BY_DUE_DATE"}
                   />
                 )}
               </For>

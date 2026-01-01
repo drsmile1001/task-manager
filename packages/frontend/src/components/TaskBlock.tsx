@@ -1,6 +1,8 @@
+import { client } from "@frontend/client";
 import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useAssignmentStore } from "@frontend/stores/assignmentStore";
+import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import type { TaskWithRelation } from "@frontend/stores/taskStore";
 import { differenceInDays, format, isBefore, startOfDay } from "date-fns";
@@ -14,8 +16,9 @@ export function TaskBlock(props: {
   showProject?: boolean;
 }) {
   const { pushPanel } = usePanelController();
-  const { setDragContext } = useDragController();
+  const { setDragContext, dragContext } = useDragController();
   const { getPerson } = usePersonStore();
+  const { getMilestone } = useMilestoneStore();
   const today = startOfDay(new Date());
   const { task } = props;
   const assigned = () => useAssignmentStore().listByTask(task.id).length > 0;
@@ -49,6 +52,21 @@ export function TaskBlock(props: {
           taskId: task.id,
         })
       }
+      onDrop={async (e) => {
+        e.preventDefault();
+        const currentDragContext = dragContext();
+        if (currentDragContext?.type === "milestone") {
+          const milestone = getMilestone(currentDragContext.milestoneId);
+          if (!milestone || milestone.projectId !== task.projectId) {
+            setDragContext(null);
+            return;
+          }
+          await client.api
+            .tasks({ id: task.id })
+            .patch({ milestoneId: milestone.id, dueDate: milestone.dueDate });
+          setDragContext(null);
+        }
+      }}
     >
       <div class="flex justify-between items-center mb-1">
         <div>

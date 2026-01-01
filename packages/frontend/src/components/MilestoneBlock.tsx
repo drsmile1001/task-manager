@@ -1,6 +1,8 @@
+import { client } from "@frontend/client";
 import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useProjectStore } from "@frontend/stores/projectStore";
+import { useTaskStore } from "@frontend/stores/taskStore";
 import { differenceInDays, format, startOfDay } from "date-fns";
 import { Show, createMemo } from "solid-js";
 
@@ -12,8 +14,9 @@ export function MilestoneBlock(props: {
   showProject?: boolean;
 }) {
   const { pushPanel } = usePanelController();
-  const { setDragContext } = useDragController();
+  const { setDragContext, dragContext } = useDragController();
   const { getProject } = useProjectStore();
+  const { getTask } = useTaskStore();
   const today = startOfDay(new Date());
   const { milestone } = props;
   const project = createMemo(() => getProject(milestone.projectId));
@@ -34,6 +37,21 @@ export function MilestoneBlock(props: {
       onDragStart={() =>
         setDragContext({ type: "milestone", milestoneId: milestone.id })
       }
+      onDrop={async (e) => {
+        e.preventDefault();
+        const currentDragContext = dragContext();
+        if (currentDragContext?.type === "task") {
+          const task = getTask(currentDragContext.taskId);
+          if (!task || task.projectId !== milestone.projectId) {
+            setDragContext(null);
+            return;
+          }
+          await client.api
+            .tasks({ id: currentDragContext.taskId })
+            .patch({ milestoneId: milestone.id, dueDate: milestone.dueDate });
+          setDragContext(null);
+        }
+      }}
     >
       <div class="flex justify-between items-center mb-1">
         <div>
