@@ -44,12 +44,6 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
     popPanel();
   };
 
-  const setTaskIsArchived = async (isArchived: boolean) => {
-    await client.api.tasks({ id: props.taskId! }).patch({
-      isArchived,
-    });
-  };
-
   function handleUpdateTask(update: Partial<Task>) {
     client.api.tasks({ id: props.taskId! }).patch(update);
   }
@@ -223,7 +217,9 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         <div class="flex gap-2">
           <Button
             variant="secondary"
-            onclick={() => setTaskIsArchived(!task()?.isArchived)}
+            onclick={() =>
+              handleUpdateTask({ isArchived: !task()?.isArchived })
+            }
           >
             {task()?.isArchived ? "還原" : "封存"}
           </Button>

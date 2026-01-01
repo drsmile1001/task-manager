@@ -7,6 +7,8 @@ import { debounce } from "lodash";
 import { createEffect } from "solid-js";
 import { ulid } from "ulid";
 
+import type { Person } from "@backend/schemas/Person";
+
 export default function PersonPanel() {
   const { persons } = usePersonStore();
   const nameInputRefs = new Map<string, HTMLInputElement>();
@@ -32,17 +34,8 @@ export default function PersonPanel() {
     }
   });
 
-  function setPersonName(personId: string, name: string) {
-    client.api.persons({ id: personId }).patch({
-      name,
-    });
-  }
-
-  function setPersonOrder(personId: string, order: string) {
-    const orderNumber = order ? parseInt(order) : null;
-    client.api.persons({ id: personId }).patch({
-      order: orderNumber,
-    });
+  function handleUpdatePerson(personId: string, update: Partial<Person>) {
+    client.api.persons({ id: personId }).patch(update);
   }
 
   function handleDeletePerson(personId: string) {
@@ -69,7 +62,10 @@ export default function PersonPanel() {
               class="flex-1"
               value={person.name}
               onInput={debounce(
-                (e) => setPersonName(person.id, e.currentTarget.value),
+                (e) =>
+                  handleUpdatePerson(person.id, {
+                    name: e.currentTarget.value,
+                  }),
                 300
               )}
               placeholder="人員名稱"
@@ -79,7 +75,12 @@ export default function PersonPanel() {
               type="number"
               min="1"
               value={person.order ?? ""}
-              onInput={(e) => setPersonOrder(person.id, e.currentTarget.value)}
+              onInput={(e) => {
+                const value = e.currentTarget.value;
+                handleUpdatePerson(person.id, {
+                  order: value ? parseInt(value) : null,
+                });
+              }}
               placeholder="排序"
             />
             <Button

@@ -19,6 +19,7 @@ import { Show, createEffect, createMemo, onMount } from "solid-js";
 import { ulid } from "ulid";
 
 import type { Milestone } from "@backend/schemas/Milestone";
+import type { Project } from "@backend/schemas/Project";
 import type { Task } from "@backend/schemas/Task";
 
 export type ProjectDetailsPanelProps = {
@@ -46,29 +47,8 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
     popPanel();
   };
 
-  const setProjectIsArchived = async (isArchived: boolean) => {
-    await client.api.projects({ id: props.projectId }).patch({
-      isArchived,
-    });
-  };
-
-  function handleUpdateName(name: string) {
-    client.api.projects({ id: props.projectId }).patch({
-      name,
-    });
-  }
-
-  function handleUpdateDescription(description: string) {
-    client.api.projects({ id: props.projectId }).patch({
-      description,
-    });
-  }
-
-  function handleUpdateOrder(order: string) {
-    const orderNumber = order ? parseInt(order) : null;
-    client.api.projects({ id: props.projectId }).patch({
-      order: orderNumber,
-    });
+  function handleUpdateProject(update: Partial<Project>) {
+    client.api.projects({ id: props.projectId }).patch(update);
   }
 
   const { getMilestonesByProjectId } = useMilestoneStore();
@@ -166,7 +146,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
           ref={nameInputRef}
           value={project()?.name}
           onInput={debounce(
-            (e) => handleUpdateName(e.currentTarget.value),
+            (e) => handleUpdateProject({ name: e.currentTarget.value }),
             300
           )}
         />
@@ -174,7 +154,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
         <Textarea
           value={project()?.description}
           onInput={debounce(
-            (e) => handleUpdateDescription(e.currentTarget.value),
+            (e) => handleUpdateProject({ description: e.currentTarget.value }),
             300
           )}
         />
@@ -183,7 +163,12 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
           type="number"
           min="1"
           value={project()?.order ?? ""}
-          onInput={(e) => handleUpdateOrder(e.currentTarget.value)}
+          onInput={(e) => {
+            const value = e.currentTarget.value;
+            handleUpdateProject({
+              order: value === "" ? null : parseInt(value),
+            });
+          }}
           placeholder="排序 (可選)"
         />
         <SectionLabel>里程碑</SectionLabel>
@@ -283,7 +268,9 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
         <div class="flex gap-2">
           <Button
             variant="secondary"
-            onclick={() => setProjectIsArchived(!project()?.isArchived)}
+            onclick={() =>
+              handleUpdateProject({ isArchived: !project()?.isArchived })
+            }
           >
             {project()?.isArchived ? "還原" : "封存"}
           </Button>

@@ -9,6 +9,8 @@ import { debounce } from "lodash";
 import { createEffect, createMemo, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
+import type { Project } from "@backend/schemas/Project";
+
 export default function ProjectListPanel() {
   const { pushPanel } = usePanelController();
   const [showArchived, setShowArchived] = createSignal(false);
@@ -51,17 +53,8 @@ export default function ProjectListPanel() {
     }
   });
 
-  function setProjectName(projectId: string, name: string) {
-    client.api.projects({ id: projectId }).patch({
-      name,
-    });
-  }
-
-  function setProjectOrder(projectId: string, order: string) {
-    const orderNumber = order ? parseInt(order) : null;
-    client.api.projects({ id: projectId }).patch({
-      order: orderNumber,
-    });
+  function handleUpdateProject(projectId: string, update: Partial<Project>) {
+    client.api.projects({ id: projectId }).patch(update);
   }
 
   return (
@@ -91,7 +84,10 @@ export default function ProjectListPanel() {
               }}
               value={project.name}
               onInput={debounce(
-                (e) => setProjectName(project.id, e.currentTarget.value),
+                (e) =>
+                  handleUpdateProject(project.id, {
+                    name: e.currentTarget.value,
+                  }),
                 300
               )}
               placeholder="專案名稱"
@@ -101,9 +97,12 @@ export default function ProjectListPanel() {
               type="number"
               min="1"
               value={project.order ?? ""}
-              onInput={(e) =>
-                setProjectOrder(project.id, e.currentTarget.value)
-              }
+              onInput={(e) => {
+                const value = e.currentTarget.value;
+                handleUpdateProject(project.id, {
+                  order: value ? parseInt(value) : null,
+                });
+              }}
               placeholder="排序"
             />
             <Button

@@ -10,6 +10,8 @@ import { format, parse } from "date-fns";
 import { debounce } from "lodash";
 import { onMount } from "solid-js";
 
+import type { Milestone } from "@backend/schemas/Milestone";
+
 export type MilestoneDetailsPanelProps = {
   milestoneId: string;
 };
@@ -32,22 +34,8 @@ export default function MilestoneDetailsPanel(
     popPanel();
   };
 
-  function handleUpdateName(name: string) {
-    client.api.milestones({ id: props.milestoneId }).patch({
-      name,
-    });
-  }
-
-  function handleUpdateDescription(description: string) {
-    client.api.milestones({ id: props.milestoneId }).patch({
-      description,
-    });
-  }
-
-  function handleUpdateDueDate(dueDate: string) {
-    client.api.milestones({ id: props.milestoneId }).patch({
-      dueDate: dueDate ? parse(dueDate, "yyyy-MM-dd", new Date()) : null,
-    });
+  function handleUpdateMilestone(update: Partial<Milestone>) {
+    client.api.milestones({ id: props.milestoneId }).patch(update);
   }
 
   return (
@@ -60,7 +48,7 @@ export default function MilestoneDetailsPanel(
           ref={nameInputRef}
           value={milestone()?.name}
           onInput={debounce(
-            (e) => handleUpdateName(e.currentTarget.value),
+            (e) => handleUpdateMilestone({ name: e.currentTarget.value }),
             300
           )}
         />
@@ -72,14 +60,20 @@ export default function MilestoneDetailsPanel(
               ? format(milestone()!.dueDate!, "yyyy-MM-dd")
               : ""
           }
-          onInput={(e) => handleUpdateDueDate(e.currentTarget.value)}
+          onInput={(e) => {
+            const value = e.currentTarget.value;
+            handleUpdateMilestone({
+              dueDate: value ? parse(value, "yyyy-MM-dd", new Date()) : null,
+            });
+          }}
           placeholder="到期日 (可選)"
         />
         <SectionLabel>描述</SectionLabel>
         <Textarea
           value={milestone()?.description}
           onInput={debounce(
-            (e) => handleUpdateDescription(e.currentTarget.value),
+            (e) =>
+              handleUpdateMilestone({ description: e.currentTarget.value }),
             300
           )}
         />

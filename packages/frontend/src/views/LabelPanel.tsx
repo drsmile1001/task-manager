@@ -7,6 +7,8 @@ import { debounce } from "lodash";
 import { createEffect } from "solid-js";
 import { ulid } from "ulid";
 
+import type { Label } from "@backend/schemas/Label";
+
 export default function LabelPanel() {
   const labels = () => useLabelStore().labels();
   const nameInputRefs = new Map<string, HTMLInputElement>();
@@ -34,23 +36,8 @@ export default function LabelPanel() {
     }
   });
 
-  function setLabelName(labelId: string, name: string) {
-    client.api.labels({ id: labelId }).patch({
-      name,
-    });
-  }
-
-  function setLabelColor(labelId: string, color: string) {
-    client.api.labels({ id: labelId }).patch({
-      color,
-    });
-  }
-
-  function setLabelPriority(labelId: string, priority: string | null) {
-    const priorityNumber = priority ? parseInt(priority) : null;
-    client.api.labels({ id: labelId }).patch({
-      priority: priorityNumber,
-    });
+  function handleUpdateLabel(labelId: string, update: Partial<Label>) {
+    client.api.labels({ id: labelId }).patch(update);
   }
 
   function hadleDeleteLabel(labelId: string) {
@@ -77,7 +64,8 @@ export default function LabelPanel() {
               class="flex-1"
               value={label.name}
               onInput={debounce(
-                (e) => setLabelName(label.id, e.currentTarget.value),
+                (e) =>
+                  handleUpdateLabel(label.id, { name: e.currentTarget.value }),
                 300
               )}
               placeholder="標籤名稱"
@@ -86,14 +74,21 @@ export default function LabelPanel() {
               class="w-10 cursor-pointer"
               type="color"
               value={label.color}
-              onInput={(e) => setLabelColor(label.id, e.currentTarget.value)}
+              onInput={(e) =>
+                handleUpdateLabel(label.id, { color: e.currentTarget.value })
+              }
             />
             <Input
               class="w-20"
               type="number"
               min="1"
               value={label.priority ?? ""}
-              onInput={(e) => setLabelPriority(label.id, e.currentTarget.value)}
+              onInput={(e) => {
+                const value = e.currentTarget.value;
+                handleUpdateLabel(label.id, {
+                  priority: value === "" ? null : parseInt(value),
+                });
+              }}
               placeholder="優先"
             />
             <Button
