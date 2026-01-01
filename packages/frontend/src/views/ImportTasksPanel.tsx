@@ -1,16 +1,15 @@
 import { client } from "@frontend/client";
+import Button from "@frontend/components/Button";
+import Panel, {
+  PanelList,
+  PanelSections,
+  SectionLabel,
+} from "@frontend/components/Panel";
+import { Textarea } from "@frontend/components/Textarea";
 import { useLabelStore } from "@frontend/stores/labelStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { createSignal } from "solid-js";
 import { ulid } from "ulid";
-
-import Button from "./Button";
-import DetailPanel, {
-  PanelList,
-  PanelSections,
-  SectionLabel,
-} from "./DetailPanel";
-import { Textarea } from "./Textarea";
 
 type ParsedTask = {
   projectName: string;
@@ -161,7 +160,7 @@ export default function ImportTasksPanel() {
     setImportingLog([]);
   }
   return (
-    <DetailPanel title="匯入工作">
+    <Panel title="匯入工作">
       <PanelSections>
         <SectionLabel>工作資料貼上區</SectionLabel>
         <Textarea
@@ -234,6 +233,6 @@ export default function ImportTasksPanel() {
           </Button>
         </div>
       </PanelSections>
-    </DetailPanel>
+    </Panel>
   );
 }

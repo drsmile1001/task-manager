@@ -1,11 +1,10 @@
 import { client } from "@frontend/client";
+import Button from "@frontend/components/Button";
+import Input from "@frontend/components/Input";
+import Panel, { PanelList } from "@frontend/components/Panel";
 import { useLabelStore } from "@frontend/stores/labelStore";
 import { createEffect } from "solid-js";
 import { ulid } from "ulid";
-
-import Button from "./Button";
-import DetailPanel, { PanelList } from "./DetailPanel";
-import Input from "./Input";
 
 export default function LabelPanel() {
   const labels = () => useLabelStore().labels();
@@ -58,7 +57,7 @@ export default function LabelPanel() {
   }
 
   return (
-    <DetailPanel
+    <Panel
       title="標籤"
       actions={
         <div class="flex items-center justify-between">
@@ -103,6 +102,6 @@ export default function LabelPanel() {
           </>
         )}
       </PanelList>
-    </DetailPanel>
+    </Panel>
   );
 }

@@ -1,4 +1,7 @@
 import { client } from "@frontend/client";
+import Button from "@frontend/components/Button";
+import LabelLine from "@frontend/components/LabelLine";
+import Panel, { PanelList } from "@frontend/components/Panel";
 import { useAssignmentStore } from "@frontend/stores/assignmentStore";
 import { usePanelController } from "@frontend/stores/detailPanelController";
 import { useDragStore } from "@frontend/stores/dragStore";
@@ -12,10 +15,6 @@ import {
 import { differenceInDays, format, isBefore, startOfDay } from "date-fns";
 import { For, Show, createMemo, createSignal } from "solid-js";
 import { ulid } from "ulid";
-
-import Button from "./Button";
-import DetailPanel, { PanelList } from "./DetailPanel";
-import LabelLine from "./LabelLine";
 
 type GroupType = "BY_PROJECT" | "BY_DUE_DATE";
 
@@ -138,7 +137,7 @@ export default function TaskPool() {
   });
 
   return (
-    <DetailPanel
+    <Panel
       title="工作總覽"
       actions={
         <div class="flex items-center gap-1">
@@ -218,7 +217,7 @@ export default function TaskPool() {
           </div>
         )}
       </PanelList>
-    </DetailPanel>
+    </Panel>
   );
 }
 

@@ -1,13 +1,12 @@
 import { client } from "@frontend/client";
+import Button from "@frontend/components/Button";
+import Checkbox from "@frontend/components/Checkbox";
+import Input from "@frontend/components/Input";
+import Panel, { PanelList } from "@frontend/components/Panel";
 import { usePanelController } from "@frontend/stores/detailPanelController";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { createEffect, createMemo, createSignal } from "solid-js";
 import { ulid } from "ulid";
-
-import Button from "./Button";
-import Checkbox from "./Checkbox";
-import DetailPanel, { PanelList } from "./DetailPanel";
-import Input from "./Input";
 
 export default function ProjectListPanel() {
   const { pushPanel } = usePanelController();
@@ -65,7 +64,7 @@ export default function ProjectListPanel() {
   }
 
   return (
-    <DetailPanel
+    <Panel
       title="專案清單"
       actions={
         <div class="flex items-center justify-between">
@@ -115,6 +114,6 @@ export default function ProjectListPanel() {
           </>
         )}
       </PanelList>
-    </DetailPanel>
+    </Panel>
   );
 }

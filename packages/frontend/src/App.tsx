@@ -1,27 +1,26 @@
 import { For } from "solid-js";
 
-import FilterPanel from "./components/FilterPanel";
-import ImportTasksPanel from "./components/ImportTasksPanel";
-import LabelPanel from "./components/LabelPanel";
-import MilestoneDetailsPanel from "./components/MilestoneDetailsPanel";
-import PersonPanel from "./components/PersonPanel";
-import ProjectDetailsPanel from "./components/ProjectDetailsPanel";
-import ProjectListPanel from "./components/ProjectListPanel";
-import ScheduleTable from "./components/ScheduleTable";
-import TaskDetailsPanel from "./components/TaskDetailsPanel";
-import TaskPool from "./components/TaskPool";
 import { useAssignmentStore } from "./stores/assignmentStore";
 import {
   type PanelOptions,
   usePanelController,
 } from "./stores/detailPanelController";
 import { useDragStore } from "./stores/dragStore";
+import FilterPanel from "./views/FilterPanel";
+import ImportTasksPanel from "./views/ImportTasksPanel";
+import LabelPanel from "./views/LabelPanel";
+import MilestoneDetailsPanel from "./views/MilestoneDetailsPanel";
+import PersonPanel from "./views/PersonPanel";
+import ProjectDetailsPanel from "./views/ProjectDetailsPanel";
+import ProjectListPanel from "./views/ProjectListPanel";
+import ScheduleTable from "./views/ScheduleTable";
+import TaskDetailsPanel from "./views/TaskDetailsPanel";
+import TaskPool from "./views/TaskPool";
 
 export default function App() {
   const { stack: panelStack } = usePanelController();
 
   function matchPanelComponent(context: PanelOptions) {
-    console.log("Rendering panel:", context);
     if (!context) return <div></div>;
     switch (context.type) {
       case "Filter":

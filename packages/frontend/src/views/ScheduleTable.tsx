@@ -1,4 +1,5 @@
 import { client } from "@frontend/client";
+import Button from "@frontend/components/Button";
 import { useAssignmentStore } from "@frontend/stores/assignmentStore";
 import { usePanelController } from "@frontend/stores/detailPanelController";
 import { useDragStore } from "@frontend/stores/dragStore";
@@ -12,8 +13,6 @@ import { useTaskStore } from "@frontend/stores/taskStore";
 import { addDays, format, isBefore, startOfDay } from "date-fns";
 import { For, createMemo } from "solid-js";
 import { ulid } from "ulid";
-
-import Button from "./Button";
 
 export default function ScheduleTable() {
   const { openPanel } = usePanelController();

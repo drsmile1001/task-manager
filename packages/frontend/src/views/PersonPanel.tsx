@@ -1,11 +1,10 @@
 import { client } from "@frontend/client";
+import Button from "@frontend/components/Button";
+import Input from "@frontend/components/Input";
+import Panel, { PanelList } from "@frontend/components/Panel";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { createEffect } from "solid-js";
 import { ulid } from "ulid";
-
-import Button from "./Button";
-import DetailPanel, { PanelList } from "./DetailPanel";
-import Input from "./Input";
 
 export default function PersonPanel() {
   const { persons } = usePersonStore();
@@ -50,7 +49,7 @@ export default function PersonPanel() {
   }
 
   return (
-    <DetailPanel
+    <Panel
       title="人員"
       actions={
         <div class="flex items-center justify-between">
@@ -89,6 +88,6 @@ export default function PersonPanel() {
           </>
         )}
       </PanelList>
-    </DetailPanel>
+    </Panel>
   );
 }

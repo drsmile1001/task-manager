@@ -1,7 +1,6 @@
+import Button from "@frontend/components/Button";
 import { usePanelController } from "@frontend/stores/detailPanelController";
 import { type JSX, Show } from "solid-js";
-
-import Button from "./Button";
 
 export interface DetailPanelProps {
   title: JSX.Element | string;
@@ -9,7 +8,7 @@ export interface DetailPanelProps {
   actions?: JSX.Element;
 }
 
-export default function DetailPanel(props: DetailPanelProps) {
+export default function Panel(props: DetailPanelProps) {
   const { closePanel, stack: panelStack, popPanel } = usePanelController();
   return (
     <div class="h-full shadow-lg flex-none w-120 border-l bg-white flex flex-col">

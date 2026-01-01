@@ -1,4 +1,12 @@
 import { client } from "@frontend/client";
+import Button from "@frontend/components/Button";
+import Input from "@frontend/components/Input";
+import Panel, {
+  PanelList,
+  PanelSections,
+  SectionLabel,
+} from "@frontend/components/Panel";
+import { Textarea } from "@frontend/components/Textarea";
 import { usePanelController } from "@frontend/stores/detailPanelController";
 import { useDragStore } from "@frontend/stores/dragStore";
 import { useFilterStore } from "@frontend/stores/filterStore";
@@ -11,15 +19,6 @@ import { ulid } from "ulid";
 
 import type { Milestone } from "@backend/schemas/Milestone";
 import type { Task } from "@backend/schemas/Task";
-
-import Button from "./Button";
-import DetailPanel, {
-  PanelList,
-  PanelSections,
-  SectionLabel,
-} from "./DetailPanel";
-import Input from "./Input";
-import { Textarea } from "./Textarea";
 
 export type ProjectDetailsPanelProps = {
   projectId: string;
@@ -152,7 +151,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
   }
 
   return (
-    <DetailPanel
+    <Panel
       title={`專案詳情 - ${project()?.name || ""}`}
       actions={
         <Button variant="secondary" size="small" onClick={applyFilter}>
@@ -284,6 +283,6 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
           </Show>
         </div>
       </PanelSections>
-    </DetailPanel>
+    </Panel>
   );
 }

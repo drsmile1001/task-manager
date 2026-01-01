@@ -1,14 +1,13 @@
 import { client } from "@frontend/client";
+import Button from "@frontend/components/Button";
+import Input from "@frontend/components/Input";
+import Panel, { PanelSections, SectionLabel } from "@frontend/components/Panel";
+import { Textarea } from "@frontend/components/Textarea";
 import { usePanelController } from "@frontend/stores/detailPanelController";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { format, parse } from "date-fns";
 import { onMount } from "solid-js";
-
-import Button from "./Button";
-import DetailPanel, { PanelSections, SectionLabel } from "./DetailPanel";
-import Input from "./Input";
-import { Textarea } from "./Textarea";
 
 export type MilestoneDetailsPanelProps = {
   milestoneId: string;
@@ -51,7 +50,7 @@ export default function MilestoneDetailsPanel(
   }
 
   return (
-    <DetailPanel title={`里程碑詳情 - ${milestone()?.name || ""}`}>
+    <Panel title={`里程碑詳情 - ${milestone()?.name || ""}`}>
       <PanelSections>
         <SectionLabel>所屬專案</SectionLabel>
         <Input value={project()?.name || ""} disabled />
@@ -84,6 +83,6 @@ export default function MilestoneDetailsPanel(
           </Button>
         </div>
       </PanelSections>
-    </DetailPanel>
+    </Panel>
   );
 }

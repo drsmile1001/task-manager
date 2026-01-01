@@ -1,4 +1,9 @@
 import { client } from "@frontend/client";
+import Button from "@frontend/components/Button";
+import Checkbox from "@frontend/components/Checkbox";
+import Input from "@frontend/components/Input";
+import Panel, { PanelSections, SectionLabel } from "@frontend/components/Panel";
+import { Textarea } from "@frontend/components/Textarea";
 import { usePanelController } from "@frontend/stores/detailPanelController";
 import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
 import { usePersonStore } from "@frontend/stores/personStore";
@@ -6,12 +11,6 @@ import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
 import { format } from "date-fns";
 import { For, Show, onMount } from "solid-js";
-
-import Button from "./Button";
-import Checkbox from "./Checkbox";
-import DetailPanel, { PanelSections, SectionLabel } from "./DetailPanel";
-import Input from "./Input";
-import { Textarea } from "./Textarea";
 
 export type TaskDetailsPanelProps = {
   taskId: string;
@@ -96,7 +95,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   }
 
   return (
-    <DetailPanel title={`工作詳情 - ${task()?.name || ""}`}>
+    <Panel title={`工作詳情 - ${task()?.name || ""}`}>
       <PanelSections>
         <SectionLabel>所屬專案</SectionLabel>
         <div class="w-full flex items-center">
@@ -203,6 +202,6 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
           </Show>
         </div>
       </PanelSections>
-    </DetailPanel>
+    </Panel>
   );
 }

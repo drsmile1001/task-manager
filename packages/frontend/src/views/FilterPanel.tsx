@@ -1,11 +1,10 @@
+import Button from "@frontend/components/Button";
+import Checkbox from "@frontend/components/Checkbox";
+import Panel, { PanelSections, SectionLabel } from "@frontend/components/Panel";
 import { useFilterStore } from "@frontend/stores/filterStore";
 import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
-
-import Button from "./Button";
-import Checkbox from "./Checkbox";
-import DetailPanel, { PanelSections, SectionLabel } from "./DetailPanel";
 
 export default function FilterPanel() {
   const { labels } = useLabelStore();
@@ -64,7 +63,7 @@ export default function FilterPanel() {
     });
   }
   return (
-    <DetailPanel
+    <Panel
       title="篩選"
       actions={
         <Button size="small" onclick={clearFilter}>
@@ -149,6 +148,6 @@ export default function FilterPanel() {
           ))}
         </div>
       </PanelSections>
-    </DetailPanel>
+    </Panel>
   );
 }
