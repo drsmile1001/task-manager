@@ -6,8 +6,8 @@ import Panel, {
   PanelSections,
   SectionLabel,
 } from "@frontend/components/Panel";
+import { TaskBlock } from "@frontend/components/TaskBlock";
 import { Textarea } from "@frontend/components/Textarea";
-import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useFilterStore } from "@frontend/stores/filterStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
@@ -20,7 +20,6 @@ import { ulid } from "ulid";
 
 import type { Milestone } from "@backend/schemas/Milestone";
 import type { Project } from "@backend/schemas/Project";
-import type { Task } from "@backend/schemas/Task";
 
 export type ProjectDetailsPanelProps = {
   projectId: string;
@@ -89,12 +88,8 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
       (task) => task.projectId === props.projectId && !task.isArchived
     )
   );
-  function handleUpdateTask(taskId: string, updating: Partial<Task>) {
-    client.api.tasks({ id: taskId }).patch(updating);
-  }
   async function createTask() {
     const taskId = ulid();
-    toFocusTaskId = taskId;
     await client.api.tasks.post({
       id: taskId,
       projectId: props.projectId,
@@ -107,28 +102,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
       labelIds: [],
       assigneeIds: [],
     });
-  }
-  const taskNameInputRefs = new Map<string, HTMLInputElement>();
-  let toFocusTaskId: string | null = null;
-  createEffect(() => {
-    tasks();
-    if (toFocusTaskId) {
-      const inputRef = taskNameInputRefs.get(toFocusTaskId);
-      if (inputRef) {
-        inputRef.focus();
-        toFocusTaskId = null;
-      }
-    }
-  });
-
-  async function handleTaskDragStart(e: DragEvent, task: Task) {
-    const { setDragImage, startTaskDrag } = useDragController();
-    startTaskDrag(task.id);
-    await setDragImage(e, () => (
-      <span class="rounded bg-gray-200 px-2 py-1 border border-gray-400 shadow-md">
-        {task.name}
-      </span>
-    ));
+    pushPanel({ type: "Task", taskId });
   }
 
   return (
@@ -225,38 +199,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
         <SectionLabel>未封存工作</SectionLabel>
         <PanelList items={tasks}>
           {(task) => (
-            <>
-              <div
-                class="w-2 cursor-grab select-none"
-                draggable="true"
-                ondragstart={(e) => handleTaskDragStart(e, task)}
-              >
-                ::
-              </div>
-              <Input
-                ref={(el) => taskNameInputRefs.set(task.id, el)}
-                class="flex-1"
-                classList={{
-                  "line-through": task.isDone,
-                }}
-                value={task.name}
-                placeholder="名稱"
-                onInput={debounce(
-                  (e) =>
-                    handleUpdateTask(task.id, {
-                      name: e.currentTarget.value,
-                    }),
-                  300
-                )}
-              />
-              <Button
-                variant="secondary"
-                size="small"
-                onClick={() => pushPanel({ type: "Task", taskId: task.id })}
-              >
-                詳細
-              </Button>
-            </>
+            <TaskBlock class="w-full" task={task} showProject={false} />
           )}
         </PanelList>
         <div>

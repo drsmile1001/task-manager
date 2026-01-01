@@ -1,14 +1,21 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
 import Input from "@frontend/components/Input";
-import Panel, { PanelSections, SectionLabel } from "@frontend/components/Panel";
+import Panel, {
+  PanelList,
+  PanelSections,
+  SectionLabel,
+} from "@frontend/components/Panel";
+import { TaskBlock } from "@frontend/components/TaskBlock";
 import { Textarea } from "@frontend/components/Textarea";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
+import { useTaskStore } from "@frontend/stores/taskStore";
 import { format, parse } from "date-fns";
 import { debounce } from "lodash";
-import { onMount } from "solid-js";
+import { createMemo, onMount } from "solid-js";
+import { ulid } from "ulid";
 
 import type { Milestone } from "@backend/schemas/Milestone";
 
@@ -19,7 +26,7 @@ export type MilestoneDetailsPanelProps = {
 export default function MilestoneDetailsPanel(
   props: MilestoneDetailsPanelProps
 ) {
-  const { popPanel } = usePanelController();
+  const { popPanel, pushPanel } = usePanelController();
   const milestone = () => useMilestoneStore().getMilestone(props.milestoneId);
   const project = () =>
     useProjectStore().getProject(milestone()?.projectId ?? "");
@@ -36,6 +43,30 @@ export default function MilestoneDetailsPanel(
 
   function handleUpdateMilestone(update: Partial<Milestone>) {
     client.api.milestones({ id: props.milestoneId }).patch(update);
+  }
+
+  const { tasksWithRelation } = useTaskStore();
+  const tasks = createMemo(() =>
+    tasksWithRelation().filter(
+      (task) => task.milestoneId === props.milestoneId && !task.isArchived
+    )
+  );
+
+  async function createTask() {
+    const taskId = ulid();
+    await client.api.tasks.post({
+      id: taskId,
+      projectId: milestone()?.projectId || "",
+      milestoneId: props.milestoneId,
+      name: "新工作",
+      description: "",
+      dueDate: null,
+      isDone: false,
+      isArchived: false,
+      labelIds: [],
+      assigneeIds: [],
+    });
+    pushPanel({ type: "Task", taskId });
   }
 
   return (
@@ -77,6 +108,17 @@ export default function MilestoneDetailsPanel(
             300
           )}
         />
+        <SectionLabel>未封存工作</SectionLabel>
+        <PanelList items={tasks}>
+          {(task) => (
+            <TaskBlock class="w-full" task={task} showProject={false} />
+          )}
+        </PanelList>
+        <div>
+          <Button variant="secondary" onClick={createTask}>
+            新增工作
+          </Button>
+        </div>
         <SectionLabel>進階操作</SectionLabel>
         <div class="flex gap-2">
           <Button variant="danger" onclick={removeMilestone}>
