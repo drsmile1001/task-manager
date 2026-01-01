@@ -1,3 +1,5 @@
+import { For } from "solid-js";
+
 import FilterPanel from "./components/FilterPanel";
 import ImportTasksPanel from "./components/ImportTasksPanel";
 import LabelPanel from "./components/LabelPanel";
@@ -10,15 +12,16 @@ import TaskDetailsPanel from "./components/TaskDetailsPanel";
 import TaskPool from "./components/TaskPool";
 import { useAssignmentStore } from "./stores/assignmentStore";
 import {
-  type PanelContext,
+  type PanelOptions,
   usePanelController,
 } from "./stores/detailPanelController";
 import { useDragStore } from "./stores/dragStore";
 
 export default function App() {
-  const { currentContext } = usePanelController();
+  const { stack: panelStack } = usePanelController();
 
-  function matchPanelComponent(context: PanelContext | null) {
+  function matchPanelComponent(context: PanelOptions) {
+    console.log("Rendering panel:", context);
     if (!context) return <div></div>;
     switch (context.type) {
       case "Filter":
@@ -37,6 +40,8 @@ export default function App() {
         return <MilestoneDetailsPanel milestoneId={context.milestoneId} />;
       case "Task":
         return <TaskDetailsPanel taskId={context.taskId} />;
+      case "TaskPool":
+        return <TaskPool />;
       default:
         return <div></div>;
     }
@@ -56,9 +61,25 @@ export default function App() {
           useDragStore().clear();
         }}
       >
-        <TaskPool />
-        <ScheduleTable />
-        {matchPanelComponent(currentContext())}
+        <div
+          classList={{
+            "md:ml-120": panelStack.length > 0,
+          }}
+        >
+          <ScheduleTable />
+        </div>
+        <For each={panelStack}>
+          {(context) => (
+            <div
+              class="absolute top-0 h-full"
+              style={{
+                "z-index": context.deep + 100,
+              }}
+            >
+              {matchPanelComponent(context)}
+            </div>
+          )}
+        </For>
       </div>
       <DragImageRenderer />
     </>

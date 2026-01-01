@@ -1,7 +1,7 @@
 import { singulation } from "@frontend/utils/singulation";
-import { createSignal } from "solid-js";
+import { createStore } from "solid-js/store";
 
-export type PanelContext =
+export type PanelOptions =
   | {
       type: "Filter";
     }
@@ -28,37 +28,44 @@ export type PanelContext =
   | {
       type: "Task";
       taskId: string;
+    }
+  | {
+      type: "TaskPool";
     };
 
+export type PanelContext = PanelOptions & {
+  deep: number;
+};
+
 function createPanelController() {
-  const [contextStack, setContextStack] = createSignal<PanelContext[]>([]);
+  const [stack, setState] = createStore<PanelContext[]>([]);
 
-  function currentContext() {
-    const stack = contextStack();
-    return stack[stack.length - 1] || null;
-  }
-
-  function openPanel(context: PanelContext) {
-    setContextStack([context]);
+  function openPanel(context: PanelOptions) {
+    setState([
+      {
+        ...context,
+        deep: 0,
+      },
+    ]);
   }
 
   function closePanel() {
-    setContextStack([]);
+    setState([]);
   }
 
-  function pushPanel(context: PanelContext) {
-    setContextStack([...contextStack(), context]);
+  function pushPanel(context: PanelOptions) {
+    setState(stack.length, {
+      ...context,
+      deep: stack.length,
+    });
   }
 
   function popPanel() {
-    const stack = contextStack();
-    stack.pop();
-    setContextStack([...stack]);
+    setState(stack.slice(0, -1));
   }
 
   return {
-    contextStack,
-    currentContext,
+    stack,
     openPanel,
     closePanel,
     pushPanel,

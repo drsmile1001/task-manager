@@ -133,6 +133,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
 
         <SectionLabel>描述</SectionLabel>
         <Textarea
+          class="h-32"
           value={task()?.description}
           onInput={(e) => handleUpdateDescription(e.currentTarget.value)}
         />

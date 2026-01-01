@@ -14,6 +14,7 @@ import { For, Show, createMemo, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
 import Button from "./Button";
+import DetailPanel, { PanelList } from "./DetailPanel";
 import LabelLine from "./LabelLine";
 
 type GroupType = "BY_PROJECT" | "BY_DUE_DATE";
@@ -22,7 +23,7 @@ export default function TaskPool() {
   const { tasksWithRelation } = useTaskStore();
   const { filter } = useFilterStore();
   const [groupType, setGroupType] = createSignal<GroupType>("BY_PROJECT");
-  const { openPanel } = usePanelController();
+  const { pushPanel } = usePanelController();
 
   const groupedTasks = createMemo(() => {
     const currentGroupType = groupType();
@@ -137,37 +138,52 @@ export default function TaskPool() {
   });
 
   return (
-    <div class="h-full flex-none w-[clamp(15rem,15vw,25rem)] border-r flex flex-col p-3 bg-gray-50">
-      <div class="flex-none flex border-b mb-2 pb-2 gap-4 items-center">
-        <h2 class="font-bold text-gray-700 flex-1">專案 & 工作</h2>
-        <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
-          <input
-            type="radio"
-            name="groupType"
-            value="BY_PROJECT"
-            checked={groupType() === "BY_PROJECT"}
-            onInput={() => setGroupType("BY_PROJECT")}
-          />
-          <span>依專案</span>
-        </label>
-        <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
-          <input
-            type="radio"
-            name="groupType"
-            value="BY_DUE_DATE"
-            checked={groupType() === "BY_DUE_DATE"}
-            onInput={() => setGroupType("BY_DUE_DATE")}
-          />
-          <span>依到期日</span>
-        </label>
-      </div>
-      <div class="flex-1 overflow-y-auto">
-        <For each={groupedTasks()}>
-          {({ group, tasks }) => (
-            <div class="mb-6">
-              <div class="font-semibold text-gray-700 flex items-center justify-between mb-2">
-                <span>{group.name}</span>
-                {groupType() === "BY_PROJECT" && (
+    <DetailPanel
+      title="工作總覽"
+      actions={
+        <div class="flex items-center gap-1">
+          <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
+            <input
+              type="radio"
+              name="groupType"
+              value="BY_PROJECT"
+              checked={groupType() === "BY_PROJECT"}
+              onInput={() => setGroupType("BY_PROJECT")}
+            />
+            <span>依專案</span>
+          </label>
+          <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
+            <input
+              type="radio"
+              name="groupType"
+              value="BY_DUE_DATE"
+              checked={groupType() === "BY_DUE_DATE"}
+              onInput={() => setGroupType("BY_DUE_DATE")}
+            />
+            <span>依到期日</span>
+          </label>
+        </div>
+      }
+    >
+      <PanelList items={groupedTasks}>
+        {({ group, tasks }) => (
+          <div class="w-full">
+            <div class="font-semibold text-gray-700 flex items-center justify-between mb-2">
+              <span>{group.name}</span>
+              <Show when={groupType() === "BY_PROJECT"}>
+                <div class="flex gap-1">
+                  <Button
+                    variant="secondary"
+                    size="small"
+                    onClick={() =>
+                      pushPanel({
+                        type: "ProjectDetails",
+                        projectId: group.key,
+                      })
+                    }
+                  >
+                    詳細
+                  </Button>
                   <Button
                     variant="secondary"
                     size="small"
@@ -186,28 +202,28 @@ export default function TaskPool() {
                         dueDate: null,
                         assigneeIds: [],
                       });
-                      openPanel({ type: "Task", taskId });
+                      pushPanel({ type: "Task", taskId });
                     }}
                   >
                     ＋ 新增工作
                   </Button>
-                )}
-              </div>
-              <div class="space-y-1 pl-2">
-                <For each={tasks}>
-                  {(t) => <TaskBlock t={t} groupType={groupType} />}
-                </For>
-              </div>
+                </div>
+              </Show>
             </div>
-          )}
-        </For>
-      </div>
-    </div>
+            <div class="space-y-1 pl-2">
+              <For each={tasks}>
+                {(t) => <TaskBlock t={t} groupType={groupType} />}
+              </For>
+            </div>
+          </div>
+        )}
+      </PanelList>
+    </DetailPanel>
   );
 }
 
 function TaskBlock(props: { t: TaskWithRelation; groupType: () => GroupType }) {
-  const { openPanel } = usePanelController();
+  const { pushPanel } = usePanelController();
   const today = startOfDay(new Date());
   const { t, groupType } = props;
   const assigned = () => useAssignmentStore().listByTask(t.id).length > 0;
@@ -217,7 +233,7 @@ function TaskBlock(props: { t: TaskWithRelation; groupType: () => GroupType }) {
     t.dueDate ? differenceInDays(new Date(t.dueDate), today) : null;
   return (
     <div
-      class="p-1 border rounded text-sm shadow cursor-pointer"
+      class="p-1 border rounded text-sm shadow cursor-pointer select-none"
       classList={{
         "bg-gray-50 border-gray-300 hover:bg-gray-100 text-gray-400":
           isArchived(),
@@ -229,7 +245,7 @@ function TaskBlock(props: { t: TaskWithRelation; groupType: () => GroupType }) {
           !isArchived() && !isOverdue() && !assigned(),
         "line-through": t.isDone,
       }}
-      onClick={() => openPanel({ type: "Task", taskId: t.id })}
+      onClick={() => pushPanel({ type: "Task", taskId: t.id })}
       draggable="true"
       onDragStart={() => {
         useDragStore().startTaskDrag(t.id);
