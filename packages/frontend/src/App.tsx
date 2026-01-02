@@ -1,6 +1,7 @@
 import { DragImageRenderer } from "./stores/DragController";
 import { Panels, usePanelController } from "./stores/PanelController";
 import ScheduleTable from "./views/ScheduleTable";
+import WeekScheduleTable from "./views/WeekScheduleTable";
 
 export default function App() {
   const { stack: panelStack } = usePanelController();
@@ -13,7 +14,8 @@ export default function App() {
             "md:ml-120": panelStack.length > 0,
           }}
         >
-          <ScheduleTable />
+          <WeekScheduleTable />
+          {/* <ScheduleTable /> */}
         </div>
         <Panels />
       </div>
