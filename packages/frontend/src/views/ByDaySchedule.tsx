@@ -14,7 +14,14 @@ import {
   type TaskWithRelation,
   useTaskStore,
 } from "@frontend/stores/taskStore";
-import { addDays, format, startOfDay, startOfWeek } from "date-fns";
+import {
+  addDays,
+  format,
+  isAfter,
+  isBefore,
+  startOfDay,
+  startOfWeek,
+} from "date-fns";
 import { For, Show, createMemo, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
@@ -98,6 +105,7 @@ export default function ByDaySchedule() {
         id: string;
         taskId: string;
         task: TaskWithRelation | undefined;
+        hasAssignment: boolean;
       }[];
     }[] = [];
 
@@ -106,13 +114,24 @@ export default function ByDaySchedule() {
         addDays(viewStartDate(), w * 7),
         "yyyy-MM-dd"
       );
+      const weekEndDate = format(
+        addDays(viewStartDate(), w * 7 + 6),
+        "yyyy-MM-dd"
+      );
       const plans = getPlanningsByWeekStartDate(weekStartDate)
         .map((plan) => {
           const task = getTaskWithRelation(plan.taskId);
+          const hasAssignment =
+            task?.assignments.some(
+              (a) =>
+                !isBefore(a.date, weekStartDate) &&
+                !isAfter(a.date, weekEndDate)
+            ) ?? false;
           return {
             id: plan.id,
             taskId: plan.taskId,
             task,
+            hasAssignment,
           };
         })
         .filter(({ task }) => {
@@ -336,12 +355,20 @@ export default function ByDaySchedule() {
                 {({ plans }) => (
                   <div class="border-b border-r border-gray-300 p-1 grid grid-cols-7  auto-rows-min">
                     <For each={plans}>
-                      {({ task }) => (
+                      {({ task, hasAssignment }) => (
                         <div
-                          class="bg-green-50 border border-green-300 text-xs shadow p-1 rounded mr-1 mb-1 cursor-pointer hover:bg-green-100 select-none"
+                          class="border text-xs shadow p-1 rounded mr-1 mb-1 cursor-pointer select-none"
                           classList={{
                             "bg-gray-50 border-gray-300 text-gray-400 hover:bg-gray-100":
                               task?.isArchived || task?.project?.isArchived,
+                            "bg-green-50 border-green-400 hover:bg-green-100":
+                              !(
+                                task?.isArchived || task?.project?.isArchived
+                              ) && hasAssignment,
+                            "bg-yellow-50 border-yellow-400 hover:bg-yellow-100":
+                              !(
+                                task?.isArchived || task?.project?.isArchived
+                              ) && !hasAssignment,
                           }}
                           draggable="true"
                           onDragStart={() => {
