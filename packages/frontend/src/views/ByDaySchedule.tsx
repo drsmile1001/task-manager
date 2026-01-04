@@ -22,7 +22,7 @@ const VIEW_WEEKS = 2;
 const VIEW_DAYS = 14;
 
 export default function ByDaySchedule() {
-  const { openPanel } = usePanelController();
+  const { openPanel, pushPanel } = usePanelController();
   const { dragContext, setDragContext } = useDragController();
   const { persons } = usePersonStore();
   const { getProject } = useProjectStore();
@@ -257,7 +257,7 @@ export default function ByDaySchedule() {
           </Button>
           <Button
             variant="secondary"
-            onclick={() => openPanel({ type: "SharedFilter" })}
+            onclick={() => pushPanel({ type: "SharedFilter" })}
           >
             篩選
           </Button>
@@ -342,7 +342,6 @@ export default function ByDaySchedule() {
                           classList={{
                             "bg-gray-50 border-gray-300 text-gray-400 hover:bg-gray-100":
                               task?.isArchived || task?.project?.isArchived,
-                            "line-through": task?.isDone,
                           }}
                           draggable="true"
                           onDragStart={() => {
@@ -358,7 +357,13 @@ export default function ByDaySchedule() {
                             });
                           }}
                         >
-                          <div>{task?.name}</div>
+                          <div
+                            classList={{
+                              "line-through": task?.isDone,
+                            }}
+                          >
+                            {task?.name}
+                          </div>
                           <div class="text-gray-500 pl-1">
                             {task?.project?.name}
                           </div>
@@ -445,7 +450,6 @@ export default function ByDaySchedule() {
                               classList={{
                                 "bg-gray-50 border-gray-300 text-gray-400 hover:bg-gray-100":
                                   task?.isArchived || task?.project?.isArchived,
-                                "line-through": task?.isDone,
                               }}
                               draggable="true"
                               onDragStart={() => {
@@ -463,7 +467,13 @@ export default function ByDaySchedule() {
                                 });
                               }}
                             >
-                              <div>{task?.name}</div>
+                              <div
+                                classList={{
+                                  "line-through": task?.isDone,
+                                }}
+                              >
+                                {task?.name}
+                              </div>
                               <div class="text-gray-500 pl-1">
                                 {task?.project?.name}
                               </div>

@@ -38,12 +38,33 @@ export default function TaskPool() {
           return false;
         }
         if (
-          sharedFilter.projectIds &&
-          sharedFilter.projectIds.length > 0 &&
+          sharedFilter.projectIds.length &&
           !sharedFilter.projectIds.includes(task.projectId)
         ) {
           return false;
         }
+        if (
+          sharedFilter.labelIds.length &&
+          !sharedFilter.labelIds.some((labelId) =>
+            task.labelIds.includes(labelId)
+          )
+        )
+          return false;
+        if (
+          sharedFilter.personIds.length &&
+          !task.assigneeIds.some((assigneeId) =>
+            sharedFilter.personIds.includes(assigneeId)
+          )
+        ) {
+          return false;
+        }
+        if (
+          sharedFilter.milestoneIds.length &&
+          !sharedFilter.milestoneIds.includes(task.milestoneId ?? "")
+        ) {
+          return false;
+        }
+
         return true;
       })
       .reduce(
@@ -162,6 +183,13 @@ export default function TaskPool() {
       title="工作總覽"
       actions={
         <div class="flex items-center gap-1">
+          <Button
+            variant="secondary"
+            size="small"
+            onClick={() => pushPanel({ type: "SharedFilter" })}
+          >
+            篩選
+          </Button>
           <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
             <input
               type="radio"

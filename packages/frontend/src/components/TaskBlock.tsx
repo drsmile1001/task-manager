@@ -43,7 +43,6 @@ export function TaskBlock(props: {
           !isArchived() && !isOverdue() && assigned(),
         "bg-yellow-50 border-yellow-400 hover:bg-yellow-100":
           !isArchived() && !isOverdue() && !assigned(),
-        "line-through": task.isDone,
       }}
       onClick={() => pushPanel({ type: "Task", taskId: task.id })}
       draggable="true"
@@ -69,19 +68,24 @@ export function TaskBlock(props: {
         }
       }}
     >
-      <div class="flex justify-between items-center mb-1">
-        <div>
-          <Show when={props.showProject}>
-            <span>{task.project?.name}:</span>
-          </Show>
-          <span>{task.name}</span>
+      <div class="mb-1">
+        <div class="flex justify-between items-center">
+          <span
+            classList={{
+              "line-through": task.isDone,
+            }}
+          >
+            {task.name}
+          </span>
+          <span>
+            {task.dueDate
+              ? `${format(task.dueDate, "MM-dd")} (${dayDiff()})`
+              : ""}
+          </span>
         </div>
-
-        <span>
-          {task.dueDate
-            ? `${format(task.dueDate, "MM-dd")} (${dayDiff()})`
-            : ""}
-        </span>
+        <Show when={props.showProject}>
+          <span class="pl-1 text-xs text-gray-500">{task.project?.name}</span>
+        </Show>
       </div>
       <div class="flex justify-between items-center">
         <div class="flex gap-1">

@@ -42,7 +42,7 @@ export default function WeekScheduleTable() {
   const { getTaskWithRelation } = useTaskStore();
   const { dragContext, setDragContext } = useDragController();
   const { getPerson } = usePersonStore();
-  const { openPanel } = usePanelController();
+  const { openPanel, pushPanel } = usePanelController();
 
   const weeks = createMemo(() => {
     const weeks: WeekEntry[] = [];
@@ -211,7 +211,7 @@ export default function WeekScheduleTable() {
           </Button>
           <Button
             variant="secondary"
-            onclick={() => openPanel({ type: "SharedFilter" })}
+            onclick={() => pushPanel({ type: "SharedFilter" })}
           >
             篩選
           </Button>
@@ -306,7 +306,6 @@ export default function WeekScheduleTable() {
                               classList={{
                                 "bg-gray-50 border-gray-300 text-gray-400 hover:bg-gray-100":
                                   task?.isArchived || task?.project?.isArchived,
-                                "line-through": task?.isDone,
                               }}
                               draggable="true"
                               onDragStart={() => {
@@ -323,7 +322,13 @@ export default function WeekScheduleTable() {
                                 });
                               }}
                             >
-                              <span>{task?.name}</span>
+                              <span
+                                classList={{
+                                  "line-through": task?.isDone,
+                                }}
+                              >
+                                {task?.name}
+                              </span>
                               <div class="flex flex-wrap items-center justify-between mt-1 gap-0.5">
                                 <div class="flex flex-wrap gap-0.5">
                                   {(task?.assigneeIds ?? []).map(
