@@ -358,9 +358,10 @@ export default function ByDaySchedule() {
                             });
                           }}
                         >
-                          <span>
-                            {task?.project?.name}:{task?.name}
-                          </span>
+                          <div>{task?.name}</div>
+                          <div class="text-gray-500 pl-1">
+                            {task?.project?.name}
+                          </div>
                           <div class="flex flex-wrap items-center justify-between mt-1 gap-0.5">
                             <div class="flex flex-wrap gap-0.5">
                               {(task?.assigneeIds ?? []).map((assigneeId) => {
@@ -462,9 +463,10 @@ export default function ByDaySchedule() {
                                 });
                               }}
                             >
-                              <span>
-                                {task?.project?.name}:{task?.name}
-                              </span>
+                              <div>{task?.name}</div>
+                              <div class="text-gray-500 pl-1">
+                                {task?.project?.name}
+                              </div>
                               <div class="flex justify-end">
                                 {task?.labels.map((label) => (
                                   <span
