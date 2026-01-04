@@ -1,11 +1,11 @@
 import { singulation } from "@frontend/utils/singulation";
-import FilterPanel from "@frontend/views/FilterPanel";
 import ImportTasksPanel from "@frontend/views/ImportTasksPanel";
 import LabelPanel from "@frontend/views/LabelPanel";
 import MilestoneDetailsPanel from "@frontend/views/MilestoneDetailsPanel";
 import PersonPanel from "@frontend/views/PersonPanel";
 import ProjectDetailsPanel from "@frontend/views/ProjectDetailsPanel";
 import ProjectListPanel from "@frontend/views/ProjectListPanel";
+import SharedFilterPanel from "@frontend/views/SharedFilterPanel";
 import TaskDetailsPanel from "@frontend/views/TaskDetailsPanel";
 import TaskPool from "@frontend/views/TaskPool";
 import { For } from "solid-js";
@@ -13,7 +13,7 @@ import { createStore } from "solid-js/store";
 
 export type PanelOptions =
   | {
-      type: "Filter";
+      type: "SharedFilter";
     }
   | {
       type: "Label";
@@ -46,8 +46,8 @@ export type PanelOptions =
 function RenderPanel(options: PanelOptions) {
   if (!options) return <div></div>;
   switch (options.type) {
-    case "Filter":
-      return <FilterPanel />;
+    case "SharedFilter":
+      return <SharedFilterPanel />;
     case "Label":
       return <LabelPanel />;
     case "Person":
@@ -76,7 +76,7 @@ export function Panels() {
     <For each={stack}>
       {(context) => (
         <div
-          class="absolute top-0 h-full"
+          class="absolute top-0 h-full w-full md:w-120"
           style={{
             "z-index": context.deep + 100,
           }}

@@ -9,7 +9,6 @@ import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
-import { format, isValid } from "date-fns";
 import { debounce } from "lodash";
 import { For, Show, createMemo, onMount } from "solid-js";
 
@@ -44,7 +43,6 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   };
 
   function handleUpdateTask(update: Partial<Task>) {
-    console.log("updating task", update);
     client.api.tasks({ id: props.taskId! }).patch(update);
   }
 
@@ -163,10 +161,9 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         <input
           class={baseInputClass}
           type="date"
-          value={task()?.dueDate ? format(task()!.dueDate!, "yyyy-MM-dd") : ""}
+          value={task()?.dueDate ?? ""}
           onInput={(e) => {
-            const date = new Date(e.currentTarget.value);
-            handleUpdateTask({ dueDate: isValid(date) ? date : null });
+            handleUpdateTask({ dueDate: e.currentTarget.value || null });
           }}
         />
 

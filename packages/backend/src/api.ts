@@ -6,12 +6,20 @@ import { assignmentSchema } from "./schemas/Assignment";
 import type { Logger } from "~shared/Logger";
 import { personSchema } from "./schemas/Person";
 import { labelSchema } from "./schemas/Label";
-import { milestoneSchema } from "./schemas/Milestone";
+import { milestoneMigrations, milestoneSchema } from "./schemas/Milestone";
+import { planningSchema } from "./schemas/Planning";
 
 let currentBunServer: Bun.Server<unknown> | null = null;
 
 export type MutationMessage = {
-  type: "person" | "project" | "task" | "assignment" | "label" | "milestone";
+  type:
+    | "person"
+    | "project"
+    | "task"
+    | "planning"
+    | "assignment"
+    | "label"
+    | "milestone";
   action: "create" | "update" | "delete";
   id: string;
   eneity?: unknown;
@@ -37,16 +45,7 @@ export async function buildApi(logger: Logger) {
     "data/milestones.yaml",
     milestoneSchema,
     logger,
-    [],
-    (data) => ({
-      ...data,
-      dueDate: data.dueDate ? new Date(data.dueDate) : null,
-    }),
-    (data) =>
-      ({
-        ...data,
-        dueDate: data.dueDate ? data.dueDate.toISOString() : null,
-      }) as any
+    milestoneMigrations
   );
   await milestoneRepo.init();
 
@@ -54,18 +53,15 @@ export async function buildApi(logger: Logger) {
     "data/tasks.yaml",
     taskSchema,
     logger,
-    taskMigrations,
-    (t) => ({
-      ...t,
-      dueDate: t.dueDate ? new Date(t.dueDate) : null,
-    }),
-    (t) =>
-      ({
-        ...t,
-        dueDate: t.dueDate ? t.dueDate.toISOString() : null,
-      }) as any
+    taskMigrations
   );
   await taskRepo.init();
+  const planningRepo = createYamlRepo(
+    "data/plannings.yaml",
+    planningSchema,
+    logger
+  );
+  await planningRepo.init();
   const assignmentRepo = createYamlRepo(
     "data/assignments.yaml",
     assignmentSchema,
@@ -77,12 +73,7 @@ export async function buildApi(logger: Logger) {
   const labelRepo = createYamlRepo("data/labels.yaml", labelSchema, logger);
   await labelRepo.init();
 
-  function broadcastMutation(message: {
-    type: "person" | "project" | "milestone" | "task" | "assignment" | "label";
-    action: "create" | "update" | "delete";
-    id: string;
-    eneity?: unknown;
-  }) {
+  function broadcastMutation(message: MutationMessage) {
     logger.info(
       {
         type: "broadcastMutation",
@@ -427,6 +418,55 @@ export async function buildApi(logger: Logger) {
       await assignmentRepo.replaceAll(otherTaskAssignments);
       broadcastMutation({
         type: "task",
+        action: "delete",
+        id: params.id,
+      });
+    })
+    .get("/api/plannings", () => {
+      return planningRepo.list();
+    })
+    .post(
+      "/api/plannings",
+      async ({ body }) => {
+        await planningRepo.set(body);
+        broadcastMutation({
+          type: "planning",
+          action: "create",
+          id: body.id,
+          eneity: body,
+        });
+      },
+      {
+        body: planningSchema,
+      }
+    )
+    .get("/api/plannings/:id", ({ params, status }) => {
+      const planning = planningRepo.get(params.id);
+      if (!planning) return status(404);
+      return planning;
+    })
+    .patch(
+      "/api/plannings/:id",
+      async ({ params, body, status }) => {
+        const existing = planningRepo.get(params.id);
+        if (!existing) return status(404);
+        const updated = { ...existing, ...body };
+        await planningRepo.set(updated);
+        broadcastMutation({
+          type: "planning",
+          action: "update",
+          id: params.id,
+          eneity: updated,
+        });
+      },
+      {
+        body: t.Partial(planningSchema),
+      }
+    )
+    .delete("/api/plannings/:id", async ({ params }) => {
+      await planningRepo.remove(params.id);
+      broadcastMutation({
+        type: "planning",
         action: "delete",
         id: params.id,
       });

@@ -3,7 +3,7 @@ import Button from "@frontend/components/Button";
 import Panel, { PanelList } from "@frontend/components/Panel";
 import { TaskBlock } from "@frontend/components/TaskBlock";
 import { usePanelController } from "@frontend/stores/PanelController";
-import { useFilterStore } from "@frontend/stores/filterStore";
+import { useSharedFilterStore } from "@frontend/stores/SharedFilterStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import {
@@ -18,7 +18,7 @@ type GroupType = "BY_PROJECT" | "BY_PROJECT_MILESTONE" | "BY_DUE_DATE";
 
 export default function TaskPool() {
   const { tasksWithRelation } = useTaskStore();
-  const { filter } = useFilterStore();
+  const { sharedFilter } = useSharedFilterStore();
   const [groupType, setGroupType] = createSignal<GroupType>("BY_PROJECT");
   const { pushPanel } = usePanelController();
   const { getProject } = useProjectStore();
@@ -26,25 +26,21 @@ export default function TaskPool() {
 
   const groupedTasks = createMemo(() => {
     const currentGroupType = groupType();
-    const currentFilter = filter();
     const grouping = tasksWithRelation()
       .filter((task) => {
-        if (currentFilter.includeDoneTasks === false && task.isDone) {
-          return false;
-        }
-        if (currentFilter.includeArchivedTasks === false && task.isArchived) {
+        if (sharedFilter.includeDoneTasks === false && task.isDone) {
           return false;
         }
         if (
-          currentFilter.projectIds &&
-          currentFilter.projectIds.length > 0 &&
-          !currentFilter.projectIds.includes(task.projectId)
+          sharedFilter.includeArchivedTasks === false &&
+          (task.isArchived || task.project?.isArchived)
         ) {
           return false;
         }
         if (
-          !currentFilter.includeArchivedProjects &&
-          task.project?.isArchived
+          sharedFilter.projectIds &&
+          sharedFilter.projectIds.length > 0 &&
+          !sharedFilter.projectIds.includes(task.projectId)
         ) {
           return false;
         }
@@ -90,7 +86,7 @@ export default function TaskPool() {
             ? `${project?.name} ${milestone.name}`
             : `${project?.name}`;
           group.order = milestone?.dueDate
-            ? milestone.dueDate.getTime()
+            ? new Date(milestone.dueDate).getTime()
             : Number.MAX_SAFE_INTEGER;
         }
         if (currentGroupType === "BY_DUE_DATE") {
@@ -103,10 +99,10 @@ export default function TaskPool() {
           const priorityA = a.priority;
           const priorityB = b.priority;
           const dueDateA = a.dueDate
-            ? a.dueDate.getTime()
+            ? new Date(a.dueDate).getTime()
             : Number.MAX_SAFE_INTEGER;
           const dueDateB = b.dueDate
-            ? b.dueDate.getTime()
+            ? new Date(b.dueDate).getTime()
             : Number.MAX_SAFE_INTEGER;
           if (currentGroupType === "BY_PROJECT") {
             if (priorityA !== priorityB) {

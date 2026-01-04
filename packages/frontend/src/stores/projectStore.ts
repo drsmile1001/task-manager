@@ -5,8 +5,6 @@ import { createStore } from "solid-js/store";
 
 import type { Project } from "@backend/schemas/Project";
 
-import { useFilterStore } from "./filterStore";
-
 function createProjectStore() {
   const [map, setMap] = createStore({} as Record<string, Project | undefined>);
 
@@ -46,23 +44,6 @@ function createProjectStore() {
     return map[id];
   }
 
-  const filteredProjects = createMemo(() => {
-    const filter = useFilterStore().filter();
-    return projects().filter((p) => {
-      if (
-        filter.projectIds &&
-        filter.projectIds.length &&
-        !filter.projectIds.includes(p.id)
-      ) {
-        return false;
-      }
-      if (!filter.includeArchivedProjects && p.isArchived) {
-        return false;
-      }
-      return true;
-    });
-  });
-
   const nonArchivedProjects = createMemo(() => {
     return projects().filter((p) => !p.isArchived);
   });
@@ -73,7 +54,6 @@ function createProjectStore() {
     deleteProject,
     getProject,
     nonArchivedProjects,
-    filteredProjects,
   };
 }
 

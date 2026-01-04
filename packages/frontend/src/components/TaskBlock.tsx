@@ -21,7 +21,8 @@ export function TaskBlock(props: {
   const { getMilestone } = useMilestoneStore();
   const today = startOfDay(new Date());
   const { task } = props;
-  const assigned = () => useAssignmentStore().listByTask(task.id).length > 0;
+  const assigned = () =>
+    useAssignmentStore().getAssignmentsByTask(task.id).length > 0;
   const isArchived = () => task.isArchived || task.project?.isArchived;
   const isOverdue = () =>
     task.dueDate ? isBefore(task.dueDate, today) : false;

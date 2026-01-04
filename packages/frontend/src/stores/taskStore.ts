@@ -5,6 +5,7 @@ import { createStore } from "solid-js/store";
 
 import type { Task } from "@backend/schemas/Task";
 
+import { useAssignmentStore } from "./assignmentStore";
 import { useLabelStore } from "./labelStore";
 import { useMilestoneStore } from "./milestoneStore";
 import { usePersonStore } from "./personStore";
@@ -22,11 +23,7 @@ function createTaskStore() {
   }
   loadTasks();
 
-  async function createTask(newTask: Task) {
-    setMap(newTask.id, newTask);
-  }
-
-  async function updateTask(task: Task) {
+  async function setTask(task: Task) {
     setMap(task.id, task);
   }
 
@@ -38,44 +35,60 @@ function createTaskStore() {
     return map[id];
   }
 
-  const tasksWithRelation = createMemo(() => {
+  const tasksWithRelationMap = createMemo(() => {
     const { getProject } = useProjectStore();
     const { getPerson } = usePersonStore();
     const { getLabel } = useLabelStore();
     const { getMilestone } = useMilestoneStore();
-    return Object.values(map)
-      .filter((t): t is Task => t !== undefined)
-      .map((task) => {
-        const project = getProject(task.projectId);
-        const milestone = task.milestoneId
-          ? getMilestone(task.milestoneId)
-          : undefined;
-        const assignees = task.assigneeIds
-          .map((personId) => getPerson(personId))
-          .filter((p): p is NonNullable<typeof p> => p !== undefined);
-        const labels = task.labelIds
-          .map((labelId) => getLabel(labelId))
-          .filter((l): l is NonNullable<typeof l> => l !== undefined);
-        const priority = Math.min(
-          ...labels.map((l) => l.priority ?? Number.MAX_SAFE_INTEGER)
-        );
-        return {
-          ...task,
-          project,
-          milestone,
-          assignees,
-          labels,
-          priority,
-        };
-      });
+    const { getAssignmentsByTask } = useAssignmentStore();
+    return new Map(
+      Object.values(map)
+        .filter((t): t is Task => t !== undefined)
+        .map((task) => {
+          const project = getProject(task.projectId);
+          const milestone = task.milestoneId
+            ? getMilestone(task.milestoneId)
+            : undefined;
+          const assignees = task.assigneeIds
+            .map((personId) => getPerson(personId))
+            .filter((p): p is NonNullable<typeof p> => p !== undefined);
+          const labels = task.labelIds
+            .map((labelId) => getLabel(labelId))
+            .filter((l): l is NonNullable<typeof l> => l !== undefined);
+          const assignments = getAssignmentsByTask(task.id);
+          const priority = Math.min(
+            ...labels.map((l) => l.priority ?? Number.MAX_SAFE_INTEGER)
+          );
+          return [
+            task.id,
+            {
+              ...task,
+              project,
+              milestone,
+              assignees,
+              labels,
+              priority,
+              assignments,
+            },
+          ];
+        })
+    );
   });
 
+  function getTaskWithRelation(id: string) {
+    return tasksWithRelationMap().get(id);
+  }
+
+  function tasksWithRelation() {
+    return [...tasksWithRelationMap().values()];
+  }
+
   return {
-    createTask,
-    updateTask,
+    setTask,
     deleteTask,
     getTask,
     loadTasks,
+    getTaskWithRelation,
     tasksWithRelation,
   };
 }

@@ -4,6 +4,7 @@ import { useAssignmentStore } from "./stores/assignmentStore";
 import { useLabelStore } from "./stores/labelStore";
 import { useMilestoneStore } from "./stores/milestoneStore";
 import { usePersonStore } from "./stores/personStore";
+import { usePlanningStore } from "./stores/planningStore";
 import { useProjectStore } from "./stores/projectStore";
 import { useTaskStore } from "./stores/taskStore";
 
@@ -50,8 +51,8 @@ export function sync() {
               usePersonStore().setPerson(m.eneity as any);
               break;
             case "delete":
-              usePersonStore().deletePerson(m.id);
               useAssignmentStore().loadAssignments();
+              usePersonStore().deletePerson(m.id);
               break;
             default:
               break;
@@ -64,9 +65,9 @@ export function sync() {
               useProjectStore().setProject(m.eneity as any);
               break;
             case "delete":
-              useProjectStore().deleteProject(m.id);
-              useTaskStore().loadTasks();
               useAssignmentStore().loadAssignments();
+              useTaskStore().loadTasks();
+              useProjectStore().deleteProject(m.id);
               break;
             default:
               break;
@@ -80,8 +81,8 @@ export function sync() {
               useTaskStore().loadTasks();
               break;
             case "delete":
-              useMilestoneStore().deleteMilestone(m.id);
               useTaskStore().loadTasks();
+              useMilestoneStore().deleteMilestone(m.id);
               break;
             default:
               break;
@@ -90,14 +91,25 @@ export function sync() {
         case "task":
           switch (m.action) {
             case "create":
-              useTaskStore().createTask(m.eneity as any);
-              break;
             case "update":
-              useTaskStore().updateTask(m.eneity as any);
+              useTaskStore().setTask(m.eneity as any);
               break;
             case "delete":
-              useTaskStore().deleteTask(m.id);
               useAssignmentStore().loadAssignments();
+              useTaskStore().deleteTask(m.id);
+              break;
+            default:
+              break;
+          }
+          break;
+        case "planning":
+          switch (m.action) {
+            case "create":
+            case "update":
+              usePlanningStore().setPlanning(m.eneity as any);
+              break;
+            case "delete":
+              usePlanningStore().deletePlanning(m.id);
               break;
             default:
               break;
@@ -106,10 +118,8 @@ export function sync() {
         case "assignment":
           switch (m.action) {
             case "create":
-              useAssignmentStore().createAssignment(m.eneity as any);
-              break;
             case "update":
-              useAssignmentStore().updateAssignment(m.eneity as any);
+              useAssignmentStore().setAssignment(m.eneity as any);
               break;
             case "delete":
               useAssignmentStore().deleteAssignment(m.id);

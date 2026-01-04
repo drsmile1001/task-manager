@@ -10,7 +10,7 @@ import Panel, {
 import { TaskBlock } from "@frontend/components/TaskBlock";
 import { baseTextareaClass } from "@frontend/components/Textarea";
 import { usePanelController } from "@frontend/stores/PanelController";
-import { useFilterStore } from "@frontend/stores/filterStore";
+import { useSharedFilterStore } from "@frontend/stores/SharedFilterStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
@@ -29,10 +29,12 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
   const { getProject } = useProjectStore();
   const project = createMemo(() => getProject(props.projectId));
 
-  const { setProjectIds } = useFilterStore();
+  const { setSharedFilter } = useSharedFilterStore();
   function applyFilter() {
-    setProjectIds([props.projectId]);
-    pushPanel({ type: "Filter" });
+    setSharedFilter({
+      projectIds: [props.projectId],
+    });
+    pushPanel({ type: "SharedFilter" });
   }
 
   let nameInputRef: HTMLInputElement | undefined;
@@ -62,6 +64,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
       name: "新里程碑",
       dueDate: null,
       description: "",
+      isArchived: false,
     });
     pushPanel({ type: "Milestone", milestoneId });
   }

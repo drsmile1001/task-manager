@@ -11,7 +11,7 @@ export interface DetailPanelProps {
 export default function Panel(props: DetailPanelProps) {
   const { closePanel, stack: panelStack, popPanel } = usePanelController();
   return (
-    <div class="h-full shadow-lg flex-none w-120 border-l bg-white flex flex-col">
+    <div class="h-full shadow-lg flex-none w-full border-l bg-white flex flex-col">
       <div class="p-1 border-b flex justify-between items-center bg-gray-50">
         <Button
           variant="secondary"

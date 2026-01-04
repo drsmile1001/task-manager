@@ -9,6 +9,11 @@ export type DragContext =
       assignmentId: string;
       fromPersonId: string;
       fromDate: string;
+    }
+  | {
+      type: "planning";
+      planningId: string;
+      fromWeekStartDate: string;
     };
 
 export function DragImageRenderer() {

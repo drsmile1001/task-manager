@@ -9,11 +9,10 @@ import Panel, {
 import { TaskBlock } from "@frontend/components/TaskBlock";
 import { baseTextareaClass } from "@frontend/components/Textarea";
 import { usePanelController } from "@frontend/stores/PanelController";
-import { useFilterStore } from "@frontend/stores/filterStore";
+import { useSharedFilterStore } from "@frontend/stores/SharedFilterStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
-import { format, parse } from "date-fns";
 import { debounce } from "lodash";
 import { createMemo, onMount } from "solid-js";
 import { ulid } from "ulid";
@@ -37,10 +36,12 @@ export default function MilestoneDetailsPanel(
     nameInputRef?.focus();
   });
 
-  const { setMilestoneIds } = useFilterStore();
+  const { setSharedFilter } = useSharedFilterStore();
   function applyFilter() {
-    setMilestoneIds([props.milestoneId]);
-    pushPanel({ type: "Filter" });
+    setSharedFilter({
+      milestoneIds: [props.milestoneId],
+    });
+    pushPanel({ type: "SharedFilter" });
   }
 
   const removeMilestone = async () => {
@@ -123,15 +124,11 @@ export default function MilestoneDetailsPanel(
         <input
           class={baseInputClass}
           type="date"
-          value={
-            milestone()?.dueDate
-              ? format(milestone()!.dueDate!, "yyyy-MM-dd")
-              : ""
-          }
+          value={milestone()?.dueDate ?? ""}
           onInput={(e) => {
             const value = e.currentTarget.value;
             handleUpdateMilestone({
-              dueDate: value ? parse(value, "yyyy-MM-dd", new Date()) : null,
+              dueDate: value ? value : null,
             });
           }}
           placeholder="到期日 (可選)"
