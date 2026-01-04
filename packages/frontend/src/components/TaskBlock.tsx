@@ -14,6 +14,7 @@ export function TaskBlock(props: {
   class?: string;
   task: TaskWithRelation;
   showProject?: boolean;
+  showMilestone?: boolean;
 }) {
   const { pushPanel } = usePanelController();
   const { setDragContext, dragContext } = useDragController();
@@ -83,8 +84,17 @@ export function TaskBlock(props: {
               : ""}
           </span>
         </div>
-        <Show when={props.showProject}>
-          <span class="pl-1 text-xs text-gray-500">{task.project?.name}</span>
+        <Show
+          when={props.showProject || (props.showMilestone && task.milestone)}
+        >
+          <div class="flex justify-between items-center">
+            <div class="pl-1 text-xs text-gray-500">
+              {props.showProject ? task.project?.name : ""}
+            </div>
+            <div class="text-xs text-gray-500">
+              {props.showMilestone ? task.milestone?.name : ""}
+            </div>
+          </div>
         </Show>
       </div>
       <div class="flex justify-between items-center">

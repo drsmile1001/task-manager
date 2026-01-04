@@ -71,10 +71,28 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
 
   const { tasksWithRelation } = useTaskStore();
   const tasks = createMemo(() =>
-    tasksWithRelation().filter(
-      (task) => task.projectId === props.projectId && !task.isArchived
-    )
+    tasksWithRelation()
+      .filter((task) => task.projectId === props.projectId && !task.isArchived)
+      .sort((a, b) => {
+        const aDue = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+        const bDue = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+        if (aDue !== bDue) {
+          return aDue - bDue;
+        }
+        const aPriority = a.priority ?? Infinity;
+        const bPriority = b.priority ?? Infinity;
+        if (aPriority !== bPriority) {
+          return aPriority - bPriority;
+        }
+        const aMilestone = a.milestone ? 0 : 1;
+        const bMilestone = b.milestone ? 0 : 1;
+        if (aMilestone !== bMilestone) {
+          return aMilestone - bMilestone;
+        }
+        return a.name.localeCompare(b.name);
+      })
   );
+
   async function createTask() {
     const taskId = ulid();
     await client.api.tasks.post({
@@ -147,7 +165,12 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
         <SectionLabel>未封存工作</SectionLabel>
         <PanelList items={tasks}>
           {(task) => (
-            <TaskBlock class="w-full" task={task} showProject={false} />
+            <TaskBlock
+              class="w-full"
+              task={task}
+              showProject={false}
+              showMilestone={true}
+            />
           )}
         </PanelList>
         <div>

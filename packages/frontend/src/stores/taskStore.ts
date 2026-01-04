@@ -19,7 +19,20 @@ function createTaskStore() {
     if (result.error) {
       throw new Error("Failed to load tasks");
     }
-    setMap(Object.fromEntries(result.data.map((task) => [task.id, task])));
+    setMap(
+      Object.fromEntries(
+        result.data.map((task) => [
+          task.id,
+          {
+            ...task,
+            dueDate:
+              (task.dueDate as unknown as Date | null)
+                ?.toISOString()
+                .split("T")[0] ?? null,
+          },
+        ])
+      )
+    );
   }
   loadTasks();
 
@@ -56,9 +69,12 @@ function createTaskStore() {
             .map((labelId) => getLabel(labelId))
             .filter((l): l is NonNullable<typeof l> => l !== undefined);
           const assignments = getAssignmentsByTask(task.id);
-          const priority = Math.min(
-            ...labels.map((l) => l.priority ?? Number.MAX_SAFE_INTEGER)
-          );
+          const priority =
+            labels.length === 0
+              ? Number.MAX_SAFE_INTEGER
+              : Math.min(
+                  ...labels.map((l) => l.priority ?? Number.MAX_SAFE_INTEGER)
+                );
           return [
             task.id,
             {

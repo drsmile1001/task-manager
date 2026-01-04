@@ -320,6 +320,10 @@ export default function TaskPool() {
                   <TaskBlock
                     task={t}
                     showProject={groupType() === "BY_DUE_DATE"}
+                    showMilestone={
+                      groupType() === "BY_DUE_DATE" ||
+                      groupType() === "BY_PROJECT"
+                    }
                   />
                 )}
               </For>
