@@ -8,6 +8,7 @@ import Panel, {
 } from "@frontend/components/Panel";
 import { TaskBlock } from "@frontend/components/TaskBlock";
 import { baseTextareaClass } from "@frontend/components/Textarea";
+import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useSharedFilterStore } from "@frontend/stores/SharedFilterStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
@@ -31,6 +32,7 @@ export default function MilestoneDetailsPanel(
   const milestone = createMemo(() => getMilestone(props.milestoneId));
   const project = () =>
     useProjectStore().getProject(milestone()?.projectId ?? "");
+  const { setDragContext } = useDragController();
   let nameInputRef: HTMLInputElement | undefined;
   onMount(() => {
     nameInputRef?.focus();
@@ -83,9 +85,23 @@ export default function MilestoneDetailsPanel(
     <Panel
       title={`里程碑詳情 - ${milestone()?.name || ""}`}
       actions={
-        <Button variant="secondary" size="small" onClick={applyFilter}>
-          套用篩選
-        </Button>
+        <div class="flex items-center justify-between">
+          <Button variant="secondary" size="small" onClick={applyFilter}>
+            套用篩選
+          </Button>
+          <div
+            class="bg-blue-50 border border-blue-300 text-xs shadow p-1 rounded mb-1 cursor-pointer hover:bg-blue-100 select-none"
+            draggable="true"
+            onDragStart={() => {
+              setDragContext({
+                type: "milestone",
+                milestoneId: props.milestoneId,
+              });
+            }}
+          >
+            指派
+          </div>
+        </div>
       }
     >
       <PanelSections>

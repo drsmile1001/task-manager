@@ -3,6 +3,7 @@ import Button from "@frontend/components/Button";
 import { checkboxLabelClass } from "@frontend/components/Checkbox";
 import { baseInputClass } from "@frontend/components/Input";
 import Panel, { PanelSections, SectionLabel } from "@frontend/components/Panel";
+import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
@@ -31,8 +32,8 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   });
   const { labels } = useLabelStore();
   const { persons } = usePersonStore();
+  const { setDragContext } = useDragController();
   let nameInputRef: HTMLInputElement | undefined;
-
   onMount(() => {
     nameInputRef?.focus();
   });
@@ -75,7 +76,25 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   }
 
   return (
-    <Panel title={`工作詳情 - ${task()?.name || ""}`}>
+    <Panel
+      title={`工作詳情 - ${task()?.name || ""}`}
+      actions={
+        <div class="flex items-center justify-end">
+          <div
+            class="bg-blue-50 border border-blue-300 text-xs shadow p-1 rounded mb-1 cursor-pointer hover:bg-blue-100 select-none"
+            draggable="true"
+            onDragStart={() => {
+              setDragContext({
+                type: "task",
+                taskId: props.taskId,
+              });
+            }}
+          >
+            指派
+          </div>
+        </div>
+      }
+    >
       <PanelSections>
         <SectionLabel>所屬專案</SectionLabel>
         <div class="w-full flex">

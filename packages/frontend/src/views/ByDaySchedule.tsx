@@ -8,12 +8,17 @@ import { useHolidayStore } from "@frontend/stores/holidayStore";
 import { getLabelTextColor } from "@frontend/stores/labelStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { usePersonStore } from "@frontend/stores/personStore";
+import { usePlanningStore } from "@frontend/stores/planningStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
-import { useTaskStore } from "@frontend/stores/taskStore";
+import {
+  type TaskWithRelation,
+  useTaskStore,
+} from "@frontend/stores/taskStore";
 import { addDays, format, startOfDay, startOfWeek } from "date-fns";
-import { For, createMemo, createSignal } from "solid-js";
+import { For, Show, createMemo, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
+const VIEW_WEEKS = 2;
 const VIEW_DAYS = 14;
 
 export default function ByDaySchedule() {
@@ -24,17 +29,22 @@ export default function ByDaySchedule() {
   const { getDateRecord } = useHolidayStore();
   const { sharedFilter } = useSharedFilterStore();
   const { milestones } = useMilestoneStore();
-  const today = startOfDay(new Date());
-  const currentWeekStart = startOfWeek(today);
+  const today = format(startOfDay(new Date()), "yyyy-MM-dd");
+  const currentWeekStart = format(startOfWeek(new Date()), "yyyy-MM-dd");
   const [viewStartDate, setViewStartDate] = createSignal(currentWeekStart);
   const { getAssignmentsByPersonAndDate } = useAssignmentStore();
   const { getTaskWithRelation } = useTaskStore();
+  const { getPlanningsByWeekStartDate } = usePlanningStore();
+  const [showWeekPlans, setShowWeekPlans] = createSignal(true);
+  const { getPerson } = usePersonStore();
 
   function navigateViewRange(offset: number | "current") {
     if (offset === "current") {
       setViewStartDate(currentWeekStart);
     } else {
-      setViewStartDate(addDays(viewStartDate(), offset * 7));
+      setViewStartDate(
+        format(addDays(viewStartDate(), offset * 7), "yyyy-MM-dd")
+      );
     }
   }
 
@@ -68,7 +78,7 @@ export default function ByDaySchedule() {
         label: format(date, "MM/dd E"),
         description: record?.description ?? "",
         isHoliday: record?.isHoliday ?? false,
-        isToday: date === format(today, "yyyy-MM-dd"),
+        isToday: date === today,
         milestonesInDate,
       });
     }
@@ -80,6 +90,74 @@ export default function ByDaySchedule() {
     const end = days()[days().length - 1];
     return `${start.date} - ${end.date}`;
   };
+
+  function weekPlans() {
+    const weekPlans: {
+      weekStartDate: string;
+      plans: {
+        id: string;
+        taskId: string;
+        task: TaskWithRelation | undefined;
+      }[];
+    }[] = [];
+
+    for (let w = 0; w < VIEW_WEEKS; w++) {
+      const weekStartDate = format(
+        addDays(viewStartDate(), w * 7),
+        "yyyy-MM-dd"
+      );
+      const plans = getPlanningsByWeekStartDate(weekStartDate)
+        .map((plan) => {
+          const task = getTaskWithRelation(plan.taskId);
+          return {
+            id: plan.id,
+            taskId: plan.taskId,
+            task,
+          };
+        })
+        .filter(({ task }) => {
+          if (sharedFilter.includeDoneTasks === false && task?.isDone)
+            return false;
+          if (
+            sharedFilter.includeArchivedTasks === false &&
+            (task?.isArchived || task?.project?.isArchived)
+          )
+            return false;
+          if (
+            sharedFilter.projectIds.length &&
+            !sharedFilter.projectIds.includes(task?.projectId ?? "")
+          )
+            return false;
+          if (
+            sharedFilter.milestoneIds.length &&
+            !sharedFilter.milestoneIds.includes(task?.milestoneId ?? "")
+          )
+            return false;
+          if (
+            sharedFilter.labelIds.length &&
+            !sharedFilter.labelIds.some((i) =>
+              task?.labelIds.some((labelId) => labelId === i)
+            )
+          )
+            return false;
+          if (
+            sharedFilter.personIds.length > 0 &&
+            !(task?.assigneeIds ?? []).some((assigneeId) =>
+              sharedFilter.personIds.includes(assigneeId)
+            )
+          )
+            return false;
+          return true;
+        });
+
+      weekPlans.push({
+        weekStartDate,
+        plans,
+      });
+    }
+
+    return weekPlans;
+  }
 
   function data() {
     return persons()
@@ -183,6 +261,14 @@ export default function ByDaySchedule() {
           >
             篩選
           </Button>
+          <label class="flex items-center gap-1">
+            <input
+              type="checkbox"
+              checked={showWeekPlans()}
+              onChange={(e) => setShowWeekPlans(e.currentTarget.checked)}
+            />
+            顯示週計劃
+          </label>
         </div>
       </div>
       <div class="flex-1 overflow-auto">
@@ -241,6 +327,75 @@ export default function ByDaySchedule() {
               </div>
             )}
           </For>
+          <Show when={showWeekPlans()}>
+            <div class="border-b border-r border-gray-300 border-r-gray-400 p-1 font-medium sticky left-0 z-[2] bg-gray-100 text-sm text-right">
+              週計劃
+            </div>
+            <div class="col-span-14 border-b border-gray-300 grid grid-cols-2">
+              <For each={weekPlans()}>
+                {({ plans }) => (
+                  <div class="border-b border-r border-gray-300 p-1 grid grid-cols-7  auto-rows-min">
+                    <For each={plans}>
+                      {({ task }) => (
+                        <div
+                          class="bg-green-50 border border-green-300 text-xs shadow p-1 rounded mr-1 mb-1 cursor-pointer hover:bg-green-100 select-none"
+                          classList={{
+                            "bg-gray-50 border-gray-300 text-gray-400 hover:bg-gray-100":
+                              task?.isArchived || task?.project?.isArchived,
+                            "line-through": task?.isDone,
+                          }}
+                          draggable="true"
+                          onDragStart={() => {
+                            setDragContext({
+                              type: "task",
+                              taskId: task?.id ?? "",
+                            });
+                          }}
+                          onClick={() => {
+                            openPanel({
+                              type: "Task",
+                              taskId: task?.id ?? "",
+                            });
+                          }}
+                        >
+                          <span>
+                            {task?.project?.name}:{task?.name}
+                          </span>
+                          <div class="flex flex-wrap items-center justify-between mt-1 gap-0.5">
+                            <div class="flex flex-wrap gap-0.5">
+                              {(task?.assigneeIds ?? []).map((assigneeId) => {
+                                const person = getPerson(assigneeId);
+                                if (!person) return null;
+                                return (
+                                  <span class="px-1 py-0.5 rounded text-xs bg-gray-300 text-gray-800">
+                                    {person.name}
+                                  </span>
+                                );
+                              })}
+                            </div>
+
+                            <div class="flex justify-end">
+                              {task?.labels.map((label) => (
+                                <span
+                                  class="text-xs px-1 py-0.5 rounded mr-1"
+                                  style={{
+                                    "background-color": label.color,
+                                    color: getLabelTextColor(label.color),
+                                  }}
+                                >
+                                  {label.name}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </For>
+                  </div>
+                )}
+              </For>
+            </div>
+          </Show>
 
           <For each={data()}>
             {(p) => (
