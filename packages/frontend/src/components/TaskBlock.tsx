@@ -22,10 +22,14 @@ export function TaskBlock(props: {
   const { getPerson } = usePersonStore();
   const { getMilestone } = useMilestoneStore();
   const { getWorkDays } = useHolidayStore();
+  const { getAssignmentsByTask } = useAssignmentStore();
   const today = startOfDay(new Date());
   const { task } = props;
-  const assigned = () =>
-    useAssignmentStore().getAssignmentsByTask(task.id).length > 0;
+  const hasActivedAssignments = createMemo(
+    () =>
+      getAssignmentsByTask(task.id).filter((a) => !isBefore(a.date, today))
+        .length > 0
+  );
   const isArchived = () => task.isArchived || task.project?.isArchived;
   const isOverdue = () =>
     task.dueDate ? isBefore(task.dueDate, today) : false;
@@ -46,9 +50,9 @@ export function TaskBlock(props: {
         "bg-red-50 border-red-400 hover:bg-red-100":
           !isArchived() && isOverdue(),
         "bg-green-50 border-green-400 hover:bg-green-100":
-          !isArchived() && !isOverdue() && assigned(),
+          !isArchived() && !isOverdue() && hasActivedAssignments(),
         "bg-yellow-50 border-yellow-400 hover:bg-yellow-100":
-          !isArchived() && !isOverdue() && !assigned(),
+          !isArchived() && !isOverdue() && !hasActivedAssignments(),
       }}
       onClick={() => pushPanel({ type: "Task", taskId: task.id })}
       draggable="true"
