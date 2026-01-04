@@ -1,12 +1,11 @@
 import { client } from "@frontend/client";
 import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
-import { useAssignmentStore } from "@frontend/stores/assignmentStore";
 import { useHolidayStore } from "@frontend/stores/holidayStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import type { TaskWithRelation } from "@frontend/stores/taskStore";
-import { format, isBefore, startOfDay } from "date-fns";
+import { format, isBefore, startOfDay, startOfWeek } from "date-fns";
 import { For, Show, createMemo } from "solid-js";
 
 import LabelLine from "./LabelLine";
@@ -22,13 +21,15 @@ export function TaskBlock(props: {
   const { getPerson } = usePersonStore();
   const { getMilestone } = useMilestoneStore();
   const { getWorkDays } = useHolidayStore();
-  const { getAssignmentsByTask } = useAssignmentStore();
+
   const today = startOfDay(new Date());
+  const currentWeekStart = startOfWeek(new Date());
   const { task } = props;
-  const hasActivedAssignments = createMemo(
-    () =>
-      getAssignmentsByTask(task.id).filter((a) => !isBefore(a.date, today))
-        .length > 0
+  const hasActivedAssignments = createMemo(() =>
+    task.assignments.some((a) => !isBefore(a.date, today))
+  );
+  const hasActivedPlannings = createMemo(() =>
+    task.plannings.some((p) => !isBefore(p.weekStartDate, currentWeekStart))
   );
   const isArchived = () => task.isArchived || task.project?.isArchived;
   const isOverdue = () =>
@@ -45,6 +46,7 @@ export function TaskBlock(props: {
     <div
       class={mergedClass}
       classList={{
+        "border-3": hasActivedPlannings(),
         "bg-gray-50 border-gray-300 hover:bg-gray-100 text-gray-400":
           isArchived(),
         "bg-red-50 border-red-400 hover:bg-red-100":

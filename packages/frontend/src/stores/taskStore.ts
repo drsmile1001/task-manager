@@ -9,6 +9,7 @@ import { useAssignmentStore } from "./assignmentStore";
 import { useLabelStore } from "./labelStore";
 import { useMilestoneStore } from "./milestoneStore";
 import { usePersonStore } from "./personStore";
+import { usePlanningStore } from "./planningStore";
 import { useProjectStore } from "./projectStore";
 
 function createTaskStore() {
@@ -54,6 +55,7 @@ function createTaskStore() {
     const { getLabel } = useLabelStore();
     const { getMilestone } = useMilestoneStore();
     const { getAssignmentsByTask } = useAssignmentStore();
+    const { getPlanningsByTask } = usePlanningStore();
     return new Map(
       Object.values(map)
         .filter((t): t is Task => t !== undefined)
@@ -75,6 +77,7 @@ function createTaskStore() {
               : Math.min(
                   ...labels.map((l) => l.priority ?? Number.MAX_SAFE_INTEGER)
                 );
+          const plannings = getPlanningsByTask(task.id);
           return [
             task.id,
             {
@@ -85,6 +88,7 @@ function createTaskStore() {
               labels,
               priority,
               assignments,
+              plannings,
             },
           ];
         })

@@ -1,9 +1,10 @@
 import { client } from "@frontend/client";
 import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
+import { useHolidayStore } from "@frontend/stores/holidayStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
-import { differenceInDays, format, startOfDay } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import { Show, createMemo } from "solid-js";
 
 import type { Milestone } from "@backend/schemas/Milestone";
@@ -17,13 +18,14 @@ export function MilestoneBlock(props: {
   const { setDragContext, dragContext } = useDragController();
   const { getProject } = useProjectStore();
   const { getTask } = useTaskStore();
-  const today = startOfDay(new Date());
+  const { getWorkDays } = useHolidayStore();
   const { milestone } = props;
   const project = createMemo(() => getProject(milestone.projectId));
-  const dayDiff = () =>
-    milestone.dueDate
-      ? differenceInDays(new Date(milestone.dueDate), today)
-      : null;
+  const workDays = createMemo(() => {
+    if (!milestone.dueDate) return null;
+    return getWorkDays(milestone.dueDate);
+  });
+
   const baseClass =
     "p-1 border rounded text-sm shadow cursor-pointer select-none bg-yellow-50 border-yellow-400 hover:bg-yellow-100";
   const mergedClass = props.class ? `${baseClass} ${props.class}` : baseClass;
@@ -63,7 +65,7 @@ export function MilestoneBlock(props: {
 
         <span>
           {milestone.dueDate
-            ? `${format(milestone.dueDate, "MM-dd")} (${dayDiff()})`
+            ? `${format(milestone.dueDate, "MM-dd")} (${workDays() === "overdue" ? "逾期" : `${workDays()}工作日`})`
             : ""}
         </span>
       </div>
