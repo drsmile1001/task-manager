@@ -4,7 +4,7 @@ import { usePanelController } from "@frontend/stores/PanelController";
 import { useHolidayStore } from "@frontend/stores/holidayStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
-import { format, startOfDay } from "date-fns";
+import { format } from "date-fns";
 import { Show, createMemo } from "solid-js";
 
 import type { Milestone } from "@backend/schemas/Milestone";
