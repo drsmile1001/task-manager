@@ -1,4 +1,5 @@
 import { singulation } from "@frontend/utils/singulation";
+import { format, isAfter, startOfDay } from "date-fns";
 import ky from "ky";
 import { createStore } from "solid-js/store";
 
@@ -57,8 +58,25 @@ function createHolidayStore() {
     return map[date];
   }
 
+  function getWorkDays(dueDate: string): "overdue" | number {
+    const today = startOfDay(new Date());
+    if (isAfter(today, dueDate)) return "overdue";
+    let workDays = 0;
+    let currentDate = today;
+    while (!isAfter(currentDate, dueDate)) {
+      const dateStr = format(currentDate, "yyyy-MM-dd");
+      const record = getDateRecord(dateStr);
+      if (!record || !record.isHoliday) {
+        workDays++;
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return workDays;
+  }
+
   return {
     getDateRecord,
+    getWorkDays,
   };
 }
 

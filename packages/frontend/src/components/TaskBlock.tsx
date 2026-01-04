@@ -2,11 +2,12 @@ import { client } from "@frontend/client";
 import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useAssignmentStore } from "@frontend/stores/assignmentStore";
+import { useHolidayStore } from "@frontend/stores/holidayStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import type { TaskWithRelation } from "@frontend/stores/taskStore";
-import { differenceInDays, format, isBefore, startOfDay } from "date-fns";
-import { For, Show } from "solid-js";
+import { format, isBefore, startOfDay } from "date-fns";
+import { For, Show, createMemo } from "solid-js";
 
 import LabelLine from "./LabelLine";
 
@@ -20,6 +21,7 @@ export function TaskBlock(props: {
   const { setDragContext, dragContext } = useDragController();
   const { getPerson } = usePersonStore();
   const { getMilestone } = useMilestoneStore();
+  const { getWorkDays } = useHolidayStore();
   const today = startOfDay(new Date());
   const { task } = props;
   const assigned = () =>
@@ -27,8 +29,11 @@ export function TaskBlock(props: {
   const isArchived = () => task.isArchived || task.project?.isArchived;
   const isOverdue = () =>
     task.dueDate ? isBefore(task.dueDate, today) : false;
-  const dayDiff = () =>
-    task.dueDate ? differenceInDays(new Date(task.dueDate), today) : null;
+  const workDays = createMemo(() => {
+    if (!task.dueDate) return null;
+    return getWorkDays(task.dueDate);
+  });
+
   const baseClass =
     "p-1 border rounded text-sm shadow cursor-pointer select-none";
   const mergedClass = props.class ? `${baseClass} ${props.class}` : baseClass;
@@ -80,7 +85,7 @@ export function TaskBlock(props: {
           </span>
           <span>
             {task.dueDate
-              ? `${format(task.dueDate, "MM-dd")} (${dayDiff()})`
+              ? `${format(task.dueDate, "MM-dd")} (${workDays() === "overdue" ? "逾期" : `${workDays()}工作日`})`
               : ""}
           </span>
         </div>
