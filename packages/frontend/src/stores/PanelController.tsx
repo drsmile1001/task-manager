@@ -1,4 +1,5 @@
 import { singulation } from "@frontend/utils/singulation";
+import AuditLogListPanel from "@frontend/views/AuditLogListPanel";
 import ImportTasksPanel from "@frontend/views/ImportTasksPanel";
 import LabelPanel from "@frontend/views/LabelPanel";
 import MilestoneDetailsPanel from "@frontend/views/MilestoneDetailsPanel";
@@ -14,63 +15,68 @@ import { createStore } from "solid-js/store";
 
 export type PanelOptions =
   | {
-      type: "SharedFilter";
+      type: "SHARED_FILTER";
     }
   | {
-      type: "Label";
+      type: "LABEL";
     }
   | {
-      type: "PersonList";
+      type: "PERSON_LIST";
     }
   | {
-      type: "PersonDetails";
+      type: "PERSON_DETAILS";
       personId: string;
     }
   | {
-      type: "ProjectList";
+      type: "PROJECT_LIST";
     }
   | {
-      type: "ProjectDetails";
+      type: "PROJECT_DETAILS";
       projectId: string;
     }
   | {
-      type: "ImportTasks";
+      type: "IMPORT_TASKS";
     }
   | {
-      type: "Milestone";
+      type: "MILESTONE";
       milestoneId: string;
     }
   | {
-      type: "Task";
+      type: "TASK";
       taskId: string;
     }
   | {
-      type: "TaskPool";
+      type: "TASK_POOL";
+    }
+  | {
+      type: "AUDIT_LOG";
     };
 
 function RenderPanel(options: PanelOptions) {
   if (!options) return <div></div>;
   switch (options.type) {
-    case "SharedFilter":
+    case "SHARED_FILTER":
       return <SharedFilterPanel />;
-    case "Label":
+    case "LABEL":
       return <LabelPanel />;
-    case "PersonList":
+    case "PERSON_LIST":
       return <PersonListPanel />;
-    case "PersonDetails":
+    case "PERSON_DETAILS":
       return <PersonDetailsPanel personId={options.personId} />;
-    case "ProjectList":
+    case "PROJECT_LIST":
       return <ProjectListPanel />;
-    case "ProjectDetails":
+    case "PROJECT_DETAILS":
       return <ProjectDetailsPanel projectId={options.projectId} />;
-    case "ImportTasks":
+    case "IMPORT_TASKS":
       return <ImportTasksPanel />;
-    case "Milestone":
+    case "MILESTONE":
       return <MilestoneDetailsPanel milestoneId={options.milestoneId} />;
-    case "Task":
+    case "TASK":
       return <TaskDetailsPanel taskId={options.taskId} />;
-    case "TaskPool":
+    case "TASK_POOL":
       return <TaskPool />;
+    case "AUDIT_LOG":
+      return <AuditLogListPanel />;
     default:
       return <div></div>;
   }

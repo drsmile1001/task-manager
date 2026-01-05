@@ -56,18 +56,18 @@ export function TaskBlock(props: {
         "bg-yellow-50 border-yellow-400 hover:bg-yellow-100":
           !isArchived() && !isOverdue() && !hasActivedAssignments(),
       }}
-      onClick={() => pushPanel({ type: "Task", taskId: task.id })}
+      onClick={() => pushPanel({ type: "TASK", taskId: task.id })}
       draggable="true"
       onDragStart={() =>
         setDragContext({
-          type: "task",
+          type: "TASK",
           taskId: task.id,
         })
       }
       onDrop={async (e) => {
         e.preventDefault();
         const currentDragContext = dragContext();
-        if (currentDragContext?.type === "milestone") {
+        if (currentDragContext?.type === "MILESTONE") {
           const milestone = getMilestone(currentDragContext.milestoneId);
           if (!milestone || milestone.projectId !== task.projectId) {
             setDragContext(null);

@@ -33,16 +33,16 @@ export function MilestoneBlock(props: {
     <div
       class={mergedClass}
       onClick={() =>
-        pushPanel({ type: "Milestone", milestoneId: milestone.id })
+        pushPanel({ type: "MILESTONE", milestoneId: milestone.id })
       }
       draggable="true"
       onDragStart={() =>
-        setDragContext({ type: "milestone", milestoneId: milestone.id })
+        setDragContext({ type: "MILESTONE", milestoneId: milestone.id })
       }
       onDrop={async (e) => {
         e.preventDefault();
         const currentDragContext = dragContext();
-        if (currentDragContext?.type === "task") {
+        if (currentDragContext?.type === "TASK") {
           const task = getTask(currentDragContext.taskId);
           if (!task || task.projectId !== milestone.projectId) {
             setDragContext(null);

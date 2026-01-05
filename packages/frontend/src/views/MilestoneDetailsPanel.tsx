@@ -43,7 +43,7 @@ export default function MilestoneDetailsPanel(
     setSharedFilter({
       milestoneIds: [props.milestoneId],
     });
-    pushPanel({ type: "SharedFilter" });
+    pushPanel({ type: "SHARED_FILTER" });
   }
 
   const removeMilestone = async () => {
@@ -78,7 +78,7 @@ export default function MilestoneDetailsPanel(
       labelIds: [],
       assigneeIds: [],
     });
-    pushPanel({ type: "Task", taskId });
+    pushPanel({ type: "TASK", taskId });
   }
 
   return (
@@ -94,7 +94,7 @@ export default function MilestoneDetailsPanel(
             draggable="true"
             onDragStart={() => {
               setDragContext({
-                type: "milestone",
+                type: "MILESTONE",
                 milestoneId: props.milestoneId,
               });
             }}
@@ -118,7 +118,7 @@ export default function MilestoneDetailsPanel(
             class="ml-2"
             onclick={() =>
               pushPanel({
-                type: "ProjectDetails",
+                type: "PROJECT_DETAILS",
                 projectId: milestone()!.projectId,
               })
             }

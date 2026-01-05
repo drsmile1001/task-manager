@@ -34,7 +34,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
     setSharedFilter({
       projectIds: [props.projectId],
     });
-    pushPanel({ type: "SharedFilter" });
+    pushPanel({ type: "SHARED_FILTER" });
   }
 
   let nameInputRef: HTMLInputElement | undefined;
@@ -66,7 +66,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
       description: "",
       isArchived: false,
     });
-    pushPanel({ type: "Milestone", milestoneId });
+    pushPanel({ type: "MILESTONE", milestoneId });
   }
 
   const { tasksWithRelation } = useTaskStore();
@@ -107,7 +107,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
       labelIds: [],
       assigneeIds: [],
     });
-    pushPanel({ type: "Task", taskId });
+    pushPanel({ type: "TASK", taskId });
   }
 
   return (

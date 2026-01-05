@@ -186,7 +186,7 @@ export default function TaskPool() {
           <Button
             variant="secondary"
             size="small"
-            onClick={() => pushPanel({ type: "SharedFilter" })}
+            onClick={() => pushPanel({ type: "SHARED_FILTER" })}
           >
             篩選
           </Button>
@@ -235,7 +235,7 @@ export default function TaskPool() {
                     size="small"
                     onClick={() =>
                       pushPanel({
-                        type: "ProjectDetails",
+                        type: "PROJECT_DETAILS",
                         projectId: group.key,
                       })
                     }
@@ -260,7 +260,7 @@ export default function TaskPool() {
                         dueDate: null,
                         assigneeIds: [],
                       });
-                      pushPanel({ type: "Task", taskId });
+                      pushPanel({ type: "TASK", taskId });
                     }}
                   >
                     ＋ 新增工作
@@ -276,12 +276,12 @@ export default function TaskPool() {
                       const [projectId, milestoneId] = group.key.split("::");
                       if (milestoneId !== "_")
                         pushPanel({
-                          type: "Milestone",
+                          type: "MILESTONE",
                           milestoneId: milestoneId,
                         });
                       else
                         pushPanel({
-                          type: "ProjectDetails",
+                          type: "PROJECT_DETAILS",
                           projectId: projectId,
                         });
                     }}
@@ -306,7 +306,7 @@ export default function TaskPool() {
                         dueDate: null,
                         assigneeIds: [],
                       });
-                      pushPanel({ type: "Task", taskId });
+                      pushPanel({ type: "TASK", taskId });
                     }}
                   >
                     ＋ 新增工作

@@ -85,7 +85,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
             draggable="true"
             onDragStart={() => {
               setDragContext({
-                type: "task",
+                type: "TASK",
                 taskId: props.taskId,
               });
             }}
@@ -117,7 +117,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
             class="ml-2"
             onclick={() =>
               pushPanel({
-                type: "ProjectDetails",
+                type: "PROJECT_DETAILS",
                 projectId: task()!.projectId,
               })
             }
@@ -147,7 +147,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
               class="ml-2"
               onclick={() =>
                 pushPanel({
-                  type: "Milestone",
+                  type: "MILESTONE",
                   milestoneId: task()!.milestoneId!,
                 })
               }

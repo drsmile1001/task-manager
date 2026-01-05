@@ -1,6 +1,7 @@
 import type { MutationTopic } from "@backend/api";
 
 import { useAssignmentStore } from "./stores/assignmentStore";
+import { useAuditLogStore } from "./stores/auditLogStore";
 import { useLabelStore } from "./stores/labelStore";
 import { useMilestoneStore } from "./stores/milestoneStore";
 import { usePersonStore } from "./stores/personStore";
@@ -31,26 +32,26 @@ export function sync() {
     if (message.topic === "mutations") {
       const m = message as MutationTopic;
       switch (m.type) {
-        case "label":
+        case "LABEL":
           switch (m.action) {
-            case "create":
-            case "update":
-              useLabelStore().setLabel(m.eneity as any);
+            case "CREATE":
+            case "UPDATE":
+              useLabelStore().setLabel(m.entity as any);
               break;
-            case "delete":
+            case "DELETE":
               useLabelStore().deleteLabel(m.id);
               break;
             default:
               break;
           }
           break;
-        case "person":
+        case "PERSON":
           switch (m.action) {
-            case "create":
-            case "update":
-              usePersonStore().setPerson(m.eneity as any);
+            case "CREATE":
+            case "UPDATE":
+              usePersonStore().setPerson(m.entity as any);
               break;
-            case "delete":
+            case "DELETE":
               useAssignmentStore().loadAssignments();
               usePersonStore().deletePerson(m.id);
               break;
@@ -58,13 +59,13 @@ export function sync() {
               break;
           }
           break;
-        case "project":
+        case "PROJECT":
           switch (m.action) {
-            case "create":
-            case "update":
-              useProjectStore().setProject(m.eneity as any);
+            case "CREATE":
+            case "UPDATE":
+              useProjectStore().setProject(m.entity as any);
               break;
-            case "delete":
+            case "DELETE":
               useAssignmentStore().loadAssignments();
               useTaskStore().loadTasks();
               useProjectStore().deleteProject(m.id);
@@ -73,14 +74,14 @@ export function sync() {
               break;
           }
           break;
-        case "milestone":
+        case "MILESTONE":
           switch (m.action) {
-            case "create":
-            case "update":
-              useMilestoneStore().setMilestone(m.eneity as any);
+            case "CREATE":
+            case "UPDATE":
+              useMilestoneStore().setMilestone(m.entity as any);
               useTaskStore().loadTasks();
               break;
-            case "delete":
+            case "DELETE":
               useTaskStore().loadTasks();
               useMilestoneStore().deleteMilestone(m.id);
               break;
@@ -88,13 +89,13 @@ export function sync() {
               break;
           }
           break;
-        case "task":
+        case "TASK":
           switch (m.action) {
-            case "create":
-            case "update":
-              useTaskStore().setTask(m.eneity as any);
+            case "CREATE":
+            case "UPDATE":
+              useTaskStore().setTask(m.entity as any);
               break;
-            case "delete":
+            case "DELETE":
               useAssignmentStore().loadAssignments();
               useTaskStore().deleteTask(m.id);
               break;
@@ -102,26 +103,26 @@ export function sync() {
               break;
           }
           break;
-        case "planning":
+        case "PLANNING":
           switch (m.action) {
-            case "create":
-            case "update":
-              usePlanningStore().setPlanning(m.eneity as any);
+            case "CREATE":
+            case "UPDATE":
+              usePlanningStore().setPlanning(m.entity as any);
               break;
-            case "delete":
+            case "DELETE":
               usePlanningStore().deletePlanning(m.id);
               break;
             default:
               break;
           }
           break;
-        case "assignment":
+        case "ASSIGNMENT":
           switch (m.action) {
-            case "create":
-            case "update":
-              useAssignmentStore().setAssignment(m.eneity as any);
+            case "CREATE":
+            case "UPDATE":
+              useAssignmentStore().setAssignment(m.entity as any);
               break;
-            case "delete":
+            case "DELETE":
               useAssignmentStore().deleteAssignment(m.id);
               break;
             default:
@@ -131,6 +132,7 @@ export function sync() {
         default:
           break;
       }
+      useAuditLogStore().loadAuditLogs();
     }
   };
 }

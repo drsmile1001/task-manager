@@ -112,7 +112,7 @@ export default function ProjectListPanel() {
               variant="secondary"
               size="small"
               onClick={() =>
-                pushPanel({ type: "ProjectDetails", projectId: project.id })
+                pushPanel({ type: "PROJECT_DETAILS", projectId: project.id })
               }
             >
               詳細

@@ -12,21 +12,20 @@ import { jwtDecode } from "jwt-decode";
 import { sessionSchema } from "./schemas/Session";
 import { ulid } from "ulid";
 import { addDays } from "date-fns";
+import {
+  auditLogSchema,
+  type ActionType,
+  type AuditLog,
+  type EntityType,
+} from "./schemas/AuditLog";
 
 let currentBunServer: Bun.Server<unknown> | null = null;
 
 export type MutationMessage = {
-  type:
-    | "person"
-    | "project"
-    | "task"
-    | "planning"
-    | "assignment"
-    | "label"
-    | "milestone";
-  action: "create" | "update" | "delete";
+  type: EntityType;
+  action: ActionType;
   id: string;
-  eneity?: unknown;
+  entity?: unknown;
 };
 
 export type MutationTopic = {
@@ -88,6 +87,13 @@ export async function buildApi(logger: Logger) {
   );
   await sessionRepo.init();
 
+  const auditLogRepo = createYamlRepo(
+    "data/auditLogs.yaml",
+    auditLogSchema,
+    logger
+  );
+  await auditLogRepo.init();
+
   function broadcastMutation(message: MutationMessage) {
     logger.info(
       {
@@ -134,10 +140,10 @@ export async function buildApi(logger: Logger) {
           };
           await personRepo.set(person);
           broadcastMutation({
-            type: "person",
-            action: "create",
+            type: "PERSON",
+            action: "CREATE",
             id: person.id,
-            eneity: person,
+            entity: person,
           });
         }
 
@@ -190,8 +196,27 @@ export async function buildApi(logger: Logger) {
       }
       const person = personRepo.get(session.personId);
       if (!person) throw status(401);
+
+      function logAction(
+        type: EntityType,
+        action: ActionType,
+        entityId: string,
+        changes: AuditLog["changes"]
+      ) {
+        auditLogRepo.set({
+          id: ulid(),
+          timestamp: Date.now(),
+          userId: person!.id,
+          action,
+          entityType: type,
+          entityId,
+          changes,
+        });
+      }
+
       return {
         requester: person,
+        logAction,
       };
     })
     .get("/api/me", ({ requester }) => {
@@ -228,13 +253,16 @@ export async function buildApi(logger: Logger) {
     })
     .post(
       "/api/labels",
-      async ({ body }) => {
+      async ({ body, logAction }) => {
         await labelRepo.set(body);
         broadcastMutation({
-          type: "label",
-          action: "create",
+          type: "LABEL",
+          action: "CREATE",
           id: body.id,
-          eneity: body,
+          entity: body,
+        });
+        logAction("LABEL", "CREATE", body.id, {
+          after: body,
         });
       },
       {
@@ -248,23 +276,29 @@ export async function buildApi(logger: Logger) {
     })
     .patch(
       "/api/labels/:id",
-      async ({ params, body, status }) => {
+      async ({ params, body, status, logAction }) => {
         const existing = labelRepo.get(params.id);
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await labelRepo.set(updated);
         broadcastMutation({
-          type: "label",
-          action: "update",
+          type: "LABEL",
+          action: "UPDATE",
           id: params.id,
-          eneity: updated,
+          entity: updated,
+        });
+        logAction("LABEL", "UPDATE", params.id, {
+          before: existing,
+          after: updated,
         });
       },
       {
         body: t.Partial(labelSchema),
       }
     )
-    .delete("/api/labels/:id", async ({ params }) => {
+    .delete("/api/labels/:id", async ({ params, logAction }) => {
+      const existing = labelRepo.get(params.id);
+      if (!existing) return;
       await labelRepo.remove(params.id);
       const tasks = taskRepo.list();
       const removedLabelTasks = tasks.map((task) => {
@@ -279,9 +313,12 @@ export async function buildApi(logger: Logger) {
       await taskRepo.replaceAll(removedLabelTasks);
 
       broadcastMutation({
-        type: "label",
-        action: "delete",
+        type: "LABEL",
+        action: "DELETE",
         id: params.id,
+      });
+      logAction("LABEL", "DELETE", params.id, {
+        before: existing,
       });
     })
     .get("/api/persons", () => {
@@ -289,13 +326,16 @@ export async function buildApi(logger: Logger) {
     })
     .post(
       "/api/persons",
-      async ({ body }) => {
+      async ({ body, logAction }) => {
         await personRepo.set(body);
         broadcastMutation({
-          type: "person",
-          action: "create",
+          type: "PERSON",
+          action: "CREATE",
           id: body.id,
-          eneity: body,
+          entity: body,
+        });
+        logAction("PERSON", "CREATE", body.id, {
+          after: body,
         });
       },
       {
@@ -309,23 +349,29 @@ export async function buildApi(logger: Logger) {
     })
     .patch(
       "/api/persons/:id",
-      async ({ params, body, status }) => {
+      async ({ params, body, status, logAction }) => {
         const existing = personRepo.get(params.id);
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await personRepo.set(updated);
         broadcastMutation({
-          type: "person",
-          action: "update",
+          type: "PERSON",
+          action: "UPDATE",
           id: params.id,
-          eneity: updated,
+          entity: updated,
+        });
+        logAction("PERSON", "UPDATE", params.id, {
+          before: existing,
+          after: updated,
         });
       },
       {
         body: t.Partial(personSchema),
       }
     )
-    .delete("/api/persons/:id", async ({ params }) => {
+    .delete("/api/persons/:id", async ({ params, logAction }) => {
+      const existing = personRepo.get(params.id);
+      if (!existing) return;
       await personRepo.remove(params.id);
       const assignments = assignmentRepo.list();
       const otherPersonAssignments = assignments.filter(
@@ -333,9 +379,12 @@ export async function buildApi(logger: Logger) {
       );
       await assignmentRepo.replaceAll(otherPersonAssignments);
       broadcastMutation({
-        type: "person",
-        action: "delete",
+        type: "PERSON",
+        action: "DELETE",
         id: params.id,
+      });
+      logAction("PERSON", "DELETE", params.id, {
+        before: existing,
       });
     })
     .get("/api/projects", () => {
@@ -343,13 +392,16 @@ export async function buildApi(logger: Logger) {
     })
     .post(
       "/api/projects",
-      async ({ body }) => {
+      async ({ body, logAction }) => {
         await projectRepo.set(body);
         broadcastMutation({
-          type: "project",
-          action: "create",
+          type: "PROJECT",
+          action: "CREATE",
           id: body.id,
-          eneity: body,
+          entity: body,
+        });
+        logAction("PROJECT", "CREATE", body.id, {
+          after: body,
         });
       },
       {
@@ -363,23 +415,29 @@ export async function buildApi(logger: Logger) {
     })
     .patch(
       "/api/projects/:id",
-      async ({ params, body, status }) => {
+      async ({ params, body, status, logAction }) => {
         const existing = projectRepo.get(params.id);
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await projectRepo.set(updated);
         broadcastMutation({
-          type: "project",
-          action: "update",
+          type: "PROJECT",
+          action: "UPDATE",
           id: params.id,
-          eneity: updated,
+          entity: updated,
+        });
+        logAction("PROJECT", "UPDATE", params.id, {
+          before: existing,
+          after: updated,
         });
       },
       {
         body: t.Partial(projectSchema),
       }
     )
-    .delete("/api/projects/:id", async ({ params }) => {
+    .delete("/api/projects/:id", async ({ params, logAction }) => {
+      const existing = projectRepo.get(params.id);
+      if (!existing) return;
       await projectRepo.remove(params.id);
       const tasks = taskRepo.list();
       const otherProjectTasks = tasks.filter((t) => t.projectId !== params.id);
@@ -396,9 +454,12 @@ export async function buildApi(logger: Logger) {
       );
       await milestoneRepo.replaceAll(otherProjectMilestones);
       broadcastMutation({
-        type: "project",
-        action: "delete",
+        type: "PROJECT",
+        action: "DELETE",
         id: params.id,
+      });
+      logAction("PROJECT", "DELETE", params.id, {
+        before: existing,
       });
     })
     .get("/api/milestones", () => {
@@ -406,13 +467,16 @@ export async function buildApi(logger: Logger) {
     })
     .post(
       "/api/milestones",
-      async ({ body }) => {
+      async ({ body, logAction }) => {
         await milestoneRepo.set(body);
         broadcastMutation({
-          type: "milestone",
-          action: "create",
+          type: "MILESTONE",
+          action: "CREATE",
           id: body.id,
-          eneity: body,
+          entity: body,
+        });
+        logAction("MILESTONE", "CREATE", body.id, {
+          after: body,
         });
       },
       {
@@ -426,7 +490,7 @@ export async function buildApi(logger: Logger) {
     })
     .patch(
       "/api/milestones/:id",
-      async ({ params, body, status }) => {
+      async ({ params, body, status, logAction }) => {
         const existing = milestoneRepo.get(params.id);
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
@@ -445,17 +509,23 @@ export async function buildApi(logger: Logger) {
           await taskRepo.replaceAll(updatedTasks);
         }
         broadcastMutation({
-          type: "milestone",
-          action: "update",
+          type: "MILESTONE",
+          action: "UPDATE",
           id: params.id,
-          eneity: updated,
+          entity: updated,
+        });
+        logAction("MILESTONE", "UPDATE", params.id, {
+          before: existing,
+          after: updated,
         });
       },
       {
         body: t.Partial(milestoneSchema),
       }
     )
-    .delete("/api/milestones/:id", async ({ params }) => {
+    .delete("/api/milestones/:id", async ({ params, logAction }) => {
+      const existing = milestoneRepo.get(params.id);
+      if (!existing) return;
       await milestoneRepo.remove(params.id);
       const tasks = taskRepo.list();
       const removeDeletedMilestoneTasks = tasks.map((task) => {
@@ -469,9 +539,12 @@ export async function buildApi(logger: Logger) {
       });
       await taskRepo.replaceAll(removeDeletedMilestoneTasks);
       broadcastMutation({
-        type: "milestone",
-        action: "delete",
+        type: "MILESTONE",
+        action: "DELETE",
         id: params.id,
+      });
+      logAction("MILESTONE", "DELETE", params.id, {
+        before: existing,
       });
     })
     .get("/api/tasks", () => {
@@ -479,13 +552,16 @@ export async function buildApi(logger: Logger) {
     })
     .post(
       "/api/tasks",
-      async ({ body }) => {
+      async ({ body, logAction }) => {
         await taskRepo.set(body);
         broadcastMutation({
-          type: "task",
-          action: "create",
+          type: "TASK",
+          action: "CREATE",
           id: body.id,
-          eneity: body,
+          entity: body,
+        });
+        logAction("TASK", "CREATE", body.id, {
+          after: body,
         });
       },
       {
@@ -499,23 +575,29 @@ export async function buildApi(logger: Logger) {
     })
     .patch(
       "/api/tasks/:id",
-      async ({ params, body, status }) => {
+      async ({ params, body, status, logAction }) => {
         const existing = taskRepo.get(params.id);
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await taskRepo.set(updated);
         broadcastMutation({
-          type: "task",
-          action: "update",
+          type: "TASK",
+          action: "UPDATE",
           id: params.id,
-          eneity: updated,
+          entity: updated,
+        });
+        logAction("TASK", "UPDATE", params.id, {
+          before: existing,
+          after: updated,
         });
       },
       {
         body: t.Partial(taskSchema),
       }
     )
-    .delete("/api/tasks/:id", async ({ params }) => {
+    .delete("/api/tasks/:id", async ({ params, logAction }) => {
+      const existing = taskRepo.get(params.id);
+      if (!existing) return;
       await taskRepo.remove(params.id);
       const assignments = assignmentRepo.list();
       const otherTaskAssignments = assignments.filter(
@@ -523,9 +605,12 @@ export async function buildApi(logger: Logger) {
       );
       await assignmentRepo.replaceAll(otherTaskAssignments);
       broadcastMutation({
-        type: "task",
-        action: "delete",
+        type: "TASK",
+        action: "DELETE",
         id: params.id,
+      });
+      logAction("TASK", "DELETE", params.id, {
+        before: existing,
       });
     })
     .get("/api/plannings", () => {
@@ -533,13 +618,16 @@ export async function buildApi(logger: Logger) {
     })
     .post(
       "/api/plannings",
-      async ({ body }) => {
+      async ({ body, logAction }) => {
         await planningRepo.set(body);
         broadcastMutation({
-          type: "planning",
-          action: "create",
+          type: "PLANNING",
+          action: "CREATE",
           id: body.id,
-          eneity: body,
+          entity: body,
+        });
+        logAction("PLANNING", "CREATE", body.id, {
+          after: body,
         });
       },
       {
@@ -553,28 +641,37 @@ export async function buildApi(logger: Logger) {
     })
     .patch(
       "/api/plannings/:id",
-      async ({ params, body, status }) => {
+      async ({ params, body, status, logAction }) => {
         const existing = planningRepo.get(params.id);
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await planningRepo.set(updated);
         broadcastMutation({
-          type: "planning",
-          action: "update",
+          type: "PLANNING",
+          action: "UPDATE",
           id: params.id,
-          eneity: updated,
+          entity: updated,
+        });
+        logAction("PLANNING", "UPDATE", params.id, {
+          before: existing,
+          after: updated,
         });
       },
       {
         body: t.Partial(planningSchema),
       }
     )
-    .delete("/api/plannings/:id", async ({ params }) => {
+    .delete("/api/plannings/:id", async ({ params, logAction }) => {
+      const existing = planningRepo.get(params.id);
+      if (!existing) return;
       await planningRepo.remove(params.id);
       broadcastMutation({
-        type: "planning",
-        action: "delete",
+        type: "PLANNING",
+        action: "DELETE",
         id: params.id,
+      });
+      logAction("PLANNING", "DELETE", params.id, {
+        before: existing,
       });
     })
     .get("/api/assignments", () => {
@@ -582,13 +679,16 @@ export async function buildApi(logger: Logger) {
     })
     .post(
       "/api/assignments",
-      async ({ body }) => {
+      async ({ body, logAction }) => {
         await assignmentRepo.set(body);
         broadcastMutation({
-          type: "assignment",
-          action: "create",
+          type: "ASSIGNMENT",
+          action: "CREATE",
           id: body.id,
-          eneity: body,
+          entity: body,
+        });
+        logAction("ASSIGNMENT", "CREATE", body.id, {
+          after: body,
         });
       },
       {
@@ -602,29 +702,43 @@ export async function buildApi(logger: Logger) {
     })
     .patch(
       "/api/assignments/:id",
-      async ({ params, body, status }) => {
+      async ({ params, body, status, logAction }) => {
         const existing = assignmentRepo.get(params.id);
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await assignmentRepo.set(updated);
         broadcastMutation({
-          type: "assignment",
-          action: "update",
+          type: "ASSIGNMENT",
+          action: "UPDATE",
           id: params.id,
-          eneity: updated,
+          entity: updated,
+        });
+        logAction("ASSIGNMENT", "UPDATE", params.id, {
+          before: existing,
+          after: updated,
         });
       },
       {
         body: t.Partial(assignmentSchema),
       }
     )
-    .delete("/api/assignments/:id", async ({ params }) => {
+    .delete("/api/assignments/:id", async ({ params, logAction }) => {
+      const existing = assignmentRepo.get(params.id);
+      if (!existing) return;
       await assignmentRepo.remove(params.id);
       broadcastMutation({
-        type: "assignment",
-        action: "delete",
+        type: "ASSIGNMENT",
+        action: "DELETE",
         id: params.id,
       });
+      logAction("ASSIGNMENT", "DELETE", params.id, {
+        before: existing,
+      });
+    })
+    .get("/api/audit-logs", () => {
+      const logs = auditLogRepo.list();
+      logs.sort((a, b) => b.timestamp - a.timestamp);
+      return logs;
     });
 
   return api;

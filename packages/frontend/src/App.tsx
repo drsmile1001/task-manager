@@ -71,33 +71,39 @@ export default function App() {
           <div class="h-full w-20 flex flex-col items-center gap-2 p-2 bg-gray-50 shadow-sm">
             <Button
               variant="secondary"
-              onclick={() => openPanel({ type: "TaskPool" })}
+              onclick={() => openPanel({ type: "TASK_POOL" })}
             >
               工作總覽
             </Button>
             <Button
               variant="secondary"
-              onclick={() => openPanel({ type: "ProjectList" })}
+              onclick={() => openPanel({ type: "PROJECT_LIST" })}
             >
               專案
             </Button>
             <Button
               variant="secondary"
-              onclick={() => openPanel({ type: "PersonList" })}
+              onclick={() => openPanel({ type: "PERSON_LIST" })}
             >
               人員
             </Button>
             <Button
               variant="secondary"
-              onclick={() => openPanel({ type: "Label" })}
+              onclick={() => openPanel({ type: "LABEL" })}
             >
               標籤
             </Button>
             <Button
               variant="secondary"
-              onclick={() => openPanel({ type: "ImportTasks" })}
+              onclick={() => openPanel({ type: "IMPORT_TASKS" })}
             >
               匯入工作
+            </Button>
+            <Button
+              variant="secondary"
+              onclick={() => openPanel({ type: "AUDIT_LOG" })}
+            >
+              操作記錄
             </Button>
             <hr class="my-1 w-10 border-gray-400" />
             <Button variant="secondary" onclick={() => setTableType("byDay")}>

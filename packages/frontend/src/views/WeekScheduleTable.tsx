@@ -188,7 +188,7 @@ export default function WeekScheduleTable() {
       onDrop={async (e) => {
         e.preventDefault();
         const currentDragContext = dragContext();
-        if (currentDragContext?.type === "planning") {
+        if (currentDragContext?.type === "PLANNING") {
           await client.api
             .plannings({ id: currentDragContext.planningId })
             .delete();
@@ -211,7 +211,7 @@ export default function WeekScheduleTable() {
           </Button>
           <Button
             variant="secondary"
-            onclick={() => pushPanel({ type: "SharedFilter" })}
+            onclick={() => pushPanel({ type: "SHARED_FILTER" })}
           >
             篩選
           </Button>
@@ -266,7 +266,7 @@ export default function WeekScheduleTable() {
                     size="small"
                     onClick={() =>
                       openPanel({
-                        type: "ProjectDetails",
+                        type: "PROJECT_DETAILS",
                         projectId: project.id,
                       })
                     }
@@ -283,10 +283,10 @@ export default function WeekScheduleTable() {
                         e.preventDefault();
                         e.stopPropagation();
                         const drag = dragContext();
-                        if (drag?.type === "task") {
+                        if (drag?.type === "TASK") {
                           setTaskPlanning(drag.taskId, week.startDate);
                         }
-                        if (drag?.type === "planning") {
+                        if (drag?.type === "PLANNING") {
                           client.api
                             .plannings({
                               id: drag.planningId,
@@ -310,14 +310,14 @@ export default function WeekScheduleTable() {
                               draggable="true"
                               onDragStart={() => {
                                 setDragContext({
-                                  type: "planning",
+                                  type: "PLANNING",
                                   planningId: id,
                                   fromWeekStartDate: week.startDate,
                                 });
                               }}
                               onClick={() => {
                                 openPanel({
-                                  type: "Task",
+                                  type: "TASK",
                                   taskId: task?.id ?? "",
                                 });
                               }}

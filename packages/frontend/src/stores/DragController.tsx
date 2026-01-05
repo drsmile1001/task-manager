@@ -2,16 +2,16 @@ import { singulation } from "@frontend/utils/singulation";
 import { type JSX, createSignal } from "solid-js";
 
 export type DragContext =
-  | { type: "task"; taskId: string }
-  | { type: "milestone"; milestoneId: string }
+  | { type: "TASK"; taskId: string }
+  | { type: "MILESTONE"; milestoneId: string }
   | {
-      type: "assignment";
+      type: "ASSIGNMENT";
       assignmentId: string;
       fromPersonId: string;
       fromDate: string;
     }
   | {
-      type: "planning";
+      type: "PLANNING";
       planningId: string;
       fromWeekStartDate: string;
     };

@@ -17,7 +17,7 @@ export default function PersonListPanel() {
       order: undefined,
       email: "",
     });
-    pushPanel({ type: "PersonDetails", personId: userId });
+    pushPanel({ type: "PERSON_DETAILS", personId: userId });
   }
 
   return (
@@ -37,7 +37,7 @@ export default function PersonListPanel() {
           <div
             class="w-full p-1 border rounded text-sm shadow cursor-pointer select-none bg-blue-50 border-blue-400 hover:bg-blue-100"
             onClick={() =>
-              pushPanel({ type: "PersonDetails", personId: person.id })
+              pushPanel({ type: "PERSON_DETAILS", personId: person.id })
             }
           >
             {person.name}

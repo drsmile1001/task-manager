@@ -250,7 +250,7 @@ export default function ByDaySchedule() {
       onDrop={async (e) => {
         e.preventDefault();
         const currentDragContext = dragContext();
-        if (currentDragContext?.type === "assignment") {
+        if (currentDragContext?.type === "ASSIGNMENT") {
           await client.api
             .assignments({ id: currentDragContext.assignmentId })
             .delete();
@@ -276,7 +276,7 @@ export default function ByDaySchedule() {
           </Button>
           <Button
             variant="secondary"
-            onclick={() => pushPanel({ type: "SharedFilter" })}
+            onclick={() => pushPanel({ type: "SHARED_FILTER" })}
           >
             篩選
           </Button>
@@ -312,7 +312,7 @@ export default function ByDaySchedule() {
                   e.preventDefault();
                   e.stopPropagation();
                   const drag = dragContext();
-                  if (drag?.type === "milestone") {
+                  if (drag?.type === "MILESTONE") {
                     await client.api
                       .milestones({ id: drag.milestoneId })
                       .patch({
@@ -329,12 +329,12 @@ export default function ByDaySchedule() {
                     <div
                       class="mt-1 px-1 py-0.5 bg-yellow-100 border border-yellow-300 rounded text-xs cursor-pointer hover:bg-yellow-200 select-none"
                       onClick={() =>
-                        openPanel({ type: "Milestone", milestoneId: m.id })
+                        openPanel({ type: "MILESTONE", milestoneId: m.id })
                       }
                       draggable="true"
                       onDragStart={() => {
                         setDragContext({
-                          type: "milestone",
+                          type: "MILESTONE",
                           milestoneId: m.id,
                         });
                       }}
@@ -373,13 +373,13 @@ export default function ByDaySchedule() {
                           draggable="true"
                           onDragStart={() => {
                             setDragContext({
-                              type: "task",
+                              type: "TASK",
                               taskId: task?.id ?? "",
                             });
                           }}
                           onClick={() => {
                             openPanel({
-                              type: "Task",
+                              type: "TASK",
                               taskId: task?.id ?? "",
                             });
                           }}
@@ -449,14 +449,14 @@ export default function ByDaySchedule() {
                         e.preventDefault();
                         e.stopPropagation();
                         const drag = dragContext();
-                        if (drag?.type === "task") {
+                        if (drag?.type === "TASK") {
                           await client.api.assignments.post({
                             id: ulid(),
                             taskId: drag.taskId,
                             personId: p.id,
                             date: day.date,
                           });
-                        } else if (drag?.type === "assignment") {
+                        } else if (drag?.type === "ASSIGNMENT") {
                           await client.api
                             .assignments({
                               id: drag.assignmentId,
@@ -481,7 +481,7 @@ export default function ByDaySchedule() {
                               draggable="true"
                               onDragStart={() => {
                                 setDragContext({
-                                  type: "assignment",
+                                  type: "ASSIGNMENT",
                                   assignmentId: assignment.id,
                                   fromPersonId: assignment.personId,
                                   fromDate: assignment.date,
@@ -489,7 +489,7 @@ export default function ByDaySchedule() {
                               }}
                               onClick={() => {
                                 openPanel({
-                                  type: "Task",
+                                  type: "TASK",
                                   taskId: task?.id ?? "",
                                 });
                               }}
