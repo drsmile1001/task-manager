@@ -4,10 +4,14 @@ import { projectMigrations, projectSchema } from "./schemas/Project";
 import { taskMigrations, taskSchema } from "./schemas/Task";
 import { assignmentSchema } from "./schemas/Assignment";
 import type { Logger } from "~shared/Logger";
-import { personSchema } from "./schemas/Person";
+import { personMigrations, personSchema } from "./schemas/Person";
 import { labelSchema } from "./schemas/Label";
 import { milestoneMigrations, milestoneSchema } from "./schemas/Milestone";
 import { planningSchema } from "./schemas/Planning";
+import { jwtDecode } from "jwt-decode";
+import { sessionSchema } from "./schemas/Session";
+import { ulid } from "ulid";
+import { addDays } from "date-fns";
 
 let currentBunServer: Bun.Server<unknown> | null = null;
 
@@ -68,10 +72,21 @@ export async function buildApi(logger: Logger) {
     logger
   );
   await assignmentRepo.init();
-  const personRepo = createYamlRepo("data/persons.yaml", personSchema, logger);
+  const personRepo = createYamlRepo(
+    "data/persons.yaml",
+    personSchema,
+    logger,
+    personMigrations
+  );
   await personRepo.init();
   const labelRepo = createYamlRepo("data/labels.yaml", labelSchema, logger);
   await labelRepo.init();
+  const sessionRepo = createYamlRepo(
+    "data/sessions.yaml",
+    sessionSchema,
+    logger
+  );
+  await sessionRepo.init();
 
   function broadcastMutation(message: MutationMessage) {
     logger.info(
@@ -89,8 +104,99 @@ export async function buildApi(logger: Logger) {
       })
     );
   }
+  const sessionCookieKey = "task-manager-session-id";
 
   const api = new Elysia()
+    .post(
+      "/api/login",
+      async ({ body, cookie }) => {
+        const response = await fetch("https://oauth2.googleapis.com/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            code: body.code,
+            client_id: Bun.env.GOOGLE_CLIENT_ID || "",
+            client_secret: Bun.env.GOOGLE_CLIENT_SECRET || "",
+            redirect_uri: body.redirect_uri,
+            grant_type: "authorization_code",
+          }),
+        });
+        const data = await response.json();
+        const idToken = data.id_token;
+        const userInfo = jwtDecode<{ email: string; name: string }>(idToken);
+
+        let person = personRepo.list().find((p) => p.email === userInfo.email);
+        if (!person) {
+          person = {
+            id: ulid(),
+            name: userInfo.name,
+            email: userInfo.email,
+          };
+          await personRepo.set(person);
+          broadcastMutation({
+            type: "person",
+            action: "create",
+            id: person.id,
+            eneity: person,
+          });
+        }
+
+        const sessionId = crypto.randomUUID();
+        const now = Date.now();
+        const expiresAt = addDays(now, 30);
+        await sessionRepo.set({
+          id: sessionId,
+          personId: person.id,
+          createdAt: now.valueOf(),
+          expiresAt: expiresAt.valueOf(),
+        });
+
+        cookie[sessionCookieKey].set({
+          value: sessionId,
+          httpOnly: true,
+          expires: new Date(expiresAt),
+          maxAge: 30 * 24 * 60 * 60,
+        });
+
+        return person;
+      },
+      {
+        body: t.Object({
+          code: t.String(),
+          redirect_uri: t.String(),
+        }),
+      }
+    )
+    .post("/api/logout", async ({ cookie }) => {
+      const sessionId = cookie[sessionCookieKey]?.value as string | undefined;
+      if (sessionId) {
+        await sessionRepo.remove(sessionId);
+        cookie[sessionCookieKey].set({
+          value: "",
+          httpOnly: true,
+          expires: new Date(0),
+          maxAge: 0,
+        });
+      }
+    })
+    .derive(({ cookie, status }) => {
+      const sessionId = cookie[sessionCookieKey]?.value as string | undefined;
+      if (!sessionId) throw status(401);
+      const session = sessionRepo.get(sessionId);
+      if (!session) throw status(401);
+      if (session.expiresAt < Date.now()) {
+        sessionRepo.remove(sessionId);
+        throw status(401);
+      }
+      const person = personRepo.get(session.personId);
+      if (!person) throw status(401);
+      return {
+        requester: person,
+      };
+    })
+    .get("/api/me", ({ requester }) => {
+      return requester;
+    })
     .ws("/ws", {
       open(ws) {
         ws.subscribe("mutations");
@@ -111,7 +217,7 @@ export async function buildApi(logger: Logger) {
       },
     })
     .get("/api/labels", async () => {
-      const labels = await labelRepo.list();
+      const labels = labelRepo.list();
       labels.sort((a, b) => {
         return (
           (a.priority ?? Number.MAX_SAFE_INTEGER) -

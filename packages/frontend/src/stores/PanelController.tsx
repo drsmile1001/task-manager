@@ -2,7 +2,8 @@ import { singulation } from "@frontend/utils/singulation";
 import ImportTasksPanel from "@frontend/views/ImportTasksPanel";
 import LabelPanel from "@frontend/views/LabelPanel";
 import MilestoneDetailsPanel from "@frontend/views/MilestoneDetailsPanel";
-import PersonPanel from "@frontend/views/PersonPanel";
+import PersonDetailsPanel from "@frontend/views/PersonDetailsPanel";
+import PersonListPanel from "@frontend/views/PersonPanel";
 import ProjectDetailsPanel from "@frontend/views/ProjectDetailsPanel";
 import ProjectListPanel from "@frontend/views/ProjectListPanel";
 import SharedFilterPanel from "@frontend/views/SharedFilterPanel";
@@ -19,7 +20,11 @@ export type PanelOptions =
       type: "Label";
     }
   | {
-      type: "Person";
+      type: "PersonList";
+    }
+  | {
+      type: "PersonDetails";
+      personId: string;
     }
   | {
       type: "ProjectList";
@@ -50,8 +55,10 @@ function RenderPanel(options: PanelOptions) {
       return <SharedFilterPanel />;
     case "Label":
       return <LabelPanel />;
-    case "Person":
-      return <PersonPanel />;
+    case "PersonList":
+      return <PersonListPanel />;
+    case "PersonDetails":
+      return <PersonDetailsPanel personId={options.personId} />;
     case "ProjectList":
       return <ProjectListPanel />;
     case "ProjectDetails":

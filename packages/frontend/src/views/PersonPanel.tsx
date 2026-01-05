@@ -1,47 +1,23 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
-import { baseInputClass } from "@frontend/components/Input";
 import Panel, { PanelList } from "@frontend/components/Panel";
+import { usePanelController } from "@frontend/stores/PanelController";
 import { usePersonStore } from "@frontend/stores/personStore";
-import { debounce } from "lodash";
-import { createEffect } from "solid-js";
 import { ulid } from "ulid";
 
-import type { Person } from "@backend/schemas/Person";
-
-export default function PersonPanel() {
+export default function PersonListPanel() {
   const { persons } = usePersonStore();
-  const nameInputRefs = new Map<string, HTMLInputElement>();
-  let toFocusUserId: string | null = null;
+  const { pushPanel } = usePanelController();
+
   async function createPerson() {
     const userId = ulid();
-    toFocusUserId = userId;
     await client.api.persons.post({
       id: userId,
       name: "新成員",
       order: undefined,
+      email: "",
     });
-  }
-
-  createEffect(() => {
-    persons();
-    if (toFocusUserId) {
-      const inputRef = nameInputRefs.get(toFocusUserId);
-      if (inputRef) {
-        inputRef.focus();
-        toFocusUserId = null;
-      }
-    }
-  });
-
-  function handleUpdatePerson(personId: string, update: Partial<Person>) {
-    client.api.persons({ id: personId }).patch(update);
-  }
-
-  const debouncedHandleUpdatePerson = debounce(handleUpdatePerson, 300);
-
-  function handleDeletePerson(personId: string) {
-    client.api.persons({ id: personId }).delete();
+    pushPanel({ type: "PersonDetails", personId: userId });
   }
 
   return (
@@ -58,39 +34,14 @@ export default function PersonPanel() {
     >
       <PanelList items={persons}>
         {(person) => (
-          <>
-            <input
-              ref={(el) => nameInputRefs.set(person.id, el)}
-              class={`${baseInputClass} flex-1`}
-              value={person.name}
-              onInput={(e) =>
-                debouncedHandleUpdatePerson(person.id, {
-                  name: e.currentTarget.value,
-                })
-              }
-              placeholder="人員名稱"
-            />
-            <input
-              class={`${baseInputClass} w-20`}
-              type="number"
-              min="1"
-              value={person.order ?? ""}
-              onInput={(e) => {
-                const value = e.currentTarget.value;
-                handleUpdatePerson(person.id, {
-                  order: value ? parseInt(value) : null,
-                });
-              }}
-              placeholder="排序"
-            />
-            <Button
-              variant="danger"
-              size="small"
-              onClick={() => handleDeletePerson(person.id)}
-            >
-              刪除
-            </Button>
-          </>
+          <div
+            class="w-full p-1 border rounded text-sm shadow cursor-pointer select-none bg-blue-50 border-blue-400 hover:bg-blue-100"
+            onClick={() =>
+              pushPanel({ type: "PersonDetails", personId: person.id })
+            }
+          >
+            {person.name}
+          </div>
         )}
       </PanelList>
     </Panel>

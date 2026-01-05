@@ -10,6 +10,8 @@ const logger = createDefaultLoggerFromEnv();
 
 const baseUrl = process.env.BASE_URL || "/";
 const baseUrlPlaceholder = "/__BASE_URL_TO_REPLACE__/";
+const googleClientId = Bun.env.GOOGLE_CLIENT_ID;
+const googleClientIdPlaceholder = "__GOOGLE_CLIENT_ID__";
 
 async function rewriteBaseUrl(root: string) {
   const rootExists = await exists(root);
@@ -31,7 +33,10 @@ async function rewriteBaseUrl(root: string) {
       entry.name.endsWith(".html")
     ) {
       const content = await readFile(fullPath, "utf-8");
-      const replaced = content.replaceAll(baseUrlPlaceholder, baseUrl);
+      const replaced = content
+        .replaceAll(baseUrlPlaceholder, baseUrl)
+        .replaceAll(googleClientIdPlaceholder, googleClientId || "");
+
       await writeFile(fullPath, replaced, "utf-8");
     }
   }
