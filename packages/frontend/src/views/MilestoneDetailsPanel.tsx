@@ -55,7 +55,7 @@ export default function MilestoneDetailsPanel(
     client.api.milestones({ id: props.milestoneId }).patch(update);
   }
 
-  const debouncedHandleUpdateMilestone = debounce(handleUpdateMilestone, 300);
+  const debouncedHandleUpdateMilestone = debounce(handleUpdateMilestone, 1500);
 
   const { tasksWithRelation } = useTaskStore();
   const tasks = createMemo(() =>

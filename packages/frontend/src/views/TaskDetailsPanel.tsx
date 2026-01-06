@@ -47,7 +47,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
     client.api.tasks({ id: props.taskId! }).patch(update);
   }
 
-  const debouncedHandleUpdateTask = debounce(handleUpdateTask, 300);
+  const debouncedHandleUpdateTask = debounce(handleUpdateTask, 1500);
 
   function setHasLabel(labelId: string, hasLabel: boolean) {
     const currentLabelIds = task()?.labelIds || [];

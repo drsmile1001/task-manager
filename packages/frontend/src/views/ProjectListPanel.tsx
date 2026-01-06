@@ -57,7 +57,7 @@ export default function ProjectListPanel() {
     client.api.projects({ id: projectId }).patch(update);
   }
 
-  const debouncedHandleUpdateProject = debounce(handleUpdateProject, 300);
+  const debouncedHandleUpdateProject = debounce(handleUpdateProject, 1500);
 
   return (
     <Panel

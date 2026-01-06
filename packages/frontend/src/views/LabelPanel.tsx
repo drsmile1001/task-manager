@@ -40,7 +40,7 @@ export default function LabelPanel() {
     client.api.labels({ id: labelId }).patch(update);
   }
 
-  const debouncedHandleUpdateLabel = debounce(handleUpdateLabel, 300);
+  const debouncedHandleUpdateLabel = debounce(handleUpdateLabel, 1500);
 
   function hadleDeleteLabel(labelId: string) {
     client.api.labels({ id: labelId }).delete();

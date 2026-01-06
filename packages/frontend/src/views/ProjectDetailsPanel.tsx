@@ -51,7 +51,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
     client.api.projects({ id: props.projectId }).patch(update);
   }
 
-  const debouncedHandleUpdateProject = debounce(handleUpdateProject, 300);
+  const debouncedHandleUpdateProject = debounce(handleUpdateProject, 1500);
 
   const { getMilestonesByProjectId } = useMilestoneStore();
   const milestones = () => getMilestonesByProjectId(props.projectId);

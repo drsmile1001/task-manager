@@ -26,7 +26,7 @@ export default function PersonDetailsPanel(props: PersonDetailsPanelProps) {
     client.api.persons({ id: props.personId! }).patch(update);
   }
 
-  const debouncedHandleUpdatePerson = debounce(handleUpdatePerson, 300);
+  const debouncedHandleUpdatePerson = debounce(handleUpdatePerson, 1500);
 
   async function removePerson() {
     await client.api.persons({ id: props.personId! }).delete();
