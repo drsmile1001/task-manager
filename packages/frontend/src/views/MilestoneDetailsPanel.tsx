@@ -15,7 +15,7 @@ import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
 import { debounce } from "lodash";
-import { createMemo, onMount } from "solid-js";
+import { Show, createMemo, onMount } from "solid-js";
 import { ulid } from "ulid";
 
 import type { Milestone } from "@backend/schemas/Milestone";
@@ -172,9 +172,19 @@ export default function MilestoneDetailsPanel(
         </div>
         <SectionLabel>進階操作</SectionLabel>
         <div class="flex gap-2">
-          <Button variant="danger" onclick={removeMilestone}>
-            刪除
+          <Button
+            variant="secondary"
+            onclick={() =>
+              handleUpdateMilestone({ isArchived: !milestone()?.isArchived })
+            }
+          >
+            {milestone()?.isArchived ? "還原" : "封存"}
           </Button>
+          <Show when={milestone()?.isArchived}>
+            <Button variant="danger" onclick={removeMilestone}>
+              刪除
+            </Button>
+          </Show>
         </div>
       </PanelSections>
     </Panel>

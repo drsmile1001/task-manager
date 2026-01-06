@@ -56,7 +56,9 @@ export default function ByDaySchedule() {
   }
 
   const days = createMemo(() => {
-    const allMilestones = milestones();
+    const allMilestones = milestones().filter(
+      (m) => !!m.dueDate && !m.isArchived
+    );
     const dates: {
       date: string;
       label: string;

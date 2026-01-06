@@ -5,6 +5,8 @@ import LabelPanel from "@frontend/views/LabelPanel";
 import MilestoneDetailsPanel from "@frontend/views/MilestoneDetailsPanel";
 import PersonDetailsPanel from "@frontend/views/PersonDetailsPanel";
 import PersonListPanel from "@frontend/views/PersonPanel";
+import ProjectArchivedMilestoneList from "@frontend/views/ProjectArchivedMilestoneList";
+import ProjectArchivedTaskList from "@frontend/views/ProjectArchivedTaskList";
 import ProjectDetailsPanel from "@frontend/views/ProjectDetailsPanel";
 import ProjectListPanel from "@frontend/views/ProjectListPanel";
 import SharedFilterPanel from "@frontend/views/SharedFilterPanel";
@@ -32,6 +34,14 @@ export type PanelOptions =
     }
   | {
       type: "PROJECT_DETAILS";
+      projectId: string;
+    }
+  | {
+      type: "PROJECT_ARCHIVED_MILESTONE_LIST";
+      projectId: string;
+    }
+  | {
+      type: "PROJECT_ARCHIVED_TASK_LIST";
       projectId: string;
     }
   | {
@@ -67,6 +77,10 @@ function RenderPanel(options: PanelOptions) {
       return <ProjectListPanel />;
     case "PROJECT_DETAILS":
       return <ProjectDetailsPanel projectId={options.projectId} />;
+    case "PROJECT_ARCHIVED_MILESTONE_LIST":
+      return <ProjectArchivedMilestoneList projectId={options.projectId} />;
+    case "PROJECT_ARCHIVED_TASK_LIST":
+      return <ProjectArchivedTaskList projectId={options.projectId} />;
     case "IMPORT_TASKS":
       return <ImportTasksPanel />;
     case "MILESTONE":

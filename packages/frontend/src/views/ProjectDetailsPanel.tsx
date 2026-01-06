@@ -54,7 +54,10 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
   const debouncedHandleUpdateProject = debounce(handleUpdateProject, 1500);
 
   const { getMilestonesByProjectId } = useMilestoneStore();
-  const milestones = () => getMilestonesByProjectId(props.projectId);
+  const milestones = () =>
+    getMilestonesByProjectId(props.projectId).filter(
+      (milestone) => !milestone.isArchived
+    );
 
   async function createMilestone() {
     const milestoneId = ulid();
@@ -157,12 +160,23 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
             <MilestoneBlock class="w-full" milestone={milestone} />
           )}
         </PanelList>
-        <div>
+        <div class="flex gap-2">
           <Button variant="secondary" onClick={createMilestone}>
             新增里程碑
           </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              pushPanel({
+                type: "PROJECT_ARCHIVED_MILESTONE_LIST",
+                projectId: props.projectId,
+              });
+            }}
+          >
+            封存的里程碑
+          </Button>
         </div>
-        <SectionLabel>未封存工作</SectionLabel>
+        <SectionLabel>工作</SectionLabel>
         <PanelList items={tasks}>
           {(task) => (
             <TaskBlock
@@ -173,9 +187,20 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
             />
           )}
         </PanelList>
-        <div>
+        <div class="flex gap-2">
           <Button variant="secondary" onClick={createTask}>
             新增工作
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              pushPanel({
+                type: "PROJECT_ARCHIVED_TASK_LIST",
+                projectId: props.projectId,
+              });
+            }}
+          >
+            封存的工作
           </Button>
         </div>
         <SectionLabel>進階操作</SectionLabel>
