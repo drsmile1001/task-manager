@@ -7,7 +7,6 @@ import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
 import { format } from "date-fns";
-import { stringify } from "yaml";
 
 import type { Assignment } from "@backend/schemas/Assignment";
 import type {
@@ -95,7 +94,7 @@ export default function AuditLogListPanel() {
       專案: getProject(milestone?.projectId || "")?.name || "<空>",
       名稱: milestone?.name || "<空>",
       描述: milestone?.description || "<空>",
-      截止日期:
+      到期日:
         (milestone?.dueDate as Date | undefined)?.toISOString().split("T")[0] ||
         "<空>",
       封存: milestone?.isArchived ? "是" : "否",
@@ -210,10 +209,8 @@ export default function AuditLogListPanel() {
           "日期",
         ]);
       default:
-        break;
+        return "";
     }
-
-    return stringify(log.changes);
   }
 
   return (
@@ -222,7 +219,7 @@ export default function AuditLogListPanel() {
         {(log) => (
           <div class="w-full felx flex-col gap-1">
             <div
-              class="flex gap-2 cursor-pointer hover:bg-gray-100 px-1 rounded-md mb-1"
+              class="px-1 rounded-md mb-1 text-sm flex gap-2 cursor-pointer hover:bg-gray-100"
               onClick={() => {
                 switch (log.entityType) {
                   case "LABEL":
@@ -264,7 +261,7 @@ export default function AuditLogListPanel() {
               <div>{getActionLabel(log.action)}</div>
               <div>{getEntityTypeLabel(log.entityType)}</div>
             </div>
-            <pre class="ml-2 max-h-20 overflow-auto bg-gray-100 p-2 rounded-md text-xs">
+            <pre class="ml-2 bg-gray-100 px-2 py-1 rounded-md text-xs">
               {changeSummary(log)}
             </pre>
           </div>
