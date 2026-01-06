@@ -5,6 +5,7 @@ import { usePanelController } from "@frontend/stores/PanelController";
 import { useSharedFilterStore } from "@frontend/stores/SharedFilterStore";
 import { useHolidayStore } from "@frontend/stores/holidayStore";
 import { getLabelTextColor } from "@frontend/stores/labelStore";
+import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { usePlanningStore } from "@frontend/stores/planningStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
@@ -12,7 +13,14 @@ import {
   type TaskWithRelation,
   useTaskStore,
 } from "@frontend/stores/taskStore";
-import { addDays, format, startOfDay, startOfWeek } from "date-fns";
+import {
+  addDays,
+  format,
+  isAfter,
+  isBefore,
+  startOfDay,
+  startOfWeek,
+} from "date-fns";
 import { For, createMemo, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
@@ -43,6 +51,7 @@ export default function WeekScheduleTable() {
   const { dragContext, setDragContext } = useDragController();
   const { getPerson } = usePersonStore();
   const { openPanel, pushPanel } = usePanelController();
+  const { getMilestonesByProjectId } = useMilestoneStore();
 
   const weeks = createMemo(() => {
     const weeks: WeekEntry[] = [];
@@ -133,38 +142,52 @@ export default function WeekScheduleTable() {
           return false;
         return true;
       })
-      .map((project) => ({
-        id: project.id,
-        name: project.name,
-        byWeekData: weeks().map((week) => {
-          const key = projectWeekKey(project.id, week.startDate);
-          const plannings =
-            projectWeekPlannings()[key]?.filter((p) => {
-              const task = p.task;
-              if (!sharedFilter.includeDoneTasks && task.isDone) return false;
-              if (!sharedFilter.includeArchivedTasks && task.isArchived)
-                return false;
-              if (
-                sharedFilter.labelIds.length &&
-                !sharedFilter.labelIds.some((id) => task.labelIds.includes(id))
-              )
-                return false;
-              if (
-                sharedFilter.personIds.length &&
-                !task.assigneeIds.some((id) =>
-                  sharedFilter.personIds.includes(id)
+      .map((project) => {
+        const projectMilestones = getMilestonesByProjectId(project.id).filter(
+          (m) => !m.isArchived && m.dueDate
+        );
+        return {
+          id: project.id,
+          name: project.name,
+          byWeekData: weeks().map((week) => {
+            const key = projectWeekKey(project.id, week.startDate);
+            const plannings =
+              projectWeekPlannings()[key]?.filter((p) => {
+                const task = p.task;
+                if (!sharedFilter.includeDoneTasks && task.isDone) return false;
+                if (!sharedFilter.includeArchivedTasks && task.isArchived)
+                  return false;
+                if (
+                  sharedFilter.labelIds.length &&
+                  !sharedFilter.labelIds.some((id) =>
+                    task.labelIds.includes(id)
+                  )
                 )
-              )
-                return false;
+                  return false;
+                if (
+                  sharedFilter.personIds.length &&
+                  !task.assigneeIds.some((id) =>
+                    sharedFilter.personIds.includes(id)
+                  )
+                )
+                  return false;
 
-              return true;
-            }) || [];
-          return {
-            week,
-            plannings,
-          };
-        }),
-      }));
+                return true;
+              }) || [];
+            const milestones = projectMilestones.filter(
+              (m) =>
+                !!m.dueDate &&
+                !isBefore(m.dueDate, week.startDate) &&
+                !isAfter(m.dueDate, week.endDate)
+            );
+            return {
+              week,
+              milestones,
+              plannings,
+            };
+          }),
+        };
+      });
   });
 
   function setTaskPlanning(taskId: string, weekStartDate: string) {
@@ -275,7 +298,7 @@ export default function WeekScheduleTable() {
                   </Button>
                 </div>
                 <For each={project.byWeekData}>
-                  {({ week, plannings }) => (
+                  {({ week, milestones, plannings }) => (
                     <div
                       class="border-b border-r border-gray-300 p-1"
                       onDragOver={(e) => e.preventDefault()}
@@ -298,6 +321,23 @@ export default function WeekScheduleTable() {
                         setDragContext(null);
                       }}
                     >
+                      <For each={milestones}>
+                        {(milestone) => {
+                          return (
+                            <div
+                              class="bg-yellow-100 border border-yellow-300 text-xs shadow p-1 rounded mb-1 cursor-pointer hover:bg-yellow-200 select-none"
+                              onClick={() =>
+                                openPanel({
+                                  type: "MILESTONE",
+                                  milestoneId: milestone.id,
+                                })
+                              }
+                            >
+                              <span>{milestone.name}</span>
+                            </div>
+                          );
+                        }}
+                      </For>
                       <For each={plannings}>
                         {({ task, id }) => {
                           return (
