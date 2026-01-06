@@ -24,7 +24,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   const { getTask } = useTaskStore();
   const task = () => getTask(props.taskId!);
   const { nonArchivedProjects } = useProjectStore();
-  const { getMilestonesByProjectId } = useMilestoneStore();
+  const { getMilestonesByProjectId, getMilestone } = useMilestoneStore();
   const availableMilestones = createMemo(() => {
     const projectId = task()?.projectId;
     if (!projectId) return [];
@@ -132,7 +132,11 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
             class="flex-1 border px-2 py-1 rounded"
             value={task()?.milestoneId || ""}
             onInput={(e) =>
-              handleUpdateTask({ milestoneId: e.currentTarget.value || null })
+              handleUpdateTask({
+                milestoneId: e.currentTarget.value || null,
+                dueDate:
+                  getMilestone(e.currentTarget.value)?.dueDate ?? undefined,
+              })
             }
           >
             <option value="">{"<無里程碑>"}</option>
