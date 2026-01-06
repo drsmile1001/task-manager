@@ -72,7 +72,7 @@ export default function MilestoneDetailsPanel(
       milestoneId: props.milestoneId,
       name: "新工作",
       description: "",
-      dueDate: null,
+      dueDate: milestone()?.dueDate || null,
       isDone: false,
       isArchived: false,
       labelIds: [],
