@@ -1,7 +1,12 @@
 import { client } from "@frontend/client";
+import { AuditLogBlock } from "@frontend/components/AuditLogBlock";
 import Button from "@frontend/components/Button";
 import { baseInputClass } from "@frontend/components/Input";
-import Panel, { PanelSections, SectionLabel } from "@frontend/components/Panel";
+import Panel, {
+  PanelList,
+  PanelSections,
+  SectionLabel,
+} from "@frontend/components/Panel";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { debounce } from "lodash";

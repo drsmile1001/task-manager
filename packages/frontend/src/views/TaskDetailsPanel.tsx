@@ -1,11 +1,17 @@
 import { client } from "@frontend/client";
+import { AuditLogBlock } from "@frontend/components/AuditLogBlock";
 import Button from "@frontend/components/Button";
 import { checkboxLabelClass } from "@frontend/components/Checkbox";
 import { baseInputClass } from "@frontend/components/Input";
 import { MarkdownTextarea } from "@frontend/components/MarkdownTextarea";
-import Panel, { PanelSections, SectionLabel } from "@frontend/components/Panel";
+import Panel, {
+  PanelList,
+  PanelSections,
+  SectionLabel,
+} from "@frontend/components/Panel";
 import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
+import { useAuditLogStore } from "@frontend/stores/auditLogStore";
 import { getLabelTextColor, useLabelStore } from "@frontend/stores/labelStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { usePersonStore } from "@frontend/stores/personStore";
@@ -14,6 +20,8 @@ import { useTaskStore } from "@frontend/stores/taskStore";
 import { debounce } from "lodash";
 import { For, Show, createMemo, onMount } from "solid-js";
 
+import type { Assignment } from "@backend/schemas/Assignment";
+import type { Planning } from "@backend/schemas/Planning";
 import type { Task } from "@backend/schemas/Task";
 
 export type TaskDetailsPanelProps = {
@@ -34,6 +42,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   const { labels } = useLabelStore();
   const { persons } = usePersonStore();
   const { setDragContext } = useDragController();
+  const { logs } = useAuditLogStore();
   let nameInputRef: HTMLInputElement | undefined;
   onMount(() => {
     nameInputRef?.focus();
@@ -73,6 +82,26 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
     }
     client.api.tasks({ id: props.taskId! }).patch({
       assigneeIds: newAssigneeIds,
+    });
+  }
+
+  function relatedAuditLogs() {
+    return logs.filter((log) => {
+      if (log.entityType === "TASK" && log.entityId === props.taskId)
+        return true;
+      if (log.entityType === "ASSIGNMENT") {
+        const after = log.changes.after as Assignment | undefined;
+        const before = log.changes.before as Assignment | undefined;
+        if (after?.taskId === props.taskId || before?.taskId === props.taskId)
+          return true;
+      }
+      if (log.entityType === "PLANNING") {
+        const after = log.changes.after as Planning | undefined;
+        const before = log.changes.before as Planning | undefined;
+        if (after?.taskId === props.taskId || before?.taskId === props.taskId)
+          return true;
+      }
+      return false;
     });
   }
 
@@ -240,6 +269,11 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
             </label>
           ))}
         </div>
+
+        <SectionLabel>操作記錄</SectionLabel>
+        <PanelList items={relatedAuditLogs}>
+          {(log) => <AuditLogBlock log={log} />}
+        </PanelList>
 
         <SectionLabel>進階操作</SectionLabel>
         <div class="flex gap-2">

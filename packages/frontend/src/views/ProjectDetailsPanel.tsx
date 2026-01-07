@@ -1,4 +1,5 @@
 import { client } from "@frontend/client";
+import { AuditLogBlock } from "@frontend/components/AuditLogBlock";
 import Button from "@frontend/components/Button";
 import { baseInputClass } from "@frontend/components/Input";
 import { MarkdownTextarea } from "@frontend/components/MarkdownTextarea";
@@ -11,6 +12,7 @@ import Panel, {
 import { TaskBlock } from "@frontend/components/TaskBlock";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useSharedFilterStore } from "@frontend/stores/SharedFilterStore";
+import { useAuditLogStore } from "@frontend/stores/auditLogStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
@@ -18,7 +20,9 @@ import { debounce } from "lodash";
 import { Show, createMemo, onMount } from "solid-js";
 import { ulid } from "ulid";
 
+import type { Milestone } from "@backend/schemas/Milestone";
 import type { Project } from "@backend/schemas/Project";
+import type { Task } from "@backend/schemas/Task";
 
 export type ProjectDetailsPanelProps = {
   projectId: string;
@@ -30,6 +34,8 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
   const project = createMemo(() => getProject(props.projectId));
 
   const { setSharedFilter } = useSharedFilterStore();
+  const { logs } = useAuditLogStore();
+
   function applyFilter() {
     setSharedFilter({
       projectIds: [props.projectId],
@@ -111,6 +117,32 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
       assigneeIds: [],
     });
     pushPanel({ type: "TASK", taskId });
+  }
+
+  function relatedAuditLogs() {
+    return logs.filter((log) => {
+      if (log.entityType === "PROJECT" && log.entityId === props.projectId)
+        return true;
+      if (log.entityType === "TASK") {
+        const after = log.changes.after as Task | undefined;
+        const before = log.changes.before as Task | undefined;
+        if (
+          after?.projectId === props.projectId ||
+          before?.projectId === props.projectId
+        )
+          return true;
+      }
+      if (log.entityType === "MILESTONE") {
+        const after = log.changes.after as Milestone | undefined;
+        const before = log.changes.before as Milestone | undefined;
+        if (
+          after?.projectId === props.projectId ||
+          before?.projectId === props.projectId
+        )
+          return true;
+      }
+      return false;
+    });
   }
 
   return (
@@ -204,6 +236,12 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
             封存的工作
           </Button>
         </div>
+
+        <SectionLabel>操作記錄</SectionLabel>
+        <PanelList items={relatedAuditLogs}>
+          {(log) => <AuditLogBlock log={log} />}
+        </PanelList>
+
         <SectionLabel>進階操作</SectionLabel>
         <div class="flex gap-2">
           <Button

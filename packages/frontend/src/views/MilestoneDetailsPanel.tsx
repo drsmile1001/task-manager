@@ -1,4 +1,5 @@
 import { client } from "@frontend/client";
+import { AuditLogBlock } from "@frontend/components/AuditLogBlock";
 import Button from "@frontend/components/Button";
 import { baseInputClass } from "@frontend/components/Input";
 import { MarkdownTextarea } from "@frontend/components/MarkdownTextarea";
@@ -11,6 +12,7 @@ import { TaskBlock } from "@frontend/components/TaskBlock";
 import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useSharedFilterStore } from "@frontend/stores/SharedFilterStore";
+import { useAuditLogStore } from "@frontend/stores/auditLogStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
@@ -19,6 +21,7 @@ import { Show, createMemo, onMount } from "solid-js";
 import { ulid } from "ulid";
 
 import type { Milestone } from "@backend/schemas/Milestone";
+import type { Task } from "@backend/schemas/Task";
 
 export type MilestoneDetailsPanelProps = {
   milestoneId: string;
@@ -33,6 +36,8 @@ export default function MilestoneDetailsPanel(
   const project = () =>
     useProjectStore().getProject(milestone()?.projectId ?? "");
   const { setDragContext } = useDragController();
+  const { logs } = useAuditLogStore();
+
   let nameInputRef: HTMLInputElement | undefined;
   onMount(() => {
     nameInputRef?.focus();
@@ -79,6 +84,24 @@ export default function MilestoneDetailsPanel(
       assigneeIds: [],
     });
     pushPanel({ type: "TASK", taskId });
+  }
+
+  function relatedAuditLogs() {
+    return logs.filter((log) => {
+      if (log.entityType === "MILESTONE" && log.entityId === props.milestoneId)
+        return true;
+      if (log.entityType === "TASK") {
+        const after = log.changes.after as Task | undefined;
+        const before = log.changes.before as Task | undefined;
+        if (
+          after?.milestoneId === props.milestoneId ||
+          before?.milestoneId === props.milestoneId
+        )
+          return true;
+      }
+
+      return false;
+    });
   }
 
   return (
@@ -169,6 +192,12 @@ export default function MilestoneDetailsPanel(
             新增工作
           </Button>
         </div>
+
+        <SectionLabel>操作記錄</SectionLabel>
+        <PanelList items={relatedAuditLogs}>
+          {(log) => <AuditLogBlock log={log} />}
+        </PanelList>
+
         <SectionLabel>進階操作</SectionLabel>
         <div class="flex gap-2">
           <Button

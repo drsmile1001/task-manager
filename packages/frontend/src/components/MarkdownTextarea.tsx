@@ -32,7 +32,10 @@ export function MarkdownTextarea(props: MarkdownTextareaProps) {
     setParsed(element.innerHTML);
   });
 
+  let changed = false;
+
   function startEditing() {
+    changed = false;
     setEditing(true);
     setTimeout(() => {
       textareaRef?.focus();
@@ -41,6 +44,7 @@ export function MarkdownTextarea(props: MarkdownTextareaProps) {
 
   function stopEditing() {
     setEditing(false);
+    if (!changed) return;
     props.updateValue(value());
   }
 
@@ -53,7 +57,10 @@ export function MarkdownTextarea(props: MarkdownTextareaProps) {
           hidden: !editing(),
         }}
         value={value()}
-        onInput={(e) => setValue(e.currentTarget.value ?? "")}
+        onInput={(e) => {
+          setValue(e.currentTarget.value ?? "");
+          changed = true;
+        }}
         onBlur={stopEditing}
       />
       <div
