@@ -1,13 +1,13 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
 import { baseInputClass } from "@frontend/components/Input";
+import { MarkdownTextarea } from "@frontend/components/MarkdownTextarea";
 import Panel, {
   PanelList,
   PanelSections,
   SectionLabel,
 } from "@frontend/components/Panel";
 import { TaskBlock } from "@frontend/components/TaskBlock";
-import { baseTextareaClass } from "@frontend/components/Textarea";
 import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useSharedFilterStore } from "@frontend/stores/SharedFilterStore";
@@ -150,16 +150,15 @@ export default function MilestoneDetailsPanel(
           placeholder="到期日 (可選)"
         />
         <SectionLabel>描述</SectionLabel>
-        <textarea
-          class={baseTextareaClass}
+        <MarkdownTextarea
           value={milestone()?.description}
-          onInput={(e) =>
-            debouncedHandleUpdateMilestone({
-              description: e.currentTarget.value,
+          updateValue={(value) =>
+            handleUpdateMilestone({
+              description: value,
             })
           }
         />
-        <SectionLabel>未封存工作</SectionLabel>
+        <SectionLabel>工作</SectionLabel>
         <PanelList items={tasks}>
           {(task) => (
             <TaskBlock class="w-full" task={task} showProject={false} />

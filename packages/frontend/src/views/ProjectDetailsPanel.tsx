@@ -1,6 +1,7 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
 import { baseInputClass } from "@frontend/components/Input";
+import { MarkdownTextarea } from "@frontend/components/MarkdownTextarea";
 import { MilestoneBlock } from "@frontend/components/MilestoneBlock";
 import Panel, {
   PanelList,
@@ -8,7 +9,6 @@ import Panel, {
   SectionLabel,
 } from "@frontend/components/Panel";
 import { TaskBlock } from "@frontend/components/TaskBlock";
-import { baseTextareaClass } from "@frontend/components/Textarea";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useSharedFilterStore } from "@frontend/stores/SharedFilterStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
@@ -133,11 +133,12 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
           }
         />
         <SectionLabel>描述</SectionLabel>
-        <textarea
-          class={baseTextareaClass}
+        <MarkdownTextarea
           value={project()?.description}
-          onInput={(e) =>
-            debouncedHandleUpdateProject({ description: e.currentTarget.value })
+          updateValue={(value) =>
+            handleUpdateProject({
+              description: value,
+            })
           }
         />
         <SectionLabel>排序</SectionLabel>

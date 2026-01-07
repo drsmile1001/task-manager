@@ -2,6 +2,7 @@ import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
 import { checkboxLabelClass } from "@frontend/components/Checkbox";
 import { baseInputClass } from "@frontend/components/Input";
+import { MarkdownTextarea } from "@frontend/components/MarkdownTextarea";
 import Panel, { PanelSections, SectionLabel } from "@frontend/components/Panel";
 import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
@@ -170,13 +171,13 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
             debouncedHandleUpdateTask({ name: e.currentTarget.value })
           }
         />
-
         <SectionLabel>描述</SectionLabel>
-        <textarea
-          class={`${baseInputClass} h-32`}
+        <MarkdownTextarea
           value={task()?.description}
-          onInput={(e) =>
-            debouncedHandleUpdateTask({ description: e.currentTarget.value })
+          updateValue={(value) =>
+            handleUpdateTask({
+              description: value,
+            })
           }
         />
 
