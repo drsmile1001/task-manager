@@ -1,4 +1,6 @@
 import type { MutationTopic } from "@backend/api";
+import type { EntityType } from "@backend/schemas/AuditLog";
+import type { Milestone } from "@backend/schemas/Milestone";
 
 import { useAssignmentStore } from "./stores/assignmentStore";
 import { useAuditLogStore } from "./stores/auditLogStore";
@@ -26,113 +28,82 @@ export function sync() {
       );
     }, 10000);
   };
+  const { setLabel, deleteLabel } = useLabelStore();
+  const { setPerson, deletePerson } = usePersonStore();
+  const { setProject, deleteProject } = useProjectStore();
+  const { setMilestone, deleteMilestone } = useMilestoneStore();
+  const { setTask, deleteTask, loadTasks } = useTaskStore();
+  const { setPlanning, deletePlanning, loadPlannings } = usePlanningStore();
+  const { setAssignment, deleteAssignment, loadAssignments } =
+    useAssignmentStore();
+  const { addAuditLog } = useAuditLogStore();
+  const mutationHandlers: Record<
+    EntityType,
+    {
+      onCreateOrUpdate: (after: any) => void;
+      onDelete: (id: string) => void;
+    }
+  > = {
+    LABEL: {
+      onCreateOrUpdate: setLabel,
+      onDelete: deleteLabel,
+    },
+    PERSON: {
+      onCreateOrUpdate: setPerson,
+      onDelete: (id: string) => {
+        loadAssignments();
+        deletePerson(id);
+      },
+    },
+    PROJECT: {
+      onCreateOrUpdate: setProject,
+      onDelete: (id: string) => {
+        loadAssignments();
+        loadTasks();
+        deleteProject(id);
+      },
+    },
+    MILESTONE: {
+      onCreateOrUpdate: (after: Milestone) => {
+        setMilestone(after);
+        loadTasks();
+      },
+      onDelete: (id: string) => {
+        loadTasks();
+        deleteMilestone(id);
+      },
+    },
+    TASK: {
+      onCreateOrUpdate: setTask,
+      onDelete: (id: string) => {
+        loadPlannings();
+        loadAssignments();
+        deleteTask(id);
+      },
+    },
+    PLANNING: {
+      onCreateOrUpdate: setPlanning,
+      onDelete: deletePlanning,
+    },
+    ASSIGNMENT: {
+      onCreateOrUpdate: setAssignment,
+      onDelete: deleteAssignment,
+    },
+  };
 
   ws.onmessage = (event) => {
     const message = JSON.parse(event.data);
     if (message.topic === "mutations") {
       const m = message as MutationTopic;
-      switch (m.type) {
-        case "LABEL":
-          switch (m.action) {
-            case "CREATE":
-            case "UPDATE":
-              useLabelStore().setLabel(m.entity as any);
-              break;
-            case "DELETE":
-              useLabelStore().deleteLabel(m.id);
-              break;
-            default:
-              break;
-          }
-          break;
-        case "PERSON":
-          switch (m.action) {
-            case "CREATE":
-            case "UPDATE":
-              usePersonStore().setPerson(m.entity as any);
-              break;
-            case "DELETE":
-              useAssignmentStore().loadAssignments();
-              usePersonStore().deletePerson(m.id);
-              break;
-            default:
-              break;
-          }
-          break;
-        case "PROJECT":
-          switch (m.action) {
-            case "CREATE":
-            case "UPDATE":
-              useProjectStore().setProject(m.entity as any);
-              break;
-            case "DELETE":
-              useAssignmentStore().loadAssignments();
-              useTaskStore().loadTasks();
-              useProjectStore().deleteProject(m.id);
-              break;
-            default:
-              break;
-          }
-          break;
-        case "MILESTONE":
-          switch (m.action) {
-            case "CREATE":
-            case "UPDATE":
-              useMilestoneStore().setMilestone(m.entity as any);
-              useTaskStore().loadTasks();
-              break;
-            case "DELETE":
-              useTaskStore().loadTasks();
-              useMilestoneStore().deleteMilestone(m.id);
-              break;
-            default:
-              break;
-          }
-          break;
-        case "TASK":
-          switch (m.action) {
-            case "CREATE":
-            case "UPDATE":
-              useTaskStore().setTask(m.entity as any);
-              break;
-            case "DELETE":
-              useAssignmentStore().loadAssignments();
-              useTaskStore().deleteTask(m.id);
-              break;
-            default:
-              break;
-          }
-          break;
-        case "PLANNING":
-          switch (m.action) {
-            case "CREATE":
-            case "UPDATE":
-              usePlanningStore().setPlanning(m.entity as any);
-              break;
-            case "DELETE":
-              usePlanningStore().deletePlanning(m.id);
-              break;
-            default:
-              break;
-          }
-          break;
-        case "ASSIGNMENT":
-          switch (m.action) {
-            case "CREATE":
-            case "UPDATE":
-              useAssignmentStore().setAssignment(m.entity as any);
-              break;
-            case "DELETE":
-              useAssignmentStore().deleteAssignment(m.id);
-              break;
-            default:
-              break;
-          }
-          break;
-        default:
-          break;
+      const entityType = m.entityType;
+      const action = m.action;
+      if (action === "CREATE" || action === "UPDATE") {
+        mutationHandlers[entityType].onCreateOrUpdate(m.changes.after as any);
+      } else if (action === "DELETE") {
+        mutationHandlers[entityType].onDelete(m.entityId);
       }
-      useAuditLogStore().loadAuditLogs();
+      const { topic, ...log } = m;
+      addAuditLog(log);
     }
   };
 }

@@ -16,9 +16,13 @@ function createAuditLogStore() {
   }
   loadAuditLogs();
 
+  function addAuditLog(log: AuditLog) {
+    setLogs([log, ...logs]);
+  }
+
   return {
     logs,
-    loadAuditLogs,
+    addAuditLog,
   };
 }
 

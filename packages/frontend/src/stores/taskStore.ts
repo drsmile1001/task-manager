@@ -20,20 +20,7 @@ function createTaskStore() {
     if (result.error) {
       throw new Error("Failed to load tasks");
     }
-    setMap(
-      Object.fromEntries(
-        result.data.map((task) => [
-          task.id,
-          {
-            ...task,
-            dueDate:
-              (task.dueDate as unknown as Date | null)
-                ?.toISOString()
-                .split("T")[0] ?? null,
-          },
-        ])
-      )
-    );
+    setMap(Object.fromEntries(result.data.map((task) => [task.id, task])));
   }
   loadTasks();
 

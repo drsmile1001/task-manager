@@ -94,9 +94,7 @@ export default function AuditLogListPanel() {
       專案: getProject(milestone?.projectId || "")?.name || "<空>",
       名稱: milestone?.name || "<空>",
       描述: milestone?.description || "<空>",
-      到期日:
-        (milestone?.dueDate as Date | undefined)?.toISOString().split("T")[0] ||
-        "<空>",
+      到期日: milestone?.dueDate || "<空>",
       封存: milestone?.isArchived ? "是" : "否",
     };
   }
@@ -107,9 +105,7 @@ export default function AuditLogListPanel() {
       里程碑: getMilestone(task?.milestoneId || "")?.name || "<空>",
       名稱: task?.name || "<空>",
       描述: task?.description || "<空>",
-      到期日:
-        (task?.dueDate as Date | undefined)?.toISOString().split("T")[0] ||
-        "<空>",
+      到期日: task?.dueDate || "<空>",
       完成: task?.isDone ? "是" : "否",
       封存: task?.isArchived ? "是" : "否",
       指派:
@@ -128,10 +124,7 @@ export default function AuditLogListPanel() {
       專案:
         getTaskWithRelation(planning?.taskId || "")?.project?.name || "<空>",
       工作: getTaskWithRelation(planning?.taskId || "")?.name || "<空>",
-      週:
-        (planning?.weekStartDate as Date | undefined)
-          ?.toISOString()
-          .split("T")[0] || "<空>",
+      週: planning?.weekStartDate || "<空>",
     };
   }
 
@@ -141,9 +134,7 @@ export default function AuditLogListPanel() {
         getTaskWithRelation(assignment?.taskId || "")?.project?.name || "<空>",
       工作: getTaskWithRelation(assignment?.taskId || "")?.name || "<空>",
       人員: getPerson(assignment?.personId || "")?.name || "<空>",
-      日期:
-        (assignment?.date as Date | undefined)?.toISOString().split("T")[0] ||
-        "<空>",
+      日期: assignment?.date || "<空>",
       備註: assignment?.note || "<空>",
     };
   }
@@ -247,8 +238,9 @@ export default function AuditLogListPanel() {
                   case "ASSIGNMENT":
                     pushPanel({
                       type: "TASK",
-                      taskId:
-                        log.changes.after?.taskId ?? log.changes.before?.taskId,
+                      taskId: (
+                        (log.changes.after ?? log.changes.before) as Task
+                      ).id,
                     });
                     break;
                   default:

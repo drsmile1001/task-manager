@@ -24,8 +24,8 @@ export const auditLogSchema = t.Object({
   entityType: entityTypes,
   entityId: t.String(),
   changes: t.Object({
-    before: t.Optional(t.Any()),
-    after: t.Optional(t.Any()),
+    before: t.Optional(t.Unknown()),
+    after: t.Optional(t.Unknown()),
   }),
 });
 

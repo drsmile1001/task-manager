@@ -27,10 +27,7 @@ function createAssignmentStore() {
       byPersonIdAndDate: {},
     });
     for (const a of result.data) {
-      setAssignmentInternal({
-        ...a,
-        date: (a.date as unknown as Date).toISOString().split("T")[0],
-      });
+      setAssignmentInternal(a);
     }
   }
   loadAssignments();

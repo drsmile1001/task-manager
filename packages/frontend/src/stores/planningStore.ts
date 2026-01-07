@@ -19,12 +19,7 @@ function createPlanningStore() {
     }
     setState({ byId: {}, byTaskId: {}, byWeekStartDate: {} });
     for (const p of result.data) {
-      setPlanningInternal({
-        ...p,
-        weekStartDate: (p.weekStartDate as unknown as Date)
-          .toISOString()
-          .split("T")[0],
-      });
+      setPlanningInternal(p);
     }
   }
   loadPlannings();

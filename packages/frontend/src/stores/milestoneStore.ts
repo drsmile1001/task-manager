@@ -29,16 +29,7 @@ function createMilestoneStore() {
     }
     setMap(
       Object.fromEntries(
-        result.data.map((milestone) => [
-          milestone.id,
-          {
-            ...milestone,
-            dueDate:
-              (milestone.dueDate as unknown as Date | null)
-                ?.toISOString()
-                .split("T")[0] ?? null,
-          },
-        ])
+        result.data.map((milestone) => [milestone.id, milestone])
       )
     );
   }
