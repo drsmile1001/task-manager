@@ -1,7 +1,7 @@
 import { client } from "@frontend/client";
 import { AuditLogBlock } from "@frontend/components/AuditLogBlock";
 import Button from "@frontend/components/Button";
-import { baseInputClass } from "@frontend/components/Input";
+import { Input, baseInputClass } from "@frontend/components/Input";
 import { MarkdownTextarea } from "@frontend/components/MarkdownTextarea";
 import Panel, {
   PanelList,
@@ -16,7 +16,6 @@ import { useAuditLogStore } from "@frontend/stores/auditLogStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
-import { debounce } from "lodash";
 import { Show, createMemo, onMount } from "solid-js";
 import { ulid } from "ulid";
 
@@ -59,8 +58,6 @@ export default function MilestoneDetailsPanel(
   function handleUpdateMilestone(update: Partial<Milestone>) {
     client.api.milestones({ id: props.milestoneId }).patch(update);
   }
-
-  const debouncedHandleUpdateMilestone = debounce(handleUpdateMilestone, 1500);
 
   const { tasksWithRelation } = useTaskStore();
   const tasks = createMemo(() =>
@@ -151,12 +148,13 @@ export default function MilestoneDetailsPanel(
         </div>
 
         <SectionLabel>名稱</SectionLabel>
-        <input
-          class={baseInputClass}
+        <Input
           ref={nameInputRef}
           value={milestone()?.name}
-          onInput={(e) =>
-            debouncedHandleUpdateMilestone({ name: e.currentTarget.value })
+          onConfirm={(value) =>
+            handleUpdateMilestone({
+              name: value,
+            })
           }
         />
         <SectionLabel>到期日</SectionLabel>

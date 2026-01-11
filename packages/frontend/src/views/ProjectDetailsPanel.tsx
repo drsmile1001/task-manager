@@ -1,7 +1,7 @@
 import { client } from "@frontend/client";
 import { AuditLogBlock } from "@frontend/components/AuditLogBlock";
 import Button from "@frontend/components/Button";
-import { baseInputClass } from "@frontend/components/Input";
+import { Input, baseInputClass } from "@frontend/components/Input";
 import { MarkdownTextarea } from "@frontend/components/MarkdownTextarea";
 import { MilestoneBlock } from "@frontend/components/MilestoneBlock";
 import Panel, {
@@ -16,7 +16,6 @@ import { useAuditLogStore } from "@frontend/stores/auditLogStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
-import { debounce } from "lodash";
 import { Show, createMemo, onMount } from "solid-js";
 import { ulid } from "ulid";
 
@@ -56,8 +55,6 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
   function handleUpdateProject(update: Partial<Project>) {
     client.api.projects({ id: props.projectId }).patch(update);
   }
-
-  const debouncedHandleUpdateProject = debounce(handleUpdateProject, 1500);
 
   const { getMilestonesByProjectId } = useMilestoneStore();
   const milestones = () =>
@@ -156,12 +153,13 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
     >
       <PanelSections>
         <SectionLabel>名稱</SectionLabel>
-        <input
-          class={baseInputClass}
+        <Input
           ref={nameInputRef}
           value={project()?.name}
-          onInput={(e) =>
-            debouncedHandleUpdateProject({ name: e.currentTarget.value })
+          onConfirm={(value) =>
+            handleUpdateProject({
+              name: value,
+            })
           }
         />
         <SectionLabel>描述</SectionLabel>

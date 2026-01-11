@@ -1,9 +1,8 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
-import { baseInputClass } from "@frontend/components/Input";
+import { Input, baseInputClass } from "@frontend/components/Input";
 import Panel, { PanelList } from "@frontend/components/Panel";
 import { useLabelStore } from "@frontend/stores/labelStore";
-import { debounce } from "lodash";
 import { createEffect } from "solid-js";
 import { ulid } from "ulid";
 
@@ -40,8 +39,6 @@ export default function LabelPanel() {
     client.api.labels({ id: labelId }).patch(update);
   }
 
-  const debouncedHandleUpdateLabel = debounce(handleUpdateLabel, 1500);
-
   function hadleDeleteLabel(labelId: string) {
     client.api.labels({ id: labelId }).delete();
   }
@@ -61,13 +58,13 @@ export default function LabelPanel() {
       <PanelList items={labels}>
         {(label) => (
           <>
-            <input
+            <Input
               ref={(el) => nameInputRefs.set(label.id, el)}
-              class={`${baseInputClass} flex-1`}
+              class="flex-1"
               value={label.name}
-              onInput={(e) =>
-                debouncedHandleUpdateLabel(label.id, {
-                  name: e.currentTarget.value,
+              onConfirm={(value) =>
+                handleUpdateLabel(label.id, {
+                  name: value,
                 })
               }
               placeholder="標籤名稱"

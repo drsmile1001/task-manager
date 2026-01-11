@@ -1,10 +1,9 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
-import { baseInputClass } from "@frontend/components/Input";
+import { Input, baseInputClass } from "@frontend/components/Input";
 import Panel, { PanelSections, SectionLabel } from "@frontend/components/Panel";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { usePersonStore } from "@frontend/stores/personStore";
-import { debounce } from "lodash";
 import { onMount } from "solid-js";
 
 import type { Person } from "@backend/schemas/Person";
@@ -26,8 +25,6 @@ export default function PersonDetailsPanel(props: PersonDetailsPanelProps) {
     client.api.persons({ id: props.personId! }).patch(update);
   }
 
-  const debouncedHandleUpdatePerson = debounce(handleUpdatePerson, 1500);
-
   async function removePerson() {
     await client.api.persons({ id: props.personId! }).delete();
     popPanel();
@@ -37,12 +34,13 @@ export default function PersonDetailsPanel(props: PersonDetailsPanelProps) {
     <Panel title={`人員詳情 - ${person()?.name || ""}`}>
       <PanelSections>
         <SectionLabel>名稱</SectionLabel>
-        <input
-          class={baseInputClass}
+        <Input
           ref={nameInputRef}
           value={person()?.name}
-          onInput={(e) =>
-            debouncedHandleUpdatePerson({ name: e.currentTarget.value })
+          onConfirm={(value) =>
+            handleUpdatePerson({
+              name: value,
+            })
           }
         />
 
@@ -59,12 +57,13 @@ export default function PersonDetailsPanel(props: PersonDetailsPanelProps) {
         />
 
         <SectionLabel>Email</SectionLabel>
-        <input
-          class={baseInputClass}
+        <Input
           type="email"
           value={person()?.email ?? ""}
-          onInput={(e) =>
-            debouncedHandleUpdatePerson({ email: e.currentTarget.value })
+          onConfirm={(value) =>
+            handleUpdatePerson({
+              email: value,
+            })
           }
         />
 

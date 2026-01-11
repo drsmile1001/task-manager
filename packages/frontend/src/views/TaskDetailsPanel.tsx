@@ -2,7 +2,7 @@ import { client } from "@frontend/client";
 import { AuditLogBlock } from "@frontend/components/AuditLogBlock";
 import Button from "@frontend/components/Button";
 import { checkboxLabelClass } from "@frontend/components/Checkbox";
-import { baseInputClass } from "@frontend/components/Input";
+import { Input, baseInputClass } from "@frontend/components/Input";
 import { MarkdownTextarea } from "@frontend/components/MarkdownTextarea";
 import Panel, {
   PanelList,
@@ -17,7 +17,6 @@ import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
-import { debounce } from "lodash";
 import { For, Show, createMemo, onMount } from "solid-js";
 
 import type { Assignment } from "@backend/schemas/Assignment";
@@ -56,8 +55,6 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   function handleUpdateTask(update: Partial<Task>) {
     client.api.tasks({ id: props.taskId! }).patch(update);
   }
-
-  const debouncedHandleUpdateTask = debounce(handleUpdateTask, 1500);
 
   function setHasLabel(labelId: string, hasLabel: boolean) {
     const currentLabelIds = task()?.labelIds || [];
@@ -192,12 +189,13 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         </div>
 
         <SectionLabel>名稱</SectionLabel>
-        <input
-          class={baseInputClass}
+        <Input
           ref={nameInputRef}
           value={task()?.name}
-          onInput={(e) =>
-            debouncedHandleUpdateTask({ name: e.currentTarget.value })
+          onConfirm={(value) =>
+            handleUpdateTask({
+              name: value,
+            })
           }
         />
         <SectionLabel>描述</SectionLabel>

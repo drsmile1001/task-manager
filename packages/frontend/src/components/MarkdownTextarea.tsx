@@ -26,9 +26,29 @@ export function MarkdownTextarea(props: MarkdownTextareaProps) {
       el.className = "text-blue-600 underline cursor-pointer";
       el.setAttribute("target", "_blank");
     });
-    element.querySelectorAll("li").forEach((el) => {
+    element.querySelectorAll("ul li").forEach((el) => {
       el.className = "list-disc ml-6";
     });
+    element.querySelectorAll("ol li").forEach((el) => {
+      el.className = "list-decimal ml-6";
+    });
+
+    element.querySelectorAll("pre").forEach((el) => {
+      el.className = "bg-gray-100 p-2 rounded overflow-x-auto";
+    });
+
+    element.querySelectorAll("code").forEach((el) => {
+      el.className = "font-mono bg-gray-100 px-1 rounded";
+    });
+
+    element.querySelectorAll("blockquote").forEach((el) => {
+      el.className = "border-l-4 border-gray-300 pl-4 italic text-gray-600";
+    });
+
+    element.querySelectorAll("hr").forEach((el) => {
+      el.className = "my-4 border-t border-gray-300";
+    });
+
     setParsed(element.innerHTML);
   });
 
@@ -52,7 +72,7 @@ export function MarkdownTextarea(props: MarkdownTextareaProps) {
     <>
       <textarea
         ref={textareaRef}
-        class={`${baseInputClass} h-32`}
+        class={`${baseInputClass} h-32 font-mono`}
         classList={{
           hidden: !editing(),
         }}
@@ -64,7 +84,7 @@ export function MarkdownTextarea(props: MarkdownTextareaProps) {
         onBlur={stopEditing}
       />
       <div
-        class={`${baseInputClass} min-h-32 w-full cursor-text`}
+        class={`${baseInputClass} min-h-32 font-mono w-full cursor-text`}
         classList={{
           hidden: editing(),
         }}
