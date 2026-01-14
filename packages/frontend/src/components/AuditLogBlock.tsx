@@ -206,7 +206,11 @@ export function AuditLogBlock(props: { log: AuditLog; link?: boolean }) {
             case "ASSIGNMENT":
               pushPanel({
                 type: "TASK",
-                taskId: ((log.changes.after ?? log.changes.before) as Task).id,
+                taskId: (
+                  (log.changes.after ?? log.changes.before) as
+                    | Planning
+                    | Assignment
+                ).taskId,
               });
               break;
             default:
