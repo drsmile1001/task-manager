@@ -4,6 +4,7 @@ import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useSharedFilterStore } from "@frontend/stores/SharedFilterStore";
 import { useAssignmentStore } from "@frontend/stores/assignmentStore";
+import { useCurrentUserStore } from "@frontend/stores/currentUserStore";
 import { useHolidayStore } from "@frontend/stores/holidayStore";
 import { getLabelTextColor } from "@frontend/stores/labelStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
@@ -44,6 +45,7 @@ export default function ByDaySchedule() {
   const { getPlanningsByWeekStartDate } = usePlanningStore();
   const [showWeekPlans, setShowWeekPlans] = createSignal(true);
   const { getPerson } = usePersonStore();
+  const { currentUser } = useCurrentUserStore();
 
   function navigateViewRange(offset: number | "current") {
     if (offset === "current") {
@@ -457,6 +459,7 @@ export default function ByDaySchedule() {
                             taskId: drag.taskId,
                             personId: p.id,
                             date: day.date,
+                            acknowledged: currentUser.id === p.id,
                           });
                         } else if (drag?.type === "ASSIGNMENT") {
                           await client.api
@@ -466,6 +469,7 @@ export default function ByDaySchedule() {
                             .patch({
                               personId: p.id,
                               date: day.date,
+                              acknowledged: currentUser.id === p.id,
                             });
                         }
                         setDragContext(null);
@@ -479,6 +483,7 @@ export default function ByDaySchedule() {
                               classList={{
                                 "bg-gray-50 border-gray-300 text-gray-400 hover:bg-gray-100":
                                   task?.isArchived || task?.project?.isArchived,
+                                "border-dashed": !assignment.acknowledged,
                               }}
                               draggable="true"
                               onDragStart={() => {
@@ -490,6 +495,14 @@ export default function ByDaySchedule() {
                                 });
                               }}
                               onClick={() => {
+                                if (
+                                  assignment.personId === currentUser.id &&
+                                  !assignment.acknowledged
+                                ) {
+                                  client.api
+                                    .assignments({ id: assignment.id })
+                                    .patch({ acknowledged: true });
+                                }
                                 openPanel({
                                   type: "TASK",
                                   taskId: task?.id ?? "",

@@ -163,7 +163,7 @@ export function AuditLogBlock(props: { log: AuditLog; link?: boolean }) {
         工作: getTaskWithRelation(assignment?.taskId || "")?.name || "<空>",
         人員: getPerson(assignment?.personId || "")?.name || "<空>",
         日期: assignment?.date || "<空>",
-        備註: assignment?.note || "<空>",
+        收到: assignment?.acknowledged ? "是" : "否",
       }),
       idFields: ["專案", "工作", "人員", "日期"],
     },

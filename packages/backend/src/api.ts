@@ -2,7 +2,7 @@ import Elysia, { t } from "elysia";
 import { createYamlRepo } from "./utils/YamlRepo";
 import { projectMigrations, projectSchema } from "./schemas/Project";
 import { taskMigrations, taskSchema } from "./schemas/Task";
-import { assignmentSchema } from "./schemas/Assignment";
+import { assignmentMigrations, assignmentSchema } from "./schemas/Assignment";
 import type { Logger } from "~shared/Logger";
 import { personMigrations, personSchema } from "./schemas/Person";
 import { labelSchema } from "./schemas/Label";
@@ -61,7 +61,8 @@ export async function buildApi(logger: Logger) {
   const assignmentRepo = createYamlRepo(
     "data/assignments.yaml",
     assignmentSchema,
-    logger
+    logger,
+    assignmentMigrations
   );
   await assignmentRepo.init();
   const personRepo = createYamlRepo(

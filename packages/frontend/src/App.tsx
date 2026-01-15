@@ -6,6 +6,7 @@ import { DragImageRenderer } from "./stores/DragController";
 import { Panels, usePanelController } from "./stores/PanelController";
 import { useSharedFilterStore } from "./stores/SharedFilterStore";
 import { useAssignmentStore } from "./stores/assignmentStore";
+import { useCurrentUserStore } from "./stores/currentUserStore";
 import { useLabelStore } from "./stores/labelStore";
 import { useMilestoneStore } from "./stores/milestoneStore";
 import { usePersonStore } from "./stores/personStore";
@@ -28,17 +29,17 @@ export default function App() {
   useTaskStore();
   usePlanningStore();
   useAssignmentStore();
+  const { currentUser, setCurrentUser } = useCurrentUserStore();
   sync();
   const { stack: panelStack } = usePanelController();
   const { openPanel } = usePanelController();
   const [tableType, setTableType] = createSignal<TableType>(
     localStorage.getItem("tableType") === "byWeek" ? "byWeek" : "byDay"
   );
-  const [user, setUser] = createSignal<string | null>(null);
 
   client.api.me.get().then(({ data }) => {
     if (data) {
-      setUser(data.name);
+      setCurrentUser(data);
     }
   });
 
@@ -113,7 +114,7 @@ export default function App() {
               計劃表
             </Button>
             <div class="flex-1"></div>
-            <span>{user()}</span>
+            <span>{currentUser.name}</span>
             <Button variant="secondary" onclick={() => logout()}>
               登出
             </Button>
