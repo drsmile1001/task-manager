@@ -1,0 +1,12 @@
+trailingComma: "es5"
+semi: true
+singleQuote: false
+plugins:
+  - "@trivago/prettier-plugin-sort-imports"
+importOrder:
+  - "<THIRD_PARTY_MODULES>"
+  - "^@/.*"
+  - "^~test/"
+  - "^[./]"
+importOrderSeparation: true
+importOrderSortSpecifiers: true

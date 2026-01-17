@@ -1,23 +1,24 @@
-import Elysia, { t } from "elysia";
-import { createYamlRepo } from "./utils/YamlRepo";
-import { projectMigrations, projectSchema } from "./schemas/Project";
-import { taskMigrations, taskSchema } from "./schemas/Task";
-import { assignmentMigrations, assignmentSchema } from "./schemas/Assignment";
-import type { Logger } from "~shared/Logger";
-import { personMigrations, personSchema } from "./schemas/Person";
-import { labelSchema } from "./schemas/Label";
-import { milestoneMigrations, milestoneSchema } from "./schemas/Milestone";
-import { planningSchema } from "./schemas/Planning";
-import { jwtDecode } from "jwt-decode";
-import { sessionSchema } from "./schemas/Session";
-import { ulid } from "ulid";
 import { addDays } from "date-fns";
+import { Elysia, t } from "elysia";
+import { jwtDecode } from "jwt-decode";
+import { ulid } from "ulid";
+import type { Logger } from "~shared/Logger";
+
+import { assignmentMigrations, assignmentSchema } from "./schemas/Assignment";
 import {
-  auditLogSchema,
   type ActionType,
   type AuditLog,
   type EntityType,
+  auditLogSchema,
 } from "./schemas/AuditLog";
+import { labelSchema } from "./schemas/Label";
+import { milestoneMigrations, milestoneSchema } from "./schemas/Milestone";
+import { type Person, personMigrations, personSchema } from "./schemas/Person";
+import { planningSchema } from "./schemas/Planning";
+import { projectMigrations, projectSchema } from "./schemas/Project";
+import { sessionSchema } from "./schemas/Session";
+import { taskMigrations, taskSchema } from "./schemas/Task";
+import { createYamlRepo } from "./utils/YamlRepo";
 
 let currentBunServer: Bun.Server<unknown> | null = null;
 
@@ -187,17 +188,28 @@ export async function buildApi(logger: Logger) {
         });
       }
     })
-    .derive(({ cookie, status }) => {
-      const sessionId = cookie[sessionCookieKey]?.value as string | undefined;
-      if (!sessionId) throw status(401);
-      const session = sessionRepo.get(sessionId);
-      if (!session) throw status(401);
-      if (session.expiresAt < Date.now()) {
-        sessionRepo.remove(sessionId);
-        throw status(401);
+    .derive(({ cookie, status, headers }) => {
+      let requester: Person | undefined;
+
+      const apiKey = headers["x-api-key"];
+      if (apiKey === Bun.env.API_KEY) {
+        requester = {
+          id: "api-key-user",
+          name: "API Key User",
+          email: "apikey@local",
+        };
+      } else {
+        const sessionId = cookie[sessionCookieKey]?.value as string | undefined;
+        if (!sessionId) throw status(401);
+        const session = sessionRepo.get(sessionId);
+        if (!session) throw status(401);
+        if (session.expiresAt < Date.now()) {
+          sessionRepo.remove(sessionId);
+          throw status(401);
+        }
+        requester = personRepo.get(session.personId);
+        if (!requester) throw status(401);
       }
-      const person = personRepo.get(session.personId);
-      if (!person) throw status(401);
 
       async function logAction<
         TAction extends ActionType,
@@ -211,7 +223,7 @@ export async function buildApi(logger: Logger) {
         const auditLog = {
           id: ulid(),
           timestamp: Date.now(),
-          userId: person!.id,
+          userId: requester!.id,
           action,
           entityType: type,
           entityId,
@@ -222,7 +234,7 @@ export async function buildApi(logger: Logger) {
       }
 
       return {
-        requester: person,
+        requester,
         logAction,
       };
     })

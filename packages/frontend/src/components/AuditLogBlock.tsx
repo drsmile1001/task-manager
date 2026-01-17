@@ -106,6 +106,7 @@ export function AuditLogBlock(props: { log: AuditLog; link?: boolean }) {
       name: "專案",
       toRecord: (project: Project | undefined) => ({
         名稱: project?.name || "<空>",
+        代碼: project?.code || "<空>",
         描述: project?.description || "<空>",
         順序: project?.order?.toString() || "<空>",
         封存: project?.isArchived ? "是" : "否",

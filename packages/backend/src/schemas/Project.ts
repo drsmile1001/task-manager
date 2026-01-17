@@ -4,6 +4,7 @@ import { t } from "elysia";
 export const projectSchema = t.Object({
   id: t.String(),
   name: t.String(),
+  code: t.String(),
   description: t.String(),
   order: t.Nullable(t.Number()),
   isArchived: t.Boolean(),
@@ -33,6 +34,16 @@ export const projectMigrations = MigrationBuilder.create<{
     data.map((item) => ({
       id: item.id,
       name: item.name,
+      description: item.description,
+      order: item.order,
+      isArchived: item.isArchived,
+    }))
+  )
+  .addMigration("加入專案代碼", (data) =>
+    data.map((item) => ({
+      id: item.id,
+      name: item.name,
+      code: "",
       description: item.description,
       order: item.order,
       isArchived: item.isArchived,

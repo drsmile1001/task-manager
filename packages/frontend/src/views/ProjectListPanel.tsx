@@ -29,6 +29,7 @@ export default function ProjectListPanel() {
     await client.api.projects.post({
       id: projectId,
       name: "新專案",
+      code: "",
       description: "",
       order: null,
       isArchived: false,

@@ -162,6 +162,15 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
             })
           }
         />
+        <SectionLabel>代碼</SectionLabel>
+        <Input
+          value={project()?.code}
+          onConfirm={(value) =>
+            handleUpdateProject({
+              code: value,
+            })
+          }
+        />
         <SectionLabel>描述</SectionLabel>
         <MarkdownTextarea
           value={project()?.description}
