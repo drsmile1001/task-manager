@@ -102,6 +102,7 @@ export default function ImportTasksPanel() {
         await client.api.projects.post({
           id: pId,
           name: task.projectName,
+          code: "",
           description: "",
           order: null,
           isArchived: false,
