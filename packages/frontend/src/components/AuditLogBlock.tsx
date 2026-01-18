@@ -224,7 +224,7 @@ export function AuditLogBlock(props: { log: AuditLog; link?: boolean }) {
         <div>{actionLabel[log.action]}</div>
         <div>{matchedRenderer.name}</div>
       </div>
-      <pre class="ml-2 bg-gray-100 px-2 py-1 rounded-md text-xs">
+      <pre class="ml-2 bg-gray-100 px-2 py-1 rounded-md text-xs text-wrap whitespace-pre-wrap">
         {toSummaryText(log, matchedRenderer.toRecord, matchedRenderer.idFields)}
       </pre>
     </div>

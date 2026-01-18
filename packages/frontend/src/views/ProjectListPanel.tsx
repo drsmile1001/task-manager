@@ -59,13 +59,15 @@ export default function ProjectListPanel() {
       <PanelList items={projects}>
         {(project) => (
           <div
-            class="w-full p-1 border rounded text-sm shadow cursor-pointer select-none bg-blue-50 border-blue-400 hover:bg-blue-100"
+            class="w-full p-1 border rounded text-sm shadow cursor-pointer select-none bg-blue-50 border-blue-400 truncate hover:bg-blue-100"
             onClick={() =>
               pushPanel({ type: "PROJECT_DETAILS", projectId: project.id })
             }
           >
             <span class={project.isArchived ? "text-gray-500 italic" : ""}>
+              {project.code ? `[${project.code}] ` : ""}
               {project.name}
+              {project.description ? ` - ${project.description}` : ""}
             </span>
           </div>
         )}
