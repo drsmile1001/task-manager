@@ -323,8 +323,7 @@ export default function WeekScheduleTable() {
                         const drag = dragContext();
                         if (drag?.type === "TASK") {
                           await createPlanning(drag.taskId, week.startDate);
-                        }
-                        if (drag?.type === "PLANNING") {
+                        } else if (drag?.type === "PLANNING") {
                           await movePlanning(drag.planningId, week.startDate);
                         }
                         setDragContext(null);

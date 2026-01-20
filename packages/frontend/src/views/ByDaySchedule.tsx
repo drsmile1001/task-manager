@@ -42,7 +42,7 @@ export default function ByDaySchedule() {
   const [viewStartDate, setViewStartDate] = createSignal(currentWeekStart);
   const { getAssignmentsByPersonAndDate, getAssignment } = useAssignmentStore();
   const { getTaskWithRelation } = useTaskStore();
-  const { getPlanningsByWeekStartDate, getPlanningsByTask } =
+  const { getPlanningsByWeekStartDate, getPlanningsByTask, getPlanning } =
     usePlanningStore();
   const [showWeekPlans, setShowWeekPlans] = createSignal(true);
   const { getPerson } = usePersonStore();
@@ -303,6 +303,21 @@ export default function ByDaySchedule() {
     });
   }
 
+  async function movePlanning(planningId: string, toWeekStartDate: string) {
+    const planning = getPlanning(planningId);
+    if (!planning) return;
+    if (planning.weekStartDate === toWeekStartDate) return;
+    const existingPlanning = getPlanningsByTask(planning.taskId).find(
+      (p) => p.weekStartDate === toWeekStartDate
+    );
+    if (existingPlanning) {
+      return;
+    }
+    await client.api.plannings({ id: planningId }).patch({
+      weekStartDate: toWeekStartDate,
+    });
+  }
+
   return (
     <div
       class="h-full w-full flex-1 p-4 overflow-hidden flex flex-col gap-4"
@@ -314,8 +329,12 @@ export default function ByDaySchedule() {
           await client.api
             .assignments({ id: currentDragContext.assignmentId })
             .delete();
-          setDragContext(null);
+        } else if (currentDragContext?.type === "PLANNING") {
+          await client.api
+            .plannings({ id: currentDragContext.planningId })
+            .delete();
         }
+        setDragContext(null);
       }}
     >
       <div class="flex-none flex flex-col gap-2">
@@ -422,12 +441,14 @@ export default function ByDaySchedule() {
                       const drag = dragContext();
                       if (drag?.type === "TASK") {
                         await createPlanning(drag.taskId, weekStartDate);
+                      } else if (drag?.type === "PLANNING") {
+                        await movePlanning(drag.planningId, weekStartDate);
                       }
                       setDragContext(null);
                     }}
                   >
                     <For each={plans}>
-                      {({ task, hasAssignment }) => (
+                      {({ task, id, hasAssignment }) => (
                         <div
                           class="border text-xs shadow p-1 rounded mr-1 mb-1 cursor-pointer select-none"
                           classList={{
@@ -445,8 +466,9 @@ export default function ByDaySchedule() {
                           draggable="true"
                           onDragStart={() => {
                             setDragContext({
-                              type: "TASK",
-                              taskId: task?.id ?? "",
+                              type: "PLANNING",
+                              planningId: id,
+                              fromWeekStartDate: weekStartDate,
                             });
                           }}
                           onClick={() => {
@@ -523,6 +545,15 @@ export default function ByDaySchedule() {
                         const drag = dragContext();
                         if (drag?.type === "TASK") {
                           await createAssignment(drag.taskId, p.id, day.date);
+                        } else if (drag?.type === "PLANNING") {
+                          const planning = getPlanning(drag.planningId);
+                          if (planning) {
+                            await createAssignment(
+                              planning.taskId,
+                              p.id,
+                              day.date
+                            );
+                          }
                         } else if (drag?.type === "ASSIGNMENT") {
                           await moveAssignment(
                             drag.assignmentId,
