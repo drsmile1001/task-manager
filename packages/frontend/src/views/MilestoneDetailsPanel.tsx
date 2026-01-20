@@ -119,7 +119,7 @@ export default function MilestoneDetailsPanel(
               });
             }}
           >
-            :::本里程碑
+            ✥本里程碑
           </div>
         </div>
       }
