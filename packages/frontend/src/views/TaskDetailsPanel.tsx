@@ -230,7 +230,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
           <span>已完成</span>
         </label>
 
-        <SectionLabel>指派</SectionLabel>
+        <SectionLabel>負責人</SectionLabel>
         <div class="flex flex-wrap gap-2">
           {persons().map((person) => (
             <label class={checkboxLabelClass}>

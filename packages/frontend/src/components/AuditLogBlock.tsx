@@ -134,7 +134,7 @@ export function AuditLogBlock(props: { log: AuditLog; link?: boolean }) {
         到期日: task?.dueDate || "<空>",
         完成: task?.isDone ? "是" : "否",
         封存: task?.isArchived ? "是" : "否",
-        指派:
+        負責人:
           (task?.assigneeIds || [])
             .map((id) => getPerson(id)?.name || "<未知人員>")
             .join(", ") || "<空>",
