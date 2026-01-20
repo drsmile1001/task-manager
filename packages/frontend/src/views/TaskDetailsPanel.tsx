@@ -117,7 +117,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
               });
             }}
           >
-            指派
+            :::本工作
           </div>
         </div>
       }
