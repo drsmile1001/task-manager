@@ -36,6 +36,7 @@ export default function PersonDetailsPanel(props: PersonDetailsPanelProps) {
         <SectionLabel>名稱</SectionLabel>
         <Input
           ref={nameInputRef}
+          required
           value={person()?.name}
           onConfirm={(value) =>
             handleUpdatePerson({

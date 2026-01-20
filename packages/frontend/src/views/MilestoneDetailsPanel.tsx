@@ -150,6 +150,7 @@ export default function MilestoneDetailsPanel(
         <SectionLabel>名稱</SectionLabel>
         <Input
           ref={nameInputRef}
+          required
           value={milestone()?.name}
           onConfirm={(value) =>
             handleUpdateMilestone({

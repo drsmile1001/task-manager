@@ -155,6 +155,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
         <SectionLabel>名稱</SectionLabel>
         <Input
           ref={nameInputRef}
+          required
           value={project()?.name}
           onConfirm={(value) =>
             handleUpdateProject({

@@ -25,8 +25,14 @@ export const Input: Component<EditableInputProps> = (props) => {
   });
 
   const handleBlur = () => {
-    if (innerValue() !== local.value) {
-      local.onConfirm(innerValue());
+    const trimmedValue = innerValue().trim();
+    if (others.required && trimmedValue === "") {
+      setInnerValue(local.value || "");
+      setIsEditing(false);
+      return;
+    }
+    if (trimmedValue !== local.value) {
+      local.onConfirm(trimmedValue);
     }
     setIsEditing(false);
   };

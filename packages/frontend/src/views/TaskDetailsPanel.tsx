@@ -192,6 +192,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         <Input
           ref={nameInputRef}
           value={task()?.name}
+          required
           onConfirm={(value) =>
             handleUpdateTask({
               name: value,

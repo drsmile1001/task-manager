@@ -61,6 +61,7 @@ export default function LabelPanel() {
             <Input
               ref={(el) => nameInputRefs.set(label.id, el)}
               class="flex-1"
+              required
               value={label.name}
               onConfirm={(value) =>
                 handleUpdateLabel(label.id, {
