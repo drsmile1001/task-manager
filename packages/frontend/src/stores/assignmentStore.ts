@@ -99,9 +99,14 @@ function createAssignmentStore() {
     return state.byPersonIdAndDate[byPersonIdAndDateKey(personId, date)] || [];
   }
 
+  function getAssignment(assignmentId: string) {
+    return state.byId[assignmentId];
+  }
+
   return {
     setAssignment,
     deleteAssignment,
+    getAssignment,
     getAssignmentsByTask,
     getAssignmentsByPersonAndDate,
     loadAssignments,

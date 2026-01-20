@@ -40,9 +40,10 @@ export default function ByDaySchedule() {
   const today = format(startOfDay(new Date()), "yyyy-MM-dd");
   const currentWeekStart = format(startOfWeek(new Date()), "yyyy-MM-dd");
   const [viewStartDate, setViewStartDate] = createSignal(currentWeekStart);
-  const { getAssignmentsByPersonAndDate } = useAssignmentStore();
+  const { getAssignmentsByPersonAndDate, getAssignment } = useAssignmentStore();
   const { getTaskWithRelation } = useTaskStore();
-  const { getPlanningsByWeekStartDate } = usePlanningStore();
+  const { getPlanningsByWeekStartDate, getPlanningsByTask } =
+    usePlanningStore();
   const [showWeekPlans, setShowWeekPlans] = createSignal(true);
   const { getPerson } = usePersonStore();
   const { currentUser } = useCurrentUserStore();
@@ -247,6 +248,61 @@ export default function ByDaySchedule() {
       });
   }
 
+  async function createAssignment(
+    taskId: string,
+    personId: string,
+    date: string
+  ) {
+    const existingAssignments = getAssignmentsByPersonAndDate(personId, date);
+    if (existingAssignments.some((a) => a.taskId === taskId)) {
+      return;
+    }
+    await client.api.assignments.post({
+      id: ulid(),
+      taskId,
+      personId,
+      date,
+      acknowledged: currentUser.id === personId,
+    });
+  }
+
+  async function moveAssignment(
+    assignmentId: string,
+    toPersonId: string,
+    toDate: string
+  ) {
+    const assignment = getAssignment(assignmentId);
+    if (!assignment) {
+      return;
+    }
+    const existingAssignments = getAssignmentsByPersonAndDate(
+      toPersonId,
+      toDate
+    );
+    if (existingAssignments.some((a) => a.taskId === assignment.taskId)) {
+      return;
+    }
+    await client.api.assignments({ id: assignmentId }).patch({
+      personId: toPersonId,
+      date: toDate,
+      acknowledged: currentUser.id === toPersonId,
+    });
+  }
+
+  async function createPlanning(taskId: string, weekStartDate: string) {
+    const existingPlanning = getPlanningsByTask(taskId).find(
+      (p) => p.weekStartDate === weekStartDate
+    );
+    if (existingPlanning) {
+      return;
+    }
+    await client.api.plannings.post({
+      id: ulid(),
+      taskId,
+      weekStartDate,
+    });
+  }
+
   return (
     <div
       class="h-full w-full flex-1 p-4 overflow-hidden flex flex-col gap-4"
@@ -356,8 +412,20 @@ export default function ByDaySchedule() {
             </div>
             <div class="col-span-14 border-b border-gray-300 grid grid-cols-2">
               <For each={weekPlans()}>
-                {({ plans }) => (
-                  <div class="border-b border-r border-gray-300 p-1 grid grid-cols-7  auto-rows-min">
+                {({ plans, weekStartDate }) => (
+                  <div
+                    class="border-b border-r border-gray-300 p-1 grid grid-cols-7 auto-rows-min"
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={async (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const drag = dragContext();
+                      if (drag?.type === "TASK") {
+                        await createPlanning(drag.taskId, weekStartDate);
+                      }
+                      setDragContext(null);
+                    }}
+                  >
                     <For each={plans}>
                       {({ task, hasAssignment }) => (
                         <div
@@ -454,23 +522,13 @@ export default function ByDaySchedule() {
                         e.stopPropagation();
                         const drag = dragContext();
                         if (drag?.type === "TASK") {
-                          await client.api.assignments.post({
-                            id: ulid(),
-                            taskId: drag.taskId,
-                            personId: p.id,
-                            date: day.date,
-                            acknowledged: currentUser.id === p.id,
-                          });
+                          await createAssignment(drag.taskId, p.id, day.date);
                         } else if (drag?.type === "ASSIGNMENT") {
-                          await client.api
-                            .assignments({
-                              id: drag.assignmentId,
-                            })
-                            .patch({
-                              personId: p.id,
-                              date: day.date,
-                              acknowledged: currentUser.id === p.id,
-                            });
+                          await moveAssignment(
+                            drag.assignmentId,
+                            p.id,
+                            day.date
+                          );
                         }
                         setDragContext(null);
                       }}

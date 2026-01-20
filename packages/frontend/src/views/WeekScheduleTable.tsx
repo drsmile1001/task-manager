@@ -45,7 +45,7 @@ export default function WeekScheduleTable() {
   const [viewStartWeek, setViewStartWeek] = createSignal(currentWeekStart);
   const { nonArchivedProjects } = useProjectStore();
   const { sharedFilter } = useSharedFilterStore();
-  const { getPlanningsByWeekStartDate, getPlanningsByTask } =
+  const { getPlanningsByWeekStartDate, getPlanningsByTask, getPlanning } =
     usePlanningStore();
   const { getTaskWithRelation } = useTaskStore();
   const { dragContext, setDragContext } = useDragController();
@@ -190,17 +190,32 @@ export default function WeekScheduleTable() {
       });
   });
 
-  function setTaskPlanning(taskId: string, weekStartDate: string) {
-    const existingPlannings = getPlanningsByTask(taskId).filter(
+  async function createPlanning(taskId: string, weekStartDate: string) {
+    const existingPlanning = getPlanningsByTask(taskId).find(
       (p) => p.weekStartDate === weekStartDate
     );
-    if (existingPlannings.length > 0) {
+    if (existingPlanning) {
       return;
     }
-    client.api.plannings.post({
+    await client.api.plannings.post({
       id: ulid(),
       taskId,
       weekStartDate,
+    });
+  }
+
+  async function movePlanning(planningId: string, toWeekStartDate: string) {
+    const planning = getPlanning(planningId);
+    if (!planning) return;
+    if (planning.weekStartDate === toWeekStartDate) return;
+    const existingPlanning = getPlanningsByTask(planning.taskId).find(
+      (p) => p.weekStartDate === toWeekStartDate
+    );
+    if (existingPlanning) {
+      return;
+    }
+    await client.api.plannings({ id: planningId }).patch({
+      weekStartDate: toWeekStartDate,
     });
   }
 
@@ -307,16 +322,10 @@ export default function WeekScheduleTable() {
                         e.stopPropagation();
                         const drag = dragContext();
                         if (drag?.type === "TASK") {
-                          setTaskPlanning(drag.taskId, week.startDate);
+                          await createPlanning(drag.taskId, week.startDate);
                         }
                         if (drag?.type === "PLANNING") {
-                          client.api
-                            .plannings({
-                              id: drag.planningId,
-                            })
-                            .patch({
-                              weekStartDate: week.startDate,
-                            });
+                          await movePlanning(drag.planningId, week.startDate);
                         }
                         setDragContext(null);
                       }}
