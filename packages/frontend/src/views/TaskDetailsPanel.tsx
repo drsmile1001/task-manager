@@ -202,7 +202,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         <SectionLabel>描述</SectionLabel>
         <MarkdownTextarea
           value={task()?.description}
-          updateValue={(value) =>
+          onConfirm={(value) =>
             handleUpdateTask({
               description: value,
             })

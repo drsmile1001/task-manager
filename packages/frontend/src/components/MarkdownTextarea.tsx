@@ -1,24 +1,28 @@
 import { marked } from "marked";
-import { type JSX, createEffect, createSignal } from "solid-js";
+import { type JSX, createEffect, createSignal, splitProps } from "solid-js";
 
 import { baseInputClass } from "./Input";
 
 export interface MarkdownTextareaProps extends JSX.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  updateValue(value: string): void;
+  value: string | undefined;
+  onConfirm: (val: string) => void;
 }
 
 export function MarkdownTextarea(props: MarkdownTextareaProps) {
-  const [value, setValue] = createSignal<string>(String(props.value || ""));
-  const [editing, setEditing] = createSignal(false);
+  const [local, others] = splitProps(props, ["value", "onConfirm", "class"]);
+  const [isEditing, setIsEditing] = createSignal(false);
   const [parsed, setParsed] = createSignal("");
+  const [innerValue, setInnerValue] = createSignal("");
   let textareaRef: HTMLTextAreaElement | undefined;
 
   createEffect(() => {
-    setValue(String(props.value || ""));
+    if (!isEditing()) {
+      setInnerValue(local.value || "");
+    }
   });
 
   createEffect(async () => {
-    const parsed = await marked.parse((props.value as string) || "");
+    const parsed = await marked.parse(innerValue());
     const element = document.createElement("div");
     element.innerHTML = parsed;
     element.querySelectorAll("script").forEach((el) => el.remove());
@@ -52,41 +56,48 @@ export function MarkdownTextarea(props: MarkdownTextareaProps) {
     setParsed(element.innerHTML);
   });
 
-  let changed = false;
-
   function startEditing() {
-    changed = false;
-    setEditing(true);
+    setIsEditing(true);
     setTimeout(() => {
       textareaRef?.focus();
     }, 0);
   }
 
   function stopEditing() {
-    setEditing(false);
-    if (!changed) return;
-    props.updateValue(value());
+    const trimmedValue = innerValue().trim();
+    if (others.required && trimmedValue === "") {
+      setInnerValue(local.value || "");
+      setIsEditing(false);
+      return;
+    }
+    if (trimmedValue !== local.value) {
+      local.onConfirm(trimmedValue);
+    }
+    setIsEditing(false);
   }
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape") (e.currentTarget as HTMLTextAreaElement).blur();
+  };
 
   return (
     <>
       <textarea
+        {...others}
         ref={textareaRef}
         class={`${baseInputClass} h-32 font-mono`}
         classList={{
-          hidden: !editing(),
+          hidden: !isEditing(),
         }}
-        value={value()}
-        onInput={(e) => {
-          setValue(e.currentTarget.value ?? "");
-          changed = true;
-        }}
+        value={innerValue()}
+        onInput={(e) => setInnerValue(e.currentTarget.value)}
         onBlur={stopEditing}
+        onKeyDown={handleKeyDown}
       />
       <div
         class={`${baseInputClass} min-h-32 font-mono w-full cursor-text`}
         classList={{
-          hidden: editing(),
+          hidden: isEditing(),
         }}
         innerHTML={parsed()}
         onDblClick={startEditing}

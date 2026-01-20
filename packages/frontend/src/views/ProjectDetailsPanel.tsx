@@ -175,7 +175,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
         <SectionLabel>描述</SectionLabel>
         <MarkdownTextarea
           value={project()?.description}
-          updateValue={(value) =>
+          onConfirm={(value) =>
             handleUpdateProject({
               description: value,
             })

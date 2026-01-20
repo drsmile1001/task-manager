@@ -174,7 +174,7 @@ export default function MilestoneDetailsPanel(
         <SectionLabel>描述</SectionLabel>
         <MarkdownTextarea
           value={milestone()?.description}
-          updateValue={(value) =>
+          onConfirm={(value) =>
             handleUpdateMilestone({
               description: value,
             })

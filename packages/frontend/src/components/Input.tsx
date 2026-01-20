@@ -24,7 +24,7 @@ export const Input: Component<EditableInputProps> = (props) => {
     }
   });
 
-  const handleBlur = () => {
+  const stopEditing = () => {
     const trimmedValue = innerValue().trim();
     if (others.required && trimmedValue === "") {
       setInnerValue(local.value || "");
@@ -38,11 +38,8 @@ export const Input: Component<EditableInputProps> = (props) => {
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
-    if (e.key === "Escape") {
-      setIsEditing(false);
-      setInnerValue(local.value || "");
-    }
+    if (e.key === "Enter" || e.key === "Escape")
+      (e.currentTarget as HTMLInputElement).blur();
   };
 
   function handleFocus() {
@@ -57,7 +54,7 @@ export const Input: Component<EditableInputProps> = (props) => {
       value={innerValue()}
       onFocus={handleFocus}
       onInput={(e) => setInnerValue(e.currentTarget.value)}
-      onBlur={handleBlur}
+      onBlur={stopEditing}
       onKeyDown={handleKeyDown}
     />
   );
