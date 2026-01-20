@@ -443,6 +443,14 @@ export default function ByDaySchedule() {
                         await createPlanning(drag.taskId, weekStartDate);
                       } else if (drag?.type === "PLANNING") {
                         await movePlanning(drag.planningId, weekStartDate);
+                      } else if (drag?.type === "ASSIGNMENT") {
+                        const assignment = getAssignment(drag.assignmentId);
+                        if (assignment) {
+                          await createPlanning(
+                            assignment.taskId,
+                            weekStartDate
+                          );
+                        }
                       }
                       setDragContext(null);
                     }}
