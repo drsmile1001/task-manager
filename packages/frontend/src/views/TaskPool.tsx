@@ -5,27 +5,25 @@ import { TaskBlock } from "@frontend/components/TaskBlock";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useSharedFilterStore } from "@frontend/stores/SharedFilterStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
+import { usePreferenceStore } from "@frontend/stores/preferenceStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import {
   type TaskWithRelation,
   useTaskStore,
 } from "@frontend/stores/taskStore";
 import { format } from "date-fns";
-import { For, Show, createMemo, createSignal } from "solid-js";
+import { For, Show, createMemo } from "solid-js";
 import { ulid } from "ulid";
-
-type GroupType = "BY_PROJECT" | "BY_PROJECT_MILESTONE" | "BY_DUE_DATE";
 
 export default function TaskPool() {
   const { tasksWithRelation } = useTaskStore();
   const { sharedFilter } = useSharedFilterStore();
-  const [groupType, setGroupType] = createSignal<GroupType>("BY_PROJECT");
+  const { preference, setPreference } = usePreferenceStore();
   const { pushPanel } = usePanelController();
   const { getProject } = useProjectStore();
   const { getMilestone } = useMilestoneStore();
 
   const groupedTasks = createMemo(() => {
-    const currentGroupType = groupType();
     const grouping = tasksWithRelation()
       .filter((task) => {
         if (sharedFilter.includeDoneTasks === false && task.isDone) {
@@ -70,11 +68,11 @@ export default function TaskPool() {
       .reduce(
         (acc, task) => {
           let key = "_";
-          if (currentGroupType === "BY_PROJECT") {
+          if (preference.taskPoolGroupType === "BY_PROJECT") {
             key = task.projectId;
-          } else if (currentGroupType === "BY_PROJECT_MILESTONE") {
+          } else if (preference.taskPoolGroupType === "BY_PROJECT_MILESTONE") {
             key = `${task.projectId}::${task.milestoneId ?? "_"}`;
-          } else if (currentGroupType === "BY_DUE_DATE") {
+          } else if (preference.taskPoolGroupType === "BY_DUE_DATE") {
             key = task.dueDate ? format(task.dueDate, "yyyy-MM-dd") : "_";
           }
           if (!acc[key]) {
@@ -89,17 +87,17 @@ export default function TaskPool() {
     return Object.entries(grouping)
       .map(([key, tasks]) => {
         let group = {
-          type: currentGroupType,
+          type: preference.taskPoolGroupType,
           name: "",
           order: 0,
-          key, // 新增 key 欄位
+          key,
         };
-        if (currentGroupType === "BY_PROJECT") {
+        if (preference.taskPoolGroupType === "BY_PROJECT") {
           const project = getProject(key);
           group.name = project ? project.name : "未分類專案";
           group.order = project?.order ?? Number.MAX_SAFE_INTEGER;
         }
-        if (currentGroupType === "BY_PROJECT_MILESTONE") {
+        if (preference.taskPoolGroupType === "BY_PROJECT_MILESTONE") {
           const [projectId, milestoneId] = key.split("::");
           const milestone = getMilestone(milestoneId);
           const project = getProject(projectId);
@@ -110,7 +108,7 @@ export default function TaskPool() {
             ? new Date(milestone.dueDate).getTime()
             : Number.MAX_SAFE_INTEGER;
         }
-        if (currentGroupType === "BY_DUE_DATE") {
+        if (preference.taskPoolGroupType === "BY_DUE_DATE") {
           group.name = key === "_" ? "無到期日" : key;
           group.order =
             key === "_" ? Number.MAX_SAFE_INTEGER : new Date(key).getTime();
@@ -125,7 +123,7 @@ export default function TaskPool() {
           const dueDateB = b.dueDate
             ? new Date(b.dueDate).getTime()
             : Number.MAX_SAFE_INTEGER;
-          if (currentGroupType === "BY_PROJECT") {
+          if (preference.taskPoolGroupType === "BY_PROJECT") {
             if (priorityA !== priorityB) {
               return priorityA - priorityB;
             }
@@ -134,7 +132,7 @@ export default function TaskPool() {
             }
             return a.name.localeCompare(b.name);
           }
-          if (currentGroupType === "BY_PROJECT_MILESTONE") {
+          if (preference.taskPoolGroupType === "BY_PROJECT_MILESTONE") {
             if (priorityA !== priorityB) {
               return priorityA - priorityB;
             }
@@ -143,7 +141,7 @@ export default function TaskPool() {
             }
             return a.name.localeCompare(b.name);
           }
-          if (currentGroupType === "BY_DUE_DATE") {
+          if (preference.taskPoolGroupType === "BY_DUE_DATE") {
             if (dueDateA !== dueDateB) {
               return dueDateA - dueDateB;
             }
@@ -194,9 +192,19 @@ export default function TaskPool() {
             <input
               type="radio"
               name="groupType"
+              value="BY_DUE_DATE"
+              checked={preference.taskPoolGroupType === "BY_DUE_DATE"}
+              onInput={() => setPreference("taskPoolGroupType", "BY_DUE_DATE")}
+            />
+            <span>依到期日</span>
+          </label>
+          <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
+            <input
+              type="radio"
+              name="groupType"
               value="BY_PROJECT"
-              checked={groupType() === "BY_PROJECT"}
-              onInput={() => setGroupType("BY_PROJECT")}
+              checked={preference.taskPoolGroupType === "BY_PROJECT"}
+              onInput={() => setPreference("taskPoolGroupType", "BY_PROJECT")}
             />
             <span>依專案</span>
           </label>
@@ -205,20 +213,12 @@ export default function TaskPool() {
               type="radio"
               name="groupType"
               value="BY_MILESTONE"
-              checked={groupType() === "BY_PROJECT_MILESTONE"}
-              onInput={() => setGroupType("BY_PROJECT_MILESTONE")}
+              checked={preference.taskPoolGroupType === "BY_PROJECT_MILESTONE"}
+              onInput={() =>
+                setPreference("taskPoolGroupType", "BY_PROJECT_MILESTONE")
+              }
             />
             <span>依專案里程碑</span>
-          </label>
-          <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
-            <input
-              type="radio"
-              name="groupType"
-              value="BY_DUE_DATE"
-              checked={groupType() === "BY_DUE_DATE"}
-              onInput={() => setGroupType("BY_DUE_DATE")}
-            />
-            <span>依到期日</span>
           </label>
         </div>
       }
@@ -228,7 +228,7 @@ export default function TaskPool() {
           <div class="w-full">
             <div class="font-semibold text-gray-700 flex items-center justify-between mb-2">
               <span>{group.name}</span>
-              <Show when={groupType() === "BY_PROJECT"}>
+              <Show when={preference.taskPoolGroupType === "BY_PROJECT"}>
                 <div class="flex gap-1">
                   <Button
                     variant="secondary"
@@ -267,7 +267,9 @@ export default function TaskPool() {
                   </Button>
                 </div>
               </Show>
-              <Show when={groupType() === "BY_PROJECT_MILESTONE"}>
+              <Show
+                when={preference.taskPoolGroupType === "BY_PROJECT_MILESTONE"}
+              >
                 <div class="flex gap-1">
                   <Button
                     variant="secondary"
@@ -319,10 +321,10 @@ export default function TaskPool() {
                 {(t) => (
                   <TaskBlock
                     task={t}
-                    showProject={groupType() === "BY_DUE_DATE"}
+                    showProject={preference.taskPoolGroupType === "BY_DUE_DATE"}
                     showMilestone={
-                      groupType() === "BY_DUE_DATE" ||
-                      groupType() === "BY_PROJECT"
+                      preference.taskPoolGroupType === "BY_DUE_DATE" ||
+                      preference.taskPoolGroupType === "BY_PROJECT"
                     }
                   />
                 )}

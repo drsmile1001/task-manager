@@ -1,5 +1,3 @@
-import { createEffect, createSignal } from "solid-js";
-
 import { client } from "./client";
 import Button from "./components/Button";
 import { DragImageRenderer } from "./stores/DragController";
@@ -11,13 +9,12 @@ import { useLabelStore } from "./stores/labelStore";
 import { useMilestoneStore } from "./stores/milestoneStore";
 import { usePersonStore } from "./stores/personStore";
 import { usePlanningStore } from "./stores/planningStore";
+import { type TableType, usePreferenceStore } from "./stores/preferenceStore";
 import { useProjectStore } from "./stores/projectStore";
 import { useTaskStore } from "./stores/taskStore";
 import { sync } from "./sync";
 import ByDaySchedule from "./views/ByDaySchedule";
 import WeekScheduleTable from "./views/WeekScheduleTable";
-
-type TableType = "byDay" | "byWeek";
 
 export default function App() {
   usePanelController();
@@ -29,13 +26,11 @@ export default function App() {
   useTaskStore();
   usePlanningStore();
   useAssignmentStore();
+  const { preference, setPreference } = usePreferenceStore();
   const { currentUser, setCurrentUser } = useCurrentUserStore();
   sync();
   const { stack: panelStack } = usePanelController();
   const { openPanel } = usePanelController();
-  const [tableType, setTableType] = createSignal<TableType>(
-    localStorage.getItem("tableType") === "byWeek" ? "byWeek" : "byDay"
-  );
 
   client.api.me.get().then(({ data }) => {
     if (data) {
@@ -43,15 +38,11 @@ export default function App() {
     }
   });
 
-  createEffect(() => {
-    localStorage.setItem("tableType", tableType());
-  });
-
   function RenderTable(type: TableType) {
     switch (type) {
-      case "byDay":
+      case "BY_DAY":
         return <ByDaySchedule />;
-      case "byWeek":
+      case "BY_WEEK":
         return <WeekScheduleTable />;
     }
   }
@@ -107,10 +98,16 @@ export default function App() {
               操作記錄
             </Button>
             <hr class="my-1 w-10 border-gray-400" />
-            <Button variant="secondary" onclick={() => setTableType("byDay")}>
+            <Button
+              variant="secondary"
+              onclick={() => setPreference("tableType", "BY_DAY")}
+            >
               工作表
             </Button>
-            <Button variant="secondary" onclick={() => setTableType("byWeek")}>
+            <Button
+              variant="secondary"
+              onclick={() => setPreference("tableType", "BY_WEEK")}
+            >
               計劃表
             </Button>
             <div class="flex-1"></div>
@@ -119,7 +116,7 @@ export default function App() {
               登出
             </Button>
           </div>
-          {RenderTable(tableType())}
+          {RenderTable(preference.tableType)}
         </div>
         <Panels />
       </div>

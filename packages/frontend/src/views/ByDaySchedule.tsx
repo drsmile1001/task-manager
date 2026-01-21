@@ -10,6 +10,7 @@ import { getLabelTextColor } from "@frontend/stores/labelStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { usePlanningStore } from "@frontend/stores/planningStore";
+import { usePreferenceStore } from "@frontend/stores/preferenceStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import {
   type TaskWithRelation,
@@ -44,7 +45,7 @@ export default function ByDaySchedule() {
   const { getTaskWithRelation } = useTaskStore();
   const { getPlanningsByWeekStartDate, getPlanningsByTask, getPlanning } =
     usePlanningStore();
-  const [showWeekPlans, setShowWeekPlans] = createSignal(true);
+  const { preference, setPreference } = usePreferenceStore();
   const { getPerson } = usePersonStore();
   const { currentUser } = useCurrentUserStore();
 
@@ -362,8 +363,13 @@ export default function ByDaySchedule() {
           <label class="flex items-center gap-1">
             <input
               type="checkbox"
-              checked={showWeekPlans()}
-              onChange={(e) => setShowWeekPlans(e.currentTarget.checked)}
+              checked={preference.byDayTableShowWeekPlans}
+              onChange={(e) =>
+                setPreference(
+                  "byDayTableShowWeekPlans",
+                  e.currentTarget.checked
+                )
+              }
             />
             顯示週計劃
           </label>
@@ -425,7 +431,7 @@ export default function ByDaySchedule() {
               </div>
             )}
           </For>
-          <Show when={showWeekPlans()}>
+          <Show when={preference.byDayTableShowWeekPlans}>
             <div class="border-b border-r border-gray-300 border-r-gray-400 p-1 font-medium sticky left-0 z-[2] bg-gray-100 text-sm text-right">
               週計劃
             </div>
