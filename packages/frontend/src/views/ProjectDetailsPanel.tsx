@@ -244,12 +244,6 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
             封存的工作
           </Button>
         </div>
-
-        <SectionLabel>操作記錄</SectionLabel>
-        <PanelList items={relatedAuditLogs}>
-          {(log) => <AuditLogBlock log={log} />}
-        </PanelList>
-
         <SectionLabel>進階操作</SectionLabel>
         <div class="flex gap-2">
           <Button
@@ -266,6 +260,11 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
             </Button>
           </Show>
         </div>
+
+        <SectionLabel>操作記錄</SectionLabel>
+        <PanelList items={relatedAuditLogs}>
+          {(log) => <AuditLogBlock log={log} />}
+        </PanelList>
       </PanelSections>
     </Panel>
   );

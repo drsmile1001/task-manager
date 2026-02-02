@@ -269,11 +269,6 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
           ))}
         </div>
 
-        <SectionLabel>操作記錄</SectionLabel>
-        <PanelList items={relatedAuditLogs}>
-          {(log) => <AuditLogBlock log={log} />}
-        </PanelList>
-
         <SectionLabel>進階操作</SectionLabel>
         <div class="flex gap-2">
           <Button
@@ -290,6 +285,11 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
             </Button>
           </Show>
         </div>
+
+        <SectionLabel>操作記錄</SectionLabel>
+        <PanelList items={relatedAuditLogs}>
+          {(log) => <AuditLogBlock log={log} />}
+        </PanelList>
       </PanelSections>
     </Panel>
   );
