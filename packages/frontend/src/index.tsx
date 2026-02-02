@@ -86,6 +86,7 @@ function Callback(props: { setAuthStatus: (status: Status) => void }) {
   const code = urlParams.get("code");
   const state = urlParams.get("state");
   const storedState = localStorage.getItem("oauthState");
+  const [errorMessage, setErrorMessage] = createSignal<string | null>(null);
 
   if (state !== storedState) {
     return <div>Invalid state</div>;
@@ -100,6 +101,10 @@ function Callback(props: { setAuthStatus: (status: Status) => void }) {
       code,
       redirect_uri: `${window.location.origin}${import.meta.env.BASE_URL}callback`,
     });
+    if (result.error && result.status === 401) {
+      setErrorMessage("無法登入");
+      return;
+    }
 
     if (result.data) {
       history.replaceState(null, "", import.meta.env.BASE_URL);
@@ -110,5 +115,19 @@ function Callback(props: { setAuthStatus: (status: Status) => void }) {
 
   exchangeCodeForToken(code);
 
-  return <div>Callback Page</div>;
+  function backToLogin() {
+    document.location.href = import.meta.env.BASE_URL;
+  }
+
+  return (
+    <div class="h-screen w-screen flex flex-col items-center justify-center gap-4">
+      <Show when={!errorMessage()}>
+        <div>正在登入中...</div>
+      </Show>
+      <Show when={errorMessage()}>
+        <div>{errorMessage()}</div>
+        <Button onClick={backToLogin}>重新登入</Button>
+      </Show>
+    </div>
+  );
 }

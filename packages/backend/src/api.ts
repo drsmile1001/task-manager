@@ -110,7 +110,7 @@ export async function buildApi(logger: Logger) {
   const api = new Elysia()
     .post(
       "/api/login",
-      async ({ body, cookie }) => {
+      async ({ body, cookie, status }) => {
         const response = await fetch("https://oauth2.googleapis.com/token", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -124,7 +124,16 @@ export async function buildApi(logger: Logger) {
         });
         const data = await response.json();
         const idToken = data.id_token;
-        const userInfo = jwtDecode<{ email: string; name: string }>(idToken);
+        const userInfo = jwtDecode<{
+          email: string;
+          name: string;
+          hd: string | undefined;
+        }>(idToken);
+        if (Bun.env.GOOGLE_OAUTH_HD_RESTRICTION) {
+          if (userInfo.hd !== Bun.env.GOOGLE_OAUTH_HD_RESTRICTION) {
+            return status(401);
+          }
+        }
 
         let person = personRepo.list().find((p) => p.email === userInfo.email);
         if (!person) {
@@ -192,7 +201,7 @@ export async function buildApi(logger: Logger) {
       let requester: Person | undefined;
 
       const apiKey = headers["x-api-key"];
-      if (apiKey === Bun.env.API_KEY) {
+      if (!!apiKey && apiKey === Bun.env.API_KEY) {
         requester = {
           id: "api-key-user",
           name: "API Key User",
