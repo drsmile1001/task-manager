@@ -1,8 +1,4 @@
-import {
-  SYSTEM_USERS,
-  SYSTEM_USER_IDS,
-  getSystemUserById,
-} from "@backend/constants/SystemUsers";
+import { SYSTEM_USERS } from "@backend/constants/SystemUsers";
 import { assignmentSchema } from "@backend/schemas/Assignment";
 import {
   type ActionType,
@@ -11,12 +7,13 @@ import {
 } from "@backend/schemas/AuditLog";
 import { labelSchema } from "@backend/schemas/Label";
 import { milestoneSchema } from "@backend/schemas/Milestone";
-import { type Person, personSchema } from "@backend/schemas/Person";
+import { personSchema } from "@backend/schemas/Person";
 import { planningSchema } from "@backend/schemas/Planning";
 import { projectSchema } from "@backend/schemas/Project";
 import { taskSchema } from "@backend/schemas/Task";
 import type { MutationPublisherService } from "@backend/services/MutationPublisher";
 import type { AppRepositories } from "@backend/services/Repositories";
+import type { RequesterResolver } from "@backend/services/RequesterResolver";
 import { applyTaskCreateAssigneePolicy } from "@backend/services/TaskAssigneePolicy";
 import type { Logger } from "@backend/utils/Logger";
 import { addDays } from "date-fns";
@@ -28,8 +25,9 @@ export async function buildApi(deps: {
   logger: Logger;
   repos: AppRepositories;
   mutationPublisher: MutationPublisherService;
+  requesterResolver: RequesterResolver;
 }) {
-  const { repos, mutationPublisher } = deps;
+  const { repos, mutationPublisher, requesterResolver } = deps;
   const {
     projectRepo,
     milestoneRepo,
@@ -135,28 +133,12 @@ export async function buildApi(deps: {
         });
       }
     })
-    .derive(({ cookie, status, headers }) => {
-      let requester: Person | undefined;
-
+    .derive(async ({ cookie, status, headers }) => {
       const apiKey = headers["x-api-key"];
-      if (!!apiKey && apiKey === Bun.env.API_KEY) {
-        const apiKeyUser = getSystemUserById(SYSTEM_USER_IDS.API_KEY);
-        requester = {
-          id: SYSTEM_USER_IDS.API_KEY,
-          name: apiKeyUser?.name ?? "API Key",
-          email: "apikey@local",
-        };
-      } else {
-        const sessionId = cookie[sessionCookieKey]?.value as string | undefined;
-        if (!sessionId) throw status(401);
-        const session = sessionRepo.get(sessionId);
-        if (!session) throw status(401);
-        if (session.expiresAt < Date.now()) {
-          sessionRepo.remove(sessionId);
-          throw status(401);
-        }
-        requester = personRepo.get(session.personId);
-        if (!requester) throw status(401);
+      const sessionId = cookie[sessionCookieKey]?.value as string | undefined;
+      const requester = await requesterResolver.resolve({ apiKey, sessionId });
+      if (!requester) {
+        throw status(401);
       }
 
       async function logAction<

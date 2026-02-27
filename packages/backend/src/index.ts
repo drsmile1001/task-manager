@@ -7,6 +7,7 @@ import {
   createRepositories,
   initRepositories,
 } from "@backend/services/Repositories";
+import { RequesterResolverDefault } from "@backend/services/RequesterResolver";
 import { TaskAutoArchiveService } from "@backend/services/TaskAutoArchiveService";
 import { createDefaultLoggerFromEnv } from "@backend/utils/Logger";
 import { Elysia, file } from "elysia";
@@ -55,6 +56,10 @@ await rewriteBaseUrl("public");
 const repos = createRepositories(logger);
 await initRepositories(repos);
 const mutationPublisher = new MutationPublisherService(logger);
+const requesterResolver = new RequesterResolverDefault({
+  personRepo: repos.personRepo,
+  sessionRepo: repos.sessionRepo,
+});
 const autoArchiveEnabled = Bun.env.AUTO_ARCHIVE_ENABLED !== "0";
 const autoArchiveDays = Number(Bun.env.AUTO_ARCHIVE_DAYS ?? "7");
 const autoArchiveTimezone = Bun.env.AUTO_ARCHIVE_TZ ?? "Asia/Taipei";
@@ -79,7 +84,7 @@ const autoArchiveScheduler = new AutoArchiveScheduler({
 });
 
 const app = new Elysia()
-  .use(await buildApi({ logger, repos, mutationPublisher }))
+  .use(await buildApi({ logger, repos, mutationPublisher, requesterResolver }))
   .get("/*", async ({ path }) => {
     const allowedExtensions = [
       ".js",
