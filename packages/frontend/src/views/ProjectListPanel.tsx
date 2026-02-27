@@ -3,6 +3,7 @@ import Button from "@frontend/components/Button";
 import { checkboxLabelClass } from "@frontend/components/Checkbox";
 import Panel, { PanelList } from "@frontend/components/Panel";
 import { usePanelController } from "@frontend/stores/PanelController";
+import { compareProjectByOrderCodeName } from "@frontend/stores/projectSort";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { createMemo, createSignal } from "solid-js";
 import { ulid } from "ulid";
@@ -14,14 +15,7 @@ export default function ProjectListPanel() {
     useProjectStore()
       .projects()
       .filter((p) => (showArchived() ? true : !p.isArchived))
-      .sort((a, b) => {
-        const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
-        const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
-        if (orderA !== orderB) {
-          return orderA - orderB;
-        }
-        return a.name.localeCompare(b.name);
-      })
+      .sort(compareProjectByOrderCodeName)
   );
 
   async function createProject() {

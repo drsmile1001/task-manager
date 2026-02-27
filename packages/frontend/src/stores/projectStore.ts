@@ -5,20 +5,15 @@ import { createStore } from "solid-js/store";
 
 import type { Project } from "@backend/schemas/Project";
 
+import { compareProjectByOrderCodeName } from "./projectSort";
+
 function createProjectStore() {
   const [map, setMap] = createStore({} as Record<string, Project | undefined>);
 
   const projects = createMemo(() => {
     return Object.values(map)
       .filter((p): p is Project => p !== undefined)
-      .sort((a, b) => {
-        const aOrder = a.order ?? Number.MAX_SAFE_INTEGER;
-        const bOrder = b.order ?? Number.MAX_SAFE_INTEGER;
-        if (aOrder !== bOrder) {
-          return aOrder - bOrder;
-        }
-        return a.name.localeCompare(b.name);
-      });
+      .sort(compareProjectByOrderCodeName);
   });
 
   async function loadProjects() {

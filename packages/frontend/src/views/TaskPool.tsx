@@ -6,6 +6,7 @@ import { usePanelController } from "@frontend/stores/PanelController";
 import { useSharedFilterStore } from "@frontend/stores/SharedFilterStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { usePreferenceStore } from "@frontend/stores/preferenceStore";
+import { compareProjectByOrderCodeName } from "@frontend/stores/projectSort";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import {
   type TaskWithRelation,
@@ -93,12 +94,14 @@ export default function TaskPool() {
           type: preference.taskPoolGroupType,
           name: "",
           order: 0,
+          projectId: "",
           key,
         };
         if (preference.taskPoolGroupType === "BY_PROJECT") {
           const project = getProject(key);
           group.name = project ? project.name : "未分類專案";
           group.order = project?.order ?? Number.MAX_SAFE_INTEGER;
+          group.projectId = key;
         }
         if (preference.taskPoolGroupType === "BY_PROJECT_MILESTONE") {
           const [projectId, milestoneId] = key.split("::");
@@ -156,10 +159,14 @@ export default function TaskPool() {
             if (projectAOrder !== projectBOrder) {
               return projectAOrder - projectBOrder;
             }
-            const projectAName = a.project ? a.project.name : "";
-            const projectBName = b.project ? b.project.name : "";
-            if (projectAName !== projectBName) {
-              return projectAName.localeCompare(projectBName);
+            if (a.project && b.project) {
+              const projectCompare = compareProjectByOrderCodeName(
+                a.project,
+                b.project
+              );
+              if (projectCompare !== 0) {
+                return projectCompare;
+              }
             }
             return a.name.localeCompare(b.name);
           }
@@ -174,6 +181,19 @@ export default function TaskPool() {
       .sort((a, b) => {
         if (a.group.order !== b.group.order) {
           return a.group.order - b.group.order;
+        }
+        if (a.group.projectId && b.group.projectId) {
+          const projectA = getProject(a.group.projectId);
+          const projectB = getProject(b.group.projectId);
+          if (projectA && projectB) {
+            const projectCompare = compareProjectByOrderCodeName(
+              projectA,
+              projectB
+            );
+            if (projectCompare !== 0) {
+              return projectCompare;
+            }
+          }
         }
         return a.group.name.localeCompare(b.group.name);
       });
