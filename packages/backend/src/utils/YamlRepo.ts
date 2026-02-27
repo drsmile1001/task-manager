@@ -1,4 +1,8 @@
-import { type TObject, type TString } from "@sinclair/typebox";
+import {
+  type TObject,
+  type TProperties,
+  type TString,
+} from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import { type Static, t } from "elysia";
 
@@ -30,11 +34,17 @@ const yamlDataWithMetaSchema = t.Object({
   ),
 });
 
-export function createYamlRepo<
-  T extends TObject<{
-    id: TString;
-  }>,
->(
+function hasIdProperty<T extends TObject>(
+  schema: T
+): schema is T & TObject<{ id: TString }> {
+  if ("properties" in schema) {
+    const properties = (schema as T & TObject).properties as TProperties;
+    return "id" in properties && properties.id.type === "string";
+  }
+  return false;
+}
+
+export function createYamlRepo<T extends TObject>(
   path: string,
   schema: T,
   baseLogger: Logger,
@@ -42,6 +52,10 @@ export function createYamlRepo<
   fromYaml?: (data: Static<typeof schema>) => Static<typeof schema>,
   toYaml?: (data: Static<typeof schema>) => Static<typeof schema>
 ): YamlRepo<Static<typeof schema>> {
+  if (!hasIdProperty(schema)) {
+    throw new Error("Schema must have an 'id' property of type string");
+  }
+
   type ItemType = Static<typeof schema>;
   const cache = new Map<string, ItemType>();
   const logger = baseLogger.extend("YamlRepo", { path });

@@ -1,5 +1,5 @@
 import { Elysia, file } from "elysia";
-import { exists, readFile, readdir, writeFile } from "node:fs/promises";
+import { readFile, readdir, stat, writeFile } from "node:fs/promises";
 
 import { createDefaultLoggerFromEnv } from "../shared/Logger";
 import {
@@ -15,7 +15,9 @@ const googleClientId = Bun.env.GOOGLE_CLIENT_ID;
 const googleClientIdPlaceholder = "__GOOGLE_CLIENT_ID__";
 
 async function rewriteBaseUrl(root: string) {
-  const rootExists = await exists(root);
+  const rootExists = await stat(root)
+    .then((s) => s.isDirectory())
+    .catch(() => false);
   if (!rootExists && Bun.env.NODE_ENV !== "production") {
     return;
   }
@@ -65,7 +67,10 @@ const app = new Elysia()
       return file("public/index.html");
     }
     const filePath = `public${path}`;
-    if (await exists(filePath)) {
+    const fileExists = await stat(filePath)
+      .then((s) => s.isFile())
+      .catch(() => false);
+    if (fileExists) {
       return file(filePath);
     }
     return file("public/index.html");

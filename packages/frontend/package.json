@@ -13,23 +13,23 @@
     "test:watch": "bun test --watch test"
   },
   "dependencies": {
-    "@elysiajs/eden": "^1.4.5",
-    "@tailwindcss/vite": "^4.1.17",
+    "@elysiajs/eden": "^1.4.8",
+    "@tailwindcss/vite": "^4.2.1",
     "date-fns": "^4.1.0",
-    "ky": "^1.14.1",
-    "lodash": "^4.17.21",
-    "marked": "^17.0.1",
-    "solid-js": "^1.9.10",
-    "tailwindcss": "^4.1.17",
+    "ky": "^1.14.3",
+    "lodash": "^4.17.23",
+    "marked": "^17.0.3",
+    "solid-js": "^1.9.11",
+    "tailwindcss": "^4.2.1",
     "ulid": "^3.0.2"
   },
   "devDependencies": {
-    "@trivago/prettier-plugin-sort-imports": "^6.0.0",
-    "@types/lodash": "^4.17.21",
-    "@types/node": "^24.10.1",
-    "prettier": "^3.7.3",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+    "@types/lodash": "^4.17.24",
+    "@types/node": "^25.3.2",
+    "prettier": "^3.8.1",
     "typescript": "~5.9.3",
-    "vite": "^7.2.4",
+    "vite": "^7.3.1",
     "vite-plugin-solid": "^2.11.10"
   }
 }
