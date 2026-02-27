@@ -1,9 +1,9 @@
-import { createYamlRepo, MigrationBuilder } from "@backend/utils/YamlRepo";
+import { createDefaultLoggerFromEnv } from "@backend/utils/Logger";
+import { MigrationBuilder, createYamlRepo } from "@backend/utils/YamlRepo";
 import { expect, test } from "bun:test";
 import { t } from "elysia";
 import { tmpdir } from "node:os";
 import { ulid } from "ulid";
-import { createDefaultLoggerFromEnv } from "~shared/Logger";
 
 const sampleSchema = t.Object({
   id: t.String(),

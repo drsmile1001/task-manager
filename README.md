@@ -99,7 +99,7 @@ bun test packages/frontend/test/stores/assignmentState.test.ts -t "可刪除指�
 ## 目錄說明
 
 - `packages/backend/src`：API 與資料邏輯
-- `packages/backend/shared`：共用 logger / 工具
+- `packages/backend/src/utils`：共用 logger / 工具
 - `packages/backend/test`：backend 測試
 - `packages/frontend/src`：前端應用程式
 - `scripts/build.ts`：產出正式 `dist/` 的組裝腳本

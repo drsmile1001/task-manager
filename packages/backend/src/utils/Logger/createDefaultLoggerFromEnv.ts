@@ -1,7 +1,6 @@
+import { type LogLevel, logLevelEnum } from "@backend/utils/Logger/Logger";
+import { LoggerConsole } from "@backend/utils/Logger/LoggerConsole";
 import { Value } from "@sinclair/typebox/value";
-
-import { type LogLevel, logLevelEnum } from "./Logger";
-import { LoggerConsole } from "./LoggerConsole";
 
 export function createDefaultLoggerFromEnv() {
   let LOG_LEVEL = process.env.LOG_LEVEL;

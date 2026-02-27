@@ -1,4 +1,4 @@
-import { enumLiterals } from "~shared/utils/TypeboxHelper";
+import { enumLiterals } from "@backend/utils/TypeboxHelper";
 
 export const logLevelEnum = enumLiterals([
   "debug",

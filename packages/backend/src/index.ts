@@ -1,11 +1,14 @@
-import { Elysia, file } from "elysia";
-import { readFile, readdir, stat, writeFile } from "node:fs/promises";
-
-import { createDefaultLoggerFromEnv } from "../shared/Logger";
 import {
   buildApi,
   setCurrentBunServerPublish as setCurrentBunServer,
-} from "./api";
+} from "@backend/api";
+import {
+  createRepositories,
+  initRepositories,
+} from "@backend/services/Repositories";
+import { createDefaultLoggerFromEnv } from "@backend/utils/Logger";
+import { Elysia, file } from "elysia";
+import { readFile, readdir, stat, writeFile } from "node:fs/promises";
 
 const logger = createDefaultLoggerFromEnv();
 
@@ -47,8 +50,11 @@ async function rewriteBaseUrl(root: string) {
 
 await rewriteBaseUrl("public");
 
+const repos = createRepositories(logger);
+await initRepositories(repos);
+
 const app = new Elysia()
-  .use(await buildApi(logger))
+  .use(await buildApi({ logger, repos }))
   .get("/*", async ({ path }) => {
     const allowedExtensions = [
       ".js",

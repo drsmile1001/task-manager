@@ -19,7 +19,7 @@
 主要目錄：
 
 - `packages/backend/src`：Elysia API 與資料層。
-- `packages/backend/shared`：共用 logger、工具。
+- `packages/backend/src/utils`：共用 logger、工具。
 - `packages/backend/test`：Bun 測試。
 - `packages/frontend/src`：SolidJS 前端程式。
 - `docs/CODING_STYLE.md`：完整 coding style 規範（必讀）。

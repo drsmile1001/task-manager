@@ -1,24 +1,21 @@
-import { addDays } from "date-fns";
-import { Elysia, t } from "elysia";
-import { jwtDecode } from "jwt-decode";
-import { ulid } from "ulid";
-
-import type { Logger } from "../shared/Logger";
-import { assignmentMigrations, assignmentSchema } from "./schemas/Assignment";
+import { assignmentSchema } from "@backend/schemas/Assignment";
 import {
   type ActionType,
   type AuditLog,
   type EntityType,
-  auditLogSchema,
-} from "./schemas/AuditLog";
-import { labelSchema } from "./schemas/Label";
-import { milestoneMigrations, milestoneSchema } from "./schemas/Milestone";
-import { type Person, personMigrations, personSchema } from "./schemas/Person";
-import { planningSchema } from "./schemas/Planning";
-import { projectMigrations, projectSchema } from "./schemas/Project";
-import { sessionSchema } from "./schemas/Session";
-import { taskMigrations, taskSchema } from "./schemas/Task";
-import { createYamlRepo } from "./utils/YamlRepo";
+} from "@backend/schemas/AuditLog";
+import { labelSchema } from "@backend/schemas/Label";
+import { milestoneSchema } from "@backend/schemas/Milestone";
+import { type Person, personSchema } from "@backend/schemas/Person";
+import { planningSchema } from "@backend/schemas/Planning";
+import { projectSchema } from "@backend/schemas/Project";
+import { taskSchema } from "@backend/schemas/Task";
+import type { AppRepositories } from "@backend/services/Repositories";
+import type { Logger } from "@backend/utils/Logger";
+import { addDays } from "date-fns";
+import { Elysia, t } from "elysia";
+import { jwtDecode } from "jwt-decode";
+import { ulid } from "ulid";
 
 let currentBunServer: Bun.Server<unknown> | null = null;
 
@@ -30,64 +27,22 @@ export function setCurrentBunServerPublish(server: Bun.Server<unknown>) {
   currentBunServer = server;
 }
 
-export async function buildApi(logger: Logger) {
-  const projectRepo = createYamlRepo(
-    "data/projects.yaml",
-    projectSchema,
-    logger,
-    projectMigrations
-  );
-  await projectRepo.init();
-  const milestoneRepo = createYamlRepo(
-    "data/milestones.yaml",
-    milestoneSchema,
-    logger,
-    milestoneMigrations
-  );
-  await milestoneRepo.init();
-
-  const taskRepo = createYamlRepo(
-    "data/tasks.yaml",
-    taskSchema,
-    logger,
-    taskMigrations
-  );
-  await taskRepo.init();
-  const planningRepo = createYamlRepo(
-    "data/plannings.yaml",
-    planningSchema,
-    logger
-  );
-  await planningRepo.init();
-  const assignmentRepo = createYamlRepo(
-    "data/assignments.yaml",
-    assignmentSchema,
-    logger,
-    assignmentMigrations
-  );
-  await assignmentRepo.init();
-  const personRepo = createYamlRepo(
-    "data/persons.yaml",
-    personSchema,
-    logger,
-    personMigrations
-  );
-  await personRepo.init();
-  const labelRepo = createYamlRepo("data/labels.yaml", labelSchema, logger);
-  await labelRepo.init();
-  const sessionRepo = createYamlRepo(
-    "data/sessions.yaml",
-    sessionSchema,
-    logger
-  );
-  await sessionRepo.init();
-
-  const auditLogRepo = createYamlRepo(
-    "data/auditLogs.yaml",
-    auditLogSchema,
-    logger
-  );
-  await auditLogRepo.init();
+export async function buildApi(deps: {
+  logger: Logger;
+  repos: AppRepositories;
+}) {
+  const { logger, repos } = deps;
+  const {
+    projectRepo,
+    milestoneRepo,
+    taskRepo,
+    planningRepo,
+    assignmentRepo,
+    personRepo,
+    labelRepo,
+    sessionRepo,
+    auditLogRepo,
+  } = repos;
 
   function broadcastMutation(message: AuditLog) {
     logger.info(

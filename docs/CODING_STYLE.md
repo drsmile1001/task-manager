@@ -29,7 +29,7 @@
 
 ## 4) Import 規範
 
-- 優先使用 alias import（如 `@frontend/*`、`@backend/*`、`~shared/*`）。
+- 優先使用 alias import（如 `@frontend/*`、`@backend/*`）。
 - `import type` 與一般 import 分清楚，型別請用 type-only import。
 - import 分組與排序以 `.prettierrc.yaml` 為準，不手動插隊。
 - 非必要不要使用深層相對路徑（`../../../`）。

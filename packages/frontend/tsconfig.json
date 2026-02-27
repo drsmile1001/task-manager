@@ -3,8 +3,7 @@
     "baseUrl": ".",
     "paths": {
       "@frontend/*": ["./src/*"],
-      "@backend/*": ["../backend/.types/src/*"],
-      "~shared/*": ["../backend/.types/shared/*"]
+      "@backend/*": ["../backend/.types/src/*"]
     }
   },
   "files": [],

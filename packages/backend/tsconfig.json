@@ -5,7 +5,6 @@
     "moduleResolution": "bundler",
     "paths": {
       "@backend/*": ["./src/*"],
-      "~shared/*": ["./shared/*"],
       "~test/*": ["./test/*"]
     },
     "types": ["bun-types"],
