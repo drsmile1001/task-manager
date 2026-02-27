@@ -64,11 +64,14 @@ bun run build:backend
 # 全 workspace 格式化
 bun run format
 
-# 前端 typecheck（tsc -b）
+# 前端 typecheck（noEmit）
 bun --filter frontend typecheck
 
-# 後端 typecheck（專案目前無 script，使用 tsc 直接檢查）
-bunx tsc -p packages/backend/tsconfig.json --noEmit
+# 後端 typecheck
+bun --filter backend typecheck
+
+# 跨 workspace 型別檢查（先產生 backend .d.ts）
+bun run typecheck
 ```
 
 ## 4) 測試指令（重點：單一測試）

@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "bunx --bun vite",
-    "build": "tsc -b && bunx --bun vite build",
+    "build": "bun run typecheck && bunx --bun vite build",
     "preview": "bunx --bun vite preview",
     "format": "bunx prettier . --write",
-    "typecheck": "tsc -b",
+    "typecheck": "bun run --cwd ../backend typegen && bunx tsc -p tsconfig.app.json --noEmit && bunx tsc -p tsconfig.node.json --noEmit",
     "test": "bun test test",
     "test:watch": "bun test --watch test"
   },

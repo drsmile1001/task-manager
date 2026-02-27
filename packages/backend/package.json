@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "bun run --watch src/index.ts",
     "build": "bun build --compile --sourcemap --target bun --outfile dist/server src/index.ts",
+    "typegen": "rm -rf .types && bunx tsc -p tsconfig.types.json",
+    "typecheck": "bunx tsc -p tsconfig.json --noEmit",
     "index": "bun run src/index.ts",
     "format": "bunx prettier . --write"
   },

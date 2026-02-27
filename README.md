@@ -59,7 +59,10 @@ bun run format
 bun --filter frontend typecheck
 
 # 後端 typecheck
-bunx tsc -p packages/backend/tsconfig.json --noEmit
+bun --filter backend typecheck
+
+# 跨 workspace 型別檢查
+bun run typecheck
 ```
 
 ### 測試（Bun）

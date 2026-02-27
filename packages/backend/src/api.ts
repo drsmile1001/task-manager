@@ -2,8 +2,8 @@ import { addDays } from "date-fns";
 import { Elysia, t } from "elysia";
 import { jwtDecode } from "jwt-decode";
 import { ulid } from "ulid";
-import type { Logger } from "~shared/Logger";
 
+import type { Logger } from "../shared/Logger";
 import { assignmentMigrations, assignmentSchema } from "./schemas/Assignment";
 import {
   type ActionType,

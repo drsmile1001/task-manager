@@ -1,7 +1,8 @@
-import { t, type Static } from "elysia";
 import { type TObject, type TString } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
-import type { Logger } from "~shared/Logger";
+import { type Static, t } from "elysia";
+
+import type { Logger } from "../../shared/Logger";
 
 export interface YamlRepo<T> {
   init(): Promise<void>;
