@@ -6,18 +6,18 @@ import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
 import { format } from "date-fns";
 
-import type { Assignment } from "@backend/schemas/Assignment";
 import type {
   ActionType,
+  Assignment,
   AuditLog,
   EntityType,
-} from "@backend/schemas/AuditLog";
-import type { Label } from "@backend/schemas/Label";
-import type { Milestone } from "@backend/schemas/Milestone";
-import type { Person } from "@backend/schemas/Person";
-import type { Planning } from "@backend/schemas/Planning";
-import type { Project } from "@backend/schemas/Project";
-import type { Task } from "@backend/schemas/Task";
+  Label,
+  Milestone,
+  Person,
+  Planning,
+  Project,
+  Task,
+} from "@backend/public";
 
 const actionLabel: Record<ActionType, string> = {
   CREATE: "建立",

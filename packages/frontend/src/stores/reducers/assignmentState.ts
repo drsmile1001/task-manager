@@ -1,4 +1,4 @@
-import type { Assignment } from "@backend/schemas/Assignment";
+import type { Assignment } from "@backend/public";
 
 export type AssignmentState = {
   byId: Record<string, Assignment | undefined>;

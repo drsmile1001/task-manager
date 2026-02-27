@@ -3,7 +3,7 @@ import { singulation } from "@frontend/utils/singulation";
 import { createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import type { Person } from "@backend/schemas/Person";
+import type { Person } from "@backend/public";
 
 function createPersonStore() {
   const [map, setMap] = createStore({} as Record<string, Person | undefined>);

@@ -1,7 +1,7 @@
 import { createTaskAndOpen } from "@frontend/views/helpers/createTaskAndOpen";
 import { describe, expect, it } from "bun:test";
 
-import type { Task } from "@backend/schemas/Task";
+import type { Task } from "@backend/public";
 
 const task: Task = {
   id: "t-1",

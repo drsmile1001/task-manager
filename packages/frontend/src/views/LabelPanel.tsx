@@ -6,7 +6,7 @@ import { useLabelStore } from "@frontend/stores/labelStore";
 import { createEffect } from "solid-js";
 import { ulid } from "ulid";
 
-import type { Label } from "@backend/schemas/Label";
+import type { Label } from "@backend/public";
 
 export default function LabelPanel() {
   const labels = () => useLabelStore().labels();

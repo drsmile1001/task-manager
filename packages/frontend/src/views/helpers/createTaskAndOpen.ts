@@ -1,6 +1,6 @@
 import type { PanelOptions } from "@frontend/stores/PanelController";
 
-import type { Task } from "@backend/schemas/Task";
+import type { Task } from "@backend/public";
 
 type CreateTaskAndOpenArgs = {
   task: Task;

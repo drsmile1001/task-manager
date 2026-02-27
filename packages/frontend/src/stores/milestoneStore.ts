@@ -3,7 +3,7 @@ import { singulation } from "@frontend/utils/singulation";
 import { createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import type { Milestone } from "@backend/schemas/Milestone";
+import type { Milestone } from "@backend/public";
 
 function createMilestoneStore() {
   const [map, setMap] = createStore(

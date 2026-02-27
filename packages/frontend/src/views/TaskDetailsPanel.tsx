@@ -19,9 +19,7 @@ import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
 import { For, Show, createEffect, createMemo } from "solid-js";
 
-import type { Assignment } from "@backend/schemas/Assignment";
-import type { Planning } from "@backend/schemas/Planning";
-import type { Task } from "@backend/schemas/Task";
+import type { Assignment, Planning, Task } from "@backend/public";
 
 export type TaskDetailsPanelProps = {
   taskId: string;

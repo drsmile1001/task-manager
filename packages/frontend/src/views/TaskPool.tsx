@@ -17,7 +17,7 @@ import { format } from "date-fns";
 import { For, Show, createMemo } from "solid-js";
 import { ulid } from "ulid";
 
-import type { Task } from "@backend/schemas/Task";
+import type { Task } from "@backend/public";
 
 export default function TaskPool() {
   const { tasksWithRelation, setTask } = useTaskStore();

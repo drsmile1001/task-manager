@@ -1,7 +1,7 @@
 import { singulation } from "@frontend/utils/singulation";
 import { createStore } from "solid-js/store";
 
-import type { Person } from "@backend/schemas/Person";
+import type { Person } from "@backend/public";
 
 function createCurrentUserStore() {
   const [currentUser, setCurrentUser] = createStore<Person>({

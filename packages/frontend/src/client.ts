@@ -2,7 +2,7 @@ import { treaty } from "@elysiajs/eden";
 import { isSyncWritable } from "@frontend/stores/syncStatusStore";
 import { shouldBlockMutationRequest } from "@frontend/syncPolicy";
 
-import { type Api } from "@backend/api";
+import { type Api } from "@backend/public";
 
 export const client = treaty<Api>(
   document.location.origin + import.meta.env.BASE_URL,

@@ -3,7 +3,7 @@ import { singulation } from "@frontend/utils/singulation";
 import { createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import type { Label } from "@backend/schemas/Label";
+import type { Label } from "@backend/public";
 
 export function getLabelTextColor(backgroundColor: string): string {
   const r = parseInt(backgroundColor.slice(1, 3), 16);

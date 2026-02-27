@@ -7,7 +7,7 @@ import { useTaskStore } from "@frontend/stores/taskStore";
 import { format } from "date-fns";
 import { Show, createMemo } from "solid-js";
 
-import type { Milestone } from "@backend/schemas/Milestone";
+import type { Milestone } from "@backend/public";
 
 export function MilestoneBlock(props: {
   class?: string;

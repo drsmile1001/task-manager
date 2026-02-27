@@ -1,4 +1,4 @@
-import type { Project } from "@backend/schemas/Project";
+import type { Project } from "@backend/public";
 
 const NAME_COLLATOR = new Intl.Collator(["en", "zh-Hant"], {
   numeric: true,

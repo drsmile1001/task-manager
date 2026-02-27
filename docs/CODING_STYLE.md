@@ -40,7 +40,7 @@
 - 盡量由 schema 推導型別，而非重複手寫同型別。
 - nullable 欄位明確使用 `null`，避免 `undefined/null` 混用。
 - 需要 union 時，優先使用字串 literal union（例如 panel type）。
-- 前後端共用資料結構時，優先引用同一份 schema 型別來源。
+- 前後端共用資料結構時，前端優先從 `@backend/public` 引用公開型別入口。
 
 ## 6) 命名慣例
 

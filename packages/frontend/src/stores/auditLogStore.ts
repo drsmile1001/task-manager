@@ -3,7 +3,7 @@ import { perfEnd, perfStart } from "@frontend/utils/perf";
 import { singulation } from "@frontend/utils/singulation";
 import { createStore } from "solid-js/store";
 
-import type { AuditLog } from "@backend/schemas/AuditLog";
+import type { AuditLog } from "@backend/public";
 
 function createAuditLogStore() {
   const [logs, setLogs] = createStore([] as AuditLog[]);

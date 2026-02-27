@@ -6,7 +6,7 @@ import { usePanelController } from "@frontend/stores/PanelController";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { onMount } from "solid-js";
 
-import type { Person } from "@backend/schemas/Person";
+import type { Person } from "@backend/public";
 
 export type PersonDetailsPanelProps = {
   personId: string;

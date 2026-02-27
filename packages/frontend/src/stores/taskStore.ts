@@ -4,7 +4,7 @@ import { singulation } from "@frontend/utils/singulation";
 import { createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import type { Task } from "@backend/schemas/Task";
+import type { Task } from "@backend/public";
 
 import { useAssignmentStore } from "./assignmentStore";
 import { useLabelStore } from "./labelStore";

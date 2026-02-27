@@ -1,8 +1,6 @@
 import { perfEnd, perfStart } from "@frontend/utils/perf";
 
-import type { MutationTopic } from "@backend/api";
-import type { EntityType } from "@backend/schemas/AuditLog";
-import type { Milestone } from "@backend/schemas/Milestone";
+import type { EntityType, Milestone, MutationTopic } from "@backend/public";
 
 import { useAssignmentStore } from "./stores/assignmentStore";
 import { useAuditLogStore } from "./stores/auditLogStore";

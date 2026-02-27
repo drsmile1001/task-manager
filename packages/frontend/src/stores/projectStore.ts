@@ -3,7 +3,7 @@ import { singulation } from "@frontend/utils/singulation";
 import { createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 
-import type { Project } from "@backend/schemas/Project";
+import type { Project } from "@backend/public";
 
 import { compareProjectByOrderCodeName } from "./projectSort";
 

@@ -1,4 +1,4 @@
-import type { Planning } from "@backend/schemas/Planning";
+import type { Planning } from "@backend/public";
 
 export type PlanningState = {
   byId: Record<string, Planning | undefined>;

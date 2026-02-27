@@ -3,6 +3,7 @@
     "baseUrl": ".",
     "paths": {
       "@frontend/*": ["./src/*"],
+      "@backend/public": ["../backend/.types/src/public"],
       "@backend/*": ["../backend/.types/src/*"]
     },
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",

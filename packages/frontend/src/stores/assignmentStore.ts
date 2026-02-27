@@ -3,7 +3,7 @@ import { singulation } from "@frontend/utils/singulation";
 import { cloneDeep } from "lodash";
 import { createStore } from "solid-js/store";
 
-import type { Assignment } from "@backend/schemas/Assignment";
+import type { Assignment } from "@backend/public";
 
 import {
   buildAssignmentState,

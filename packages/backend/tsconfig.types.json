@@ -10,6 +10,6 @@
     "composite": false,
     "isolatedModules": false
   },
-  "include": ["src/**/*.ts", "shared/**/*.ts"],
+  "include": ["src/public.ts"],
   "exclude": ["test/**/*.ts", "dist", "node_modules", ".types"]
 }

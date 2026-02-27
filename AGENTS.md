@@ -156,6 +156,7 @@ bun test packages/frontend/test/stores/assignmentState.test.ts -t "可刪除指�
 - 全域狀態以 store 模式（`useXxxStore`）與 singulation 管理。
 - 面板導向互動透過 `PanelController`，新增面板請同步更新 union type 與渲染分派。
 - 呼叫 API 請沿用既有 `client`（eden treaty）與型別來源。
+- 前端若需引用 backend 型別，優先使用 `@backend/public`，避免依賴 backend 內部檔案路徑。
 
 ## 10) 安全與設定
 

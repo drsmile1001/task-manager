@@ -20,8 +20,7 @@ import { createTaskAndOpen } from "@frontend/views/helpers/createTaskAndOpen";
 import { Show, createMemo, onMount } from "solid-js";
 import { ulid } from "ulid";
 
-import type { Milestone } from "@backend/schemas/Milestone";
-import type { Task } from "@backend/schemas/Task";
+import type { Milestone, Task } from "@backend/public";
 
 export type MilestoneDetailsPanelProps = {
   milestoneId: string;
