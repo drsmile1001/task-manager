@@ -67,7 +67,7 @@ bun run typecheck
 
 ### 測試（Bun）
 
-目前測試主要在 backend。
+目前測試主要在 backend，包含 service 單元測試與 API 測試骨架。
 
 ```bash
 # 建議進入 backend 目錄
@@ -81,6 +81,9 @@ bun test test/utils/YamlRepo.test.ts
 
 # 單一測試名稱（regex）
 bun test test/utils/YamlRepo.test.ts -t "可從空白檔案讀取"
+
+# API 測試骨架（Eden + fake）
+bun test test/api.test.ts
 ```
 
 ### 前端（小規模純邏輯單元測試）
@@ -95,6 +98,14 @@ bun test packages/frontend/test/stores/assignmentState.test.ts
 # 跑單一測試名稱（regex）
 bun test packages/frontend/test/stores/assignmentState.test.ts -t "可刪除指定 taskIds"
 ```
+
+### Backend API 測試（Eden）
+
+- API 測試使用 `@elysiajs/eden` 直接呼叫 Elysia app（不需實際起 server）。
+- 測試 fake 統一放在 `packages/backend/test/fake`：
+  - `FakeRequesterResolver`：可在測試中切換當前 requester。
+  - `FakeRepositories`：集中 seed 測試資料、記錄 repo 呼叫。
+  - `FakeMutationPublisher`：收集 broadcast mutation 供斷言。
 
 ## 目錄說明
 
@@ -132,6 +143,14 @@ VITE_TM_PERF=1
 ## 已知目前 ws 問題
 
 相關文件在 `docs/WS_ISSUES.md`，包含目前已知的問題與預計解法。
+
+## API 與前端互動慣例
+
+- Backend 新增/編輯 API（`POST/PATCH`）優先回傳「最終實體結果」。
+- Frontend 面板中的新增流程，統一採用：
+  - 呼叫 API
+  - 用 `result.data` 更新對應 store
+  - 再跳轉到詳細頁（`pushPanel`）
 
 ## 定期封存任務
 

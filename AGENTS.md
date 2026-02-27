@@ -3,14 +3,14 @@
 本文件提供給在此 repo 內工作的 agent（如 OpenCode、Cursor Agent、Copilot Agent）。
 目標是讓 agent 在最少互動下，做出一致、可維護、可驗證的修改。
 
-## 1) 專案定位與開發前提
+## 專案定位與開發前提
 
 - 本系統服務對象：公司內單一部門，約 30 人以內。
 - 核心用途：綜合工作追蹤、排程安排、跨人員協作分派。
 - 維運策略：設計上應可由 1 人進行日常維護與功能迭代。
 - 開發原則：優先清晰、可讀、低複雜度，而非過度抽象化。
 
-## 2) Repo 結構（Monorepo）
+## Repo 結構（Monorepo）
 
 - runtime / package manager：Bun。
 - workspace：`packages/backend`、`packages/frontend`。
@@ -24,7 +24,7 @@
 - `packages/frontend/src`：SolidJS 前端程式。
 - `docs/CODING_STYLE.md`：完整 coding style 規範（必讀）。
 
-## 3) 安裝與開發指令
+## 安裝與開發指令
 
 在 repo 根目錄執行：
 
@@ -74,7 +74,7 @@ bun --filter backend typecheck
 bun run typecheck
 ```
 
-## 4) 測試指令（重點：單一測試）
+## 測試指令（重點：單一測試）
 
 目前測試主要在 backend，使用 `bun:test`。
 
@@ -111,7 +111,7 @@ bun test packages/frontend/test/stores/assignmentState.test.ts
 bun test packages/frontend/test/stores/assignmentState.test.ts -t "可刪除指定 taskIds"
 ```
 
-## 5) Agent 工作流程（建議）
+## Agent 工作流程（建議）
 
 1. 先讀本檔 + `docs/CODING_STYLE.md`。
 2. 先做最小可行改動（smallest useful change）。
@@ -121,7 +121,7 @@ bun test packages/frontend/test/stores/assignmentState.test.ts -t "可刪除指�
 4. 若改到 API schema 或 store，務必檢查前後端型別連動。
 5. 提交前在說明中交代：改動點、風險、驗證方式。
 
-## 6) 目前 lint / 規則現況
+## 目前 lint / 規則現況
 
 - 目前 repo 未配置 ESLint / Biome 腳本。
 - 現階段以 `prettier + sort-imports + TypeScript strict` 維持品質。
@@ -129,7 +129,7 @@ bun test packages/frontend/test/stores/assignmentState.test.ts -t "可刪除指�
   - 優先評估相容性影響。
   - 不要在無需求時進行大規模破壞式更名。
 
-## 7) Cursor / Copilot 規則檔狀態
+## Cursor / Copilot 規則檔狀態
 
 經檢查，目前 repository **不存在**以下檔案：
 
@@ -140,7 +140,7 @@ bun test packages/frontend/test/stores/assignmentState.test.ts -t "可刪除指�
 因此目前沒有額外 Cursor/Copilot 指令可覆蓋本文件。
 未來若新增上述檔案，agent 應先讀取再執行任務。
 
-## 8) Backend 改動注意事項
+## Backend 改動注意事項
 
 - API 框架：Elysia。
 - Schema 優先使用 TypeBox（`t.Object(...)`）定義，型別由 schema 推導。
@@ -149,8 +149,18 @@ bun test packages/frontend/test/stores/assignmentState.test.ts -t "可刪除指�
   - 先檢查資料存在與權限。
   - 缺資料多用 `status(404)` 或 `status(401)`。
   - 需要追蹤的 CRUD 變更要寫入 audit log。
+  - 新增/編輯 API（`POST/PATCH`）維持回傳「最終實體結果」。
 
-## 9) Frontend 改動注意事項
+- 身份解析（requester）
+  - 目前透過 `RequesterResolver` 注入，不要在 `api.ts` 寫死 cookie/api key 判斷。
+  - 正式環境使用 `RequesterResolverDefault`（由 `index.ts` 建立並注入）。
+  - API 測試可注入 fake resolver，切換不同 requester 情境。
+
+- assignment 與 task assignee 連動
+  - `POST/PATCH /api/assignments` 若 `personId` 未在 task `assigneeIds`，會自動補上。
+  - 此連動需同時記錄 `TASK UPDATE` audit log 並廣播 mutation。
+
+## Frontend 改動注意事項
 
 - 框架：SolidJS + Vite + Tailwind CSS。
 - 全域狀態以 store 模式（`useXxxStore`）與 singulation 管理。
@@ -158,7 +168,7 @@ bun test packages/frontend/test/stores/assignmentState.test.ts -t "可刪除指�
 - 呼叫 API 請沿用既有 `client`（eden treaty）與型別來源。
 - 前端若需引用 backend 型別，優先使用 `@backend/public`，避免依賴 backend 內部檔案路徑。
 
-## 10) 安全與設定
+## 安全與設定
 
 - 不提交任何 `.env` 或敏感資訊。
 - 常用環境變數（依程式碼）：
@@ -169,13 +179,23 @@ bun test packages/frontend/test/stores/assignmentState.test.ts -t "可刪除指�
   - task：封存 7 天前已完成且未封存項目。
   - milestone：封存 7 天前已到期且未封存項目（不看底下 task 是否完成）。
 
-## 11) 文件同步原則
+## 文件同步原則
 
 當你做以下修改時，請同步更新文件：
 
 - 指令變更：更新 `AGENTS.md` 與 `README.md`。
 - 風格或架構慣例變更：更新 `docs/CODING_STYLE.md`。
 - 新增 agent 規範檔（Cursor/Copilot）：在 `AGENTS.md` 補充優先順序。
+
+## Backend API 測試慣例（Eden + fake）
+
+- API 測試檔：`packages/backend/test/api.test.ts`。
+- 測試 fake 統一放 `packages/backend/test/fake/`。
+- fake 實作負責：
+  - 設定 seed 假資料
+  - 記錄呼叫（repo / resolver / publisher）
+  - 提供測試斷言所需的檢視能力
+- `test/helpers/InMemoryRepo.ts` 保持底層 helper；行為擴充集中在 fake 層。
 
 ---
 
