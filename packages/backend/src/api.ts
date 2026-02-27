@@ -17,6 +17,7 @@ import { projectSchema } from "@backend/schemas/Project";
 import { taskSchema } from "@backend/schemas/Task";
 import type { MutationPublisherService } from "@backend/services/MutationPublisher";
 import type { AppRepositories } from "@backend/services/Repositories";
+import { applyTaskCreateAssigneePolicy } from "@backend/services/TaskAssigneePolicy";
 import type { Logger } from "@backend/utils/Logger";
 import { addDays } from "date-fns";
 import { Elysia, t } from "elysia";
@@ -436,9 +437,13 @@ export async function buildApi(deps: {
     })
     .post(
       "/api/tasks",
-      async ({ body, logAction }) => {
+      async ({ body, requester, logAction }) => {
         const task = {
           ...body,
+          assigneeIds: applyTaskCreateAssigneePolicy({
+            assigneeIds: body.assigneeIds,
+            requesterId: requester.id,
+          }),
           completedAt: body.isDone ? Date.now() : null,
         };
         await taskRepo.set(task);
