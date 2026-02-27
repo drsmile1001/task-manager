@@ -26,10 +26,28 @@ function createPlanningStore() {
     const buildIndexToken = perfStart("planningStore:index.build", {
       count: result.data.length,
     });
-    setState({ byId: {}, byTaskId: {}, byWeekStartDate: {} });
-    for (const p of result.data) {
-      setPlanningInternal(p);
+    const byId: Record<string, Planning | undefined> = {};
+    const byTaskId: Record<string, Planning[]> = {};
+    const byWeekStartDate: Record<string, Planning[]> = {};
+    for (const planning of result.data) {
+      byId[planning.id] = planning;
+
+      if (!byTaskId[planning.taskId]) {
+        byTaskId[planning.taskId] = [];
+      }
+      byTaskId[planning.taskId].push(planning);
+
+      if (!byWeekStartDate[planning.weekStartDate]) {
+        byWeekStartDate[planning.weekStartDate] = [];
+      }
+      byWeekStartDate[planning.weekStartDate].push(planning);
     }
+
+    setState({
+      byId,
+      byTaskId,
+      byWeekStartDate,
+    });
     perfEnd(buildIndexToken, undefined, 1);
     perfEnd(loadToken, { count: result.data.length }, 1);
   }
@@ -86,6 +104,20 @@ function createPlanningStore() {
     );
   }
 
+  async function deletePlanningsByTaskId(taskId: string) {
+    const plannings = [...(state.byTaskId[taskId] || [])];
+    if (plannings.length === 0) return;
+
+    for (const planning of plannings) {
+      setState("byId", planning.id, undefined);
+      setState("byWeekStartDate", planning.weekStartDate, (list = []) =>
+        list.filter((item) => item.id !== planning.id)
+      );
+    }
+
+    setState("byTaskId", taskId, []);
+  }
+
   function getPlanning(id: string) {
     return state.byId[id];
   }
@@ -104,6 +136,7 @@ function createPlanningStore() {
     getPlanning,
     getPlanningsByTask,
     getPlanningsByWeekStartDate,
+    deletePlanningsByTaskId,
     loadPlannings,
   };
 }

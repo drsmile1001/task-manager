@@ -35,9 +35,14 @@ export function sync() {
   const { setProject, deleteProject } = useProjectStore();
   const { setMilestone, deleteMilestone } = useMilestoneStore();
   const { setTask, deleteTask, loadTasks } = useTaskStore();
-  const { setPlanning, deletePlanning, loadPlannings } = usePlanningStore();
-  const { setAssignment, deleteAssignment, loadAssignments } =
-    useAssignmentStore();
+  const { setPlanning, deletePlanning, deletePlanningsByTaskId } =
+    usePlanningStore();
+  const {
+    setAssignment,
+    deleteAssignment,
+    deleteAssignmentsByTaskId,
+    loadAssignments,
+  } = useAssignmentStore();
   const { addAuditLog } = useAuditLogStore();
   const mutationHandlers: Record<
     EntityType,
@@ -81,20 +86,23 @@ export function sync() {
         const taskDeleteToken = perfStart("sync:task.delete.cleanup", {
           taskId: id,
         });
-        const loadPlanningsToken = perfStart("sync:task.delete.loadPlannings", {
-          taskId: id,
-        });
-        await loadPlannings();
-        perfEnd(loadPlanningsToken, undefined, 1);
-
-        const loadAssignmentsToken = perfStart(
-          "sync:task.delete.loadAssignments",
+        const cleanupPlanningsToken = perfStart(
+          "sync:task.delete.cleanupPlannings",
           {
             taskId: id,
           }
         );
-        await loadAssignments();
-        perfEnd(loadAssignmentsToken, undefined, 1);
+        await deletePlanningsByTaskId(id);
+        perfEnd(cleanupPlanningsToken, undefined, 1);
+
+        const cleanupAssignmentsToken = perfStart(
+          "sync:task.delete.cleanupAssignments",
+          {
+            taskId: id,
+          }
+        );
+        await deleteAssignmentsByTaskId(id);
+        perfEnd(cleanupAssignmentsToken, undefined, 1);
 
         deleteTask(id);
         perfEnd(taskDeleteToken, undefined, 1);

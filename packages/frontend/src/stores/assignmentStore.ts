@@ -30,14 +30,32 @@ function createAssignmentStore() {
     const buildIndexToken = perfStart("assignmentStore:index.build", {
       count: result.data.length,
     });
-    setState({
-      byId: {},
-      byTaskId: {},
-      byPersonIdAndDate: {},
-    });
-    for (const a of result.data) {
-      setAssignmentInternal(a);
+    const byId: Record<string, Assignment | undefined> = {};
+    const byTaskId: Record<string, Assignment[]> = {};
+    const byPersonIdAndDate: Record<string, Assignment[]> = {};
+    for (const assignment of result.data) {
+      byId[assignment.id] = assignment;
+
+      if (!byTaskId[assignment.taskId]) {
+        byTaskId[assignment.taskId] = [];
+      }
+      byTaskId[assignment.taskId].push(assignment);
+
+      const personDateKey = byPersonIdAndDateKey(
+        assignment.personId,
+        assignment.date
+      );
+      if (!byPersonIdAndDate[personDateKey]) {
+        byPersonIdAndDate[personDateKey] = [];
+      }
+      byPersonIdAndDate[personDateKey].push(assignment);
     }
+
+    setState({
+      byId,
+      byTaskId,
+      byPersonIdAndDate,
+    });
     perfEnd(buildIndexToken, undefined, 1);
     perfEnd(loadToken, { count: result.data.length }, 1);
   }
@@ -102,6 +120,23 @@ function createAssignmentStore() {
     );
   }
 
+  async function deleteAssignmentsByTaskId(taskId: string) {
+    const assignments = [...(state.byTaskId[taskId] || [])];
+    if (assignments.length === 0) {
+      return;
+    }
+
+    for (const assignment of assignments) {
+      setState("byId", assignment.id, undefined);
+      const key = byPersonIdAndDateKey(assignment.personId, assignment.date);
+      setState("byPersonIdAndDate", key, (list = []) =>
+        list.filter((item) => item.id !== assignment.id)
+      );
+    }
+
+    setState("byTaskId", taskId, []);
+  }
+
   function getAssignmentsByTask(taskId: string) {
     return state.byTaskId[taskId] || [];
   }
@@ -120,6 +155,7 @@ function createAssignmentStore() {
     getAssignment,
     getAssignmentsByTask,
     getAssignmentsByPersonAndDate,
+    deleteAssignmentsByTaskId,
     loadAssignments,
   };
 }

@@ -35,6 +35,17 @@
 2. TASK 刪除改為局部清理（by taskId），避免全量 reload。
 3. 視需要將 audit log 改 lazy load（面板開啟時載入）。
 
+## 進度更新（已實作）
+
+- `assignmentStore.loadAssignments()` 已改為批次建索引後單次 `setState`。
+- `planningStore.loadPlannings()` 已改為批次建索引後單次 `setState`。
+- `sync.ts` 的 TASK DELETE 已改為局部清理：
+  - `deletePlanningsByTaskId(taskId)`
+  - `deleteAssignmentsByTaskId(taskId)`
+- 相關觀測指標名稱：
+  - `sync:task.delete.cleanupPlannings`
+  - `sync:task.delete.cleanupAssignments`
+
 ## 觀測工具使用方式
 
 前端內建 `perf` 工具，可透過 env 或 runtime 開關使用。
