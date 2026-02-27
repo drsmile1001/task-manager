@@ -1,4 +1,5 @@
 import { client } from "@frontend/client";
+import { perfEnd, perfStart } from "@frontend/utils/perf";
 import { singulation } from "@frontend/utils/singulation";
 import { cloneDeep } from "lodash";
 import { createStore } from "solid-js/store";
@@ -17,10 +18,18 @@ function createAssignmentStore() {
   }
 
   async function loadAssignments() {
+    const loadToken = perfStart("assignmentStore:load");
+    const apiToken = perfStart("assignmentStore:api.get");
     const result = await client.api.assignments.get();
+    perfEnd(apiToken, { status: result.status }, 1);
     if (result.error) {
+      perfEnd(loadToken, { error: true }, 1);
       throw new Error("Failed to load assignments");
     }
+
+    const buildIndexToken = perfStart("assignmentStore:index.build", {
+      count: result.data.length,
+    });
     setState({
       byId: {},
       byTaskId: {},
@@ -29,6 +38,8 @@ function createAssignmentStore() {
     for (const a of result.data) {
       setAssignmentInternal(a);
     }
+    perfEnd(buildIndexToken, undefined, 1);
+    perfEnd(loadToken, { count: result.data.length }, 1);
   }
   loadAssignments();
 

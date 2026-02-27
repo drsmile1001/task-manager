@@ -1,4 +1,5 @@
 import { client } from "@frontend/client";
+import { perfEnd, perfStart } from "@frontend/utils/perf";
 import { singulation } from "@frontend/utils/singulation";
 import { createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
@@ -37,13 +38,16 @@ function createTaskStore() {
   }
 
   const tasksWithRelationMap = createMemo(() => {
+    const relationToken = perfStart("taskStore:relation.recompute", {
+      taskCount: Object.values(map).filter((t) => t !== undefined).length,
+    });
     const { getProject } = useProjectStore();
     const { getPerson } = usePersonStore();
     const { getLabel } = useLabelStore();
     const { getMilestone } = useMilestoneStore();
     const { getAssignmentsByTask } = useAssignmentStore();
     const { getPlanningsByTask } = usePlanningStore();
-    return new Map(
+    const relationMap = new Map(
       Object.values(map)
         .filter((t): t is Task => t !== undefined)
         .map((task) => {
@@ -80,6 +84,8 @@ function createTaskStore() {
           ];
         })
     );
+    perfEnd(relationToken, { relationCount: relationMap.size }, 8);
+    return relationMap;
   });
 
   function getTaskWithRelation(id: string) {

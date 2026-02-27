@@ -94,5 +94,21 @@ bun test test/utils/YamlRepo.test.ts -t "可從空白檔案讀取"
 
 - 開發前先讀：`AGENTS.md`
 - 風格規範：`docs/CODING_STYLE.md`
+- 效能觀測：`docs/PERF_NOTES.md`
+
+## 前端效能觀測開關
+
+在 `packages/frontend/.env.local` 加入：
+
+```bash
+VITE_TM_PERF=1
+```
+
+瀏覽器提供 `window.__TM_PERF__` 可直接輸出當前 session 的觀測資料：
+
+- `window.__TM_PERF__.summaryByName()`
+- `window.__TM_PERF__.dump()`
+- `window.__TM_PERF__.getRecords()`
+- `window.__TM_PERF__.clear()`
 
 若文件與程式碼行為不一致，以程式碼與 `package.json` scripts 為準，並建議在同一個 PR 修正文檔。

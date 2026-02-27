@@ -1,3 +1,5 @@
+import { perfEnd, perfStart } from "@frontend/utils/perf";
+
 import type { MutationTopic } from "@backend/api";
 import type { EntityType } from "@backend/schemas/AuditLog";
 import type { Milestone } from "@backend/schemas/Milestone";
@@ -41,7 +43,7 @@ export function sync() {
     EntityType,
     {
       onCreateOrUpdate: (after: any) => void;
-      onDelete: (id: string) => void;
+      onDelete: (id: string) => void | Promise<void>;
     }
   > = {
     LABEL: {
@@ -75,10 +77,27 @@ export function sync() {
     },
     TASK: {
       onCreateOrUpdate: setTask,
-      onDelete: (id: string) => {
-        loadPlannings();
-        loadAssignments();
+      onDelete: async (id: string) => {
+        const taskDeleteToken = perfStart("sync:task.delete.cleanup", {
+          taskId: id,
+        });
+        const loadPlanningsToken = perfStart("sync:task.delete.loadPlannings", {
+          taskId: id,
+        });
+        await loadPlannings();
+        perfEnd(loadPlanningsToken, undefined, 1);
+
+        const loadAssignmentsToken = perfStart(
+          "sync:task.delete.loadAssignments",
+          {
+            taskId: id,
+          }
+        );
+        await loadAssignments();
+        perfEnd(loadAssignmentsToken, undefined, 1);
+
         deleteTask(id);
+        perfEnd(taskDeleteToken, undefined, 1);
       },
     },
     PLANNING: {
@@ -91,7 +110,7 @@ export function sync() {
     },
   };
 
-  ws.onmessage = (event) => {
+  ws.onmessage = async (event) => {
     const message = JSON.parse(event.data);
     if (message.topic === "mutations") {
       const m = message as MutationTopic;
@@ -100,7 +119,12 @@ export function sync() {
       if (action === "CREATE" || action === "UPDATE") {
         mutationHandlers[entityType].onCreateOrUpdate(m.changes.after as any);
       } else if (action === "DELETE") {
-        mutationHandlers[entityType].onDelete(m.entityId);
+        const deleteToken = perfStart("sync:mutation.delete", {
+          entityType,
+          entityId: m.entityId,
+        });
+        await mutationHandlers[entityType].onDelete(m.entityId);
+        perfEnd(deleteToken, undefined, 1);
       }
       const { topic, ...log } = m;
       addAuditLog(log);

@@ -1,4 +1,5 @@
 import { client } from "@frontend/client";
+import { perfEnd, perfStart } from "@frontend/utils/perf";
 import { singulation } from "@frontend/utils/singulation";
 import { cloneDeep } from "lodash";
 import { createStore } from "solid-js/store";
@@ -13,14 +14,24 @@ function createPlanningStore() {
   });
 
   async function loadPlannings() {
+    const loadToken = perfStart("planningStore:load");
+    const apiToken = perfStart("planningStore:api.get");
     const result = await client.api.plannings.get();
+    perfEnd(apiToken, { status: result.status }, 1);
     if (result.error) {
+      perfEnd(loadToken, { error: true }, 1);
       throw new Error("Failed to load plannings");
     }
+
+    const buildIndexToken = perfStart("planningStore:index.build", {
+      count: result.data.length,
+    });
     setState({ byId: {}, byTaskId: {}, byWeekStartDate: {} });
     for (const p of result.data) {
       setPlanningInternal(p);
     }
+    perfEnd(buildIndexToken, undefined, 1);
+    perfEnd(loadToken, { count: result.data.length }, 1);
   }
   loadPlannings();
 
