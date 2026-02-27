@@ -76,8 +76,13 @@ function createMilestoneStore() {
     );
   }
 
+  const nonArchivedMilestones = createMemo(() => {
+    return milestones().filter((milestone) => !milestone.isArchived);
+  });
+
   return {
     milestones,
+    nonArchivedMilestones,
     loadMilestones,
     setMilestone,
     deleteMilestone,

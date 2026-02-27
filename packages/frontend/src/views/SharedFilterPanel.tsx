@@ -12,10 +12,10 @@ export default function SharedFilterPanel() {
   const { persons } = usePersonStore();
   const { nonArchivedProjects, getProject } = useProjectStore();
   const { sharedFilter, setSharedFilter } = useSharedFilterStore();
-  const { milestones } = useMilestoneStore();
+  const { nonArchivedMilestones } = useMilestoneStore();
 
   function milestoneWithProjectName() {
-    return milestones().map((milestone) => {
+    return nonArchivedMilestones().map((milestone) => {
       const project = getProject(milestone.projectId);
       return {
         ...milestone,
