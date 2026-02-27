@@ -76,6 +76,7 @@ export default function MilestoneDetailsPanel(
       description: "",
       dueDate: milestone()?.dueDate || null,
       isDone: false,
+      completedAt: null,
       isArchived: false,
       labelIds: [],
       assigneeIds: [],

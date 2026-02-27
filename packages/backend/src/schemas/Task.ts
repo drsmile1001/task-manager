@@ -8,6 +8,7 @@ export const taskSchema = t.Object({
   name: t.String(),
   description: t.String(),
   isDone: t.Boolean(),
+  completedAt: t.Nullable(t.Number()),
   isArchived: t.Boolean(),
   labelIds: t.Array(t.String()),
   dueDate: t.Nullable(t.String({ format: "date" })),
@@ -22,6 +23,7 @@ export const taskMigrations = MigrationBuilder.create<{
   name: string;
   description: string;
   isDone: boolean;
+  completedAt?: number | null;
   isArchived?: boolean;
   labelIds?: string[];
 }>()
@@ -32,6 +34,7 @@ export const taskMigrations = MigrationBuilder.create<{
       name: item.name,
       description: item.description,
       isDone: item.isDone,
+      completedAt: null as number | null,
       isArchived: item.isArchived ?? false,
       labelIds: item.labelIds ?? [],
       dueDate: null as string | null,
@@ -50,4 +53,11 @@ export const taskMigrations = MigrationBuilder.create<{
       dueDate: item.dueDate ? item.dueDate.split("T")[0] : null,
     }))
   )
+  .addMigration("加入完成時間欄位", (data) => {
+    const migratedAt = Date.now();
+    return data.map((item) => ({
+      ...item,
+      completedAt: item.completedAt ?? (item.isDone ? migratedAt : null),
+    }));
+  })
   .build();

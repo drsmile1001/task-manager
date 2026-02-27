@@ -108,6 +108,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
       description: "",
       dueDate: null,
       isDone: false,
+      completedAt: null,
       isArchived: false,
       labelIds: [],
       assigneeIds: [],

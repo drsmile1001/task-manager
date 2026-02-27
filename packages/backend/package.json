@@ -14,6 +14,7 @@
   "dependencies": {
     "@sinclair/typebox": "0.34.48",
     "cac": "^6.7.14",
+    "croner": "^9.1.0",
     "date-fns": "^4.1.0",
     "elysia": "^1.4.26",
     "jwt-decode": "^4.0.0",

@@ -1,9 +1,11 @@
 import { buildApi } from "@backend/api";
+import { AutoArchiveScheduler } from "@backend/services/AutoArchiveScheduler";
 import { MutationPublisherService } from "@backend/services/MutationPublisher";
 import {
   createRepositories,
   initRepositories,
 } from "@backend/services/Repositories";
+import { TaskAutoArchiveService } from "@backend/services/TaskAutoArchiveService";
 import { createDefaultLoggerFromEnv } from "@backend/utils/Logger";
 import { Elysia, file } from "elysia";
 import { readFile, readdir, stat, writeFile } from "node:fs/promises";
@@ -51,6 +53,22 @@ await rewriteBaseUrl("public");
 const repos = createRepositories(logger);
 await initRepositories(repos);
 const mutationPublisher = new MutationPublisherService(logger);
+const autoArchiveEnabled = Bun.env.AUTO_ARCHIVE_ENABLED !== "0";
+const autoArchiveDays = Number(Bun.env.AUTO_ARCHIVE_DAYS ?? "7");
+const autoArchiveTimezone = Bun.env.AUTO_ARCHIVE_TZ ?? "Asia/Taipei";
+const taskAutoArchiveService = new TaskAutoArchiveService({
+  logger,
+  repos,
+  mutationPublisher,
+});
+const autoArchiveScheduler = new AutoArchiveScheduler({
+  logger,
+  taskAutoArchiveService,
+  enabled: autoArchiveEnabled,
+  days: autoArchiveDays,
+  timezone: autoArchiveTimezone,
+  actorId: "system-auto-archive",
+});
 
 const app = new Elysia()
   .use(await buildApi({ logger, repos, mutationPublisher }))
@@ -83,6 +101,10 @@ const app = new Elysia()
   .get("/*", () => file("public/index.html"))
   .listen(3000, (server) => {
     mutationPublisher.setServer(server);
+    autoArchiveScheduler.start();
+    if (autoArchiveEnabled) {
+      void autoArchiveScheduler.runOnce();
+    }
     logger.info(`伺服器已啟動，監聽於 http://localhost:3000${baseUrl}`);
   });
 
@@ -94,6 +116,7 @@ async function shutdown(signal: string) {
   }
   isShuttingDown = true;
   logger.info(`收到 ${signal} 信號，正在關閉伺服器...`);
+  autoArchiveScheduler.stop();
   await app.stop(true);
   logger.info("伺服器已成功關閉。");
   process.exit(0);

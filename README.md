@@ -132,3 +132,11 @@ VITE_TM_PERF=1
 ## 已知目前 ws 問題
 
 相關文件在 `docs/WS_ISSUES.md`，包含目前已知的問題與預計解法。
+
+## 定期封存任務
+
+- 後端每日 00:00（預設 `Asia/Taipei`）會自動封存「7 天前已完成且未封存」的 task。
+- 可用環境變數調整：
+  - `AUTO_ARCHIVE_ENABLED`：`1`/`0`（預設 `1`）
+  - `AUTO_ARCHIVE_DAYS`：封存天數（預設 `7`）
+  - `AUTO_ARCHIVE_TZ`：排程時區（預設 `Asia/Taipei`）

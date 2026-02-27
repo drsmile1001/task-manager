@@ -162,7 +162,7 @@ bun test packages/frontend/test/stores/assignmentState.test.ts -t "可刪除指�
 
 - 不提交任何 `.env` 或敏感資訊。
 - 常用環境變數（依程式碼）：
-  - backend: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_OAUTH_HD_RESTRICTION`, `API_KEY`, `BASE_URL`, `LOG_LEVEL`, `LOG_WITH_CONTEXT`
+  - backend: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_OAUTH_HD_RESTRICTION`, `API_KEY`, `BASE_URL`, `LOG_LEVEL`, `LOG_WITH_CONTEXT`, `AUTO_ARCHIVE_ENABLED`, `AUTO_ARCHIVE_DAYS`, `AUTO_ARCHIVE_TZ`
   - frontend: `VITE_GOOGLE_CLIENT_ID`, `BASE_URL`
 
 ## 11) 文件同步原則

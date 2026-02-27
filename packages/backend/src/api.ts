@@ -35,6 +35,7 @@ export async function buildApi(deps: {
     sessionRepo,
     auditLogRepo,
   } = repos;
+  const taskWriteSchema = t.Omit(taskSchema, ["completedAt"]);
 
   const sessionCookieKey = "task-manager-session-id";
 
@@ -427,11 +428,15 @@ export async function buildApi(deps: {
     .post(
       "/api/tasks",
       async ({ body, logAction }) => {
-        await taskRepo.set(body);
-        logAction("TASK", "CREATE", body.id, { after: body });
+        const task = {
+          ...body,
+          completedAt: body.isDone ? Date.now() : null,
+        };
+        await taskRepo.set(task);
+        logAction("TASK", "CREATE", body.id, { after: task });
       },
       {
-        body: taskSchema,
+        body: taskWriteSchema,
       }
     )
     .get("/api/tasks/:id", ({ params, status }) => {
@@ -445,6 +450,11 @@ export async function buildApi(deps: {
         const existing = taskRepo.get(params.id);
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
+        if (!existing.isDone && updated.isDone) {
+          updated.completedAt = Date.now();
+        } else if (existing.isDone && !updated.isDone) {
+          updated.completedAt = null;
+        }
         await taskRepo.set(updated);
         logAction("TASK", "UPDATE", params.id, {
           before: existing,
@@ -452,7 +462,7 @@ export async function buildApi(deps: {
         });
       },
       {
-        body: t.Partial(taskSchema),
+        body: t.Partial(taskWriteSchema),
       }
     )
     .delete("/api/tasks/:id", async ({ params, logAction }) => {
