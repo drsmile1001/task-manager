@@ -10,6 +10,7 @@ import { ulid } from "ulid";
 
 export default function ProjectListPanel() {
   const { pushPanel } = usePanelController();
+  const { setProject } = useProjectStore();
   const [showArchived, setShowArchived] = createSignal(false);
   const projects = createMemo(() =>
     useProjectStore()
@@ -20,7 +21,7 @@ export default function ProjectListPanel() {
 
   async function createProject() {
     const projectId = ulid();
-    await client.api.projects.post({
+    const result = await client.api.projects.post({
       id: projectId,
       name: "新專案",
       code: "",
@@ -28,7 +29,11 @@ export default function ProjectListPanel() {
       order: null,
       isArchived: false,
     });
-    pushPanel({ type: "PROJECT_DETAILS", projectId });
+    if (result.error || !result.data) {
+      throw new Error("CREATE_PROJECT_FAILED");
+    }
+    await setProject(result.data);
+    pushPanel({ type: "PROJECT_DETAILS", projectId: result.data.id });
   }
 
   return (

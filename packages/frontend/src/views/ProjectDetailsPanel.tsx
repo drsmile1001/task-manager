@@ -54,7 +54,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
     client.api.projects({ id: props.projectId }).patch(update);
   }
 
-  const { getMilestonesByProjectId } = useMilestoneStore();
+  const { getMilestonesByProjectId, setMilestone } = useMilestoneStore();
   const milestones = () =>
     getMilestonesByProjectId(props.projectId).filter(
       (milestone) => !milestone.isArchived
@@ -62,7 +62,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
 
   async function createMilestone() {
     const milestoneId = ulid();
-    await client.api.milestones.post({
+    const result = await client.api.milestones.post({
       id: milestoneId,
       projectId: props.projectId,
       name: "新里程碑",
@@ -70,7 +70,11 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
       description: "",
       isArchived: false,
     });
-    pushPanel({ type: "MILESTONE", milestoneId });
+    if (result.error || !result.data) {
+      throw new Error("CREATE_MILESTONE_FAILED");
+    }
+    await setMilestone(result.data);
+    pushPanel({ type: "MILESTONE", milestoneId: result.data.id });
   }
 
   const { tasksWithRelation, setTask } = useTaskStore();

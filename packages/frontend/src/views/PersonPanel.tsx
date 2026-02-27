@@ -6,18 +6,22 @@ import { usePersonStore } from "@frontend/stores/personStore";
 import { ulid } from "ulid";
 
 export default function PersonListPanel() {
-  const { persons } = usePersonStore();
+  const { persons, setPerson } = usePersonStore();
   const { pushPanel } = usePanelController();
 
   async function createPerson() {
     const userId = ulid();
-    await client.api.persons.post({
+    const result = await client.api.persons.post({
       id: userId,
       name: "新成員",
       order: undefined,
       email: "",
     });
-    pushPanel({ type: "PERSON_DETAILS", personId: userId });
+    if (result.error || !result.data) {
+      throw new Error("CREATE_PERSON_FAILED");
+    }
+    await setPerson(result.data);
+    pushPanel({ type: "PERSON_DETAILS", personId: result.data.id });
   }
 
   return (
