@@ -10,7 +10,7 @@ import { milestoneSchema } from "@backend/schemas/Milestone";
 import { personSchema } from "@backend/schemas/Person";
 import { planningSchema } from "@backend/schemas/Planning";
 import { projectSchema } from "@backend/schemas/Project";
-import { taskSchema } from "@backend/schemas/Task";
+import { type Task, taskSchema } from "@backend/schemas/Task";
 import type { MutationPublisherService } from "@backend/services/MutationPublisher";
 import type { AppRepositories } from "@backend/services/Repositories";
 import type { RequesterResolver } from "@backend/services/RequesterResolver";
@@ -383,17 +383,32 @@ export async function buildApi(deps: {
         const updated = { ...existing, ...body };
         await milestoneRepo.set(updated);
         if (body.dueDate !== undefined) {
+          const nextDueDate = body.dueDate ?? null;
           const tasks = taskRepo.list();
+          const taskUpdates: Array<{ before: Task; after: Task }> = [];
           const updatedTasks = tasks.map((task) => {
-            if (task.milestoneId === params.id) {
-              return {
-                ...task,
-                dueDate: body.dueDate ?? null,
-              };
+            if (task.milestoneId !== params.id) {
+              return task;
             }
-            return task;
+            if (task.dueDate === nextDueDate) {
+              return task;
+            }
+            const updatedTask = {
+              ...task,
+              dueDate: nextDueDate,
+            };
+            taskUpdates.push({ before: task, after: updatedTask });
+            return updatedTask;
           });
-          await taskRepo.replaceAll(updatedTasks);
+          if (taskUpdates.length > 0) {
+            await taskRepo.replaceAll(updatedTasks);
+            for (const taskUpdate of taskUpdates) {
+              await logAction("TASK", "UPDATE", taskUpdate.before.id, {
+                before: taskUpdate.before,
+                after: taskUpdate.after,
+              });
+            }
+          }
         }
         await logAction("MILESTONE", "UPDATE", params.id, {
           before: existing,
@@ -410,17 +425,28 @@ export async function buildApi(deps: {
       if (!existing) return;
       await milestoneRepo.remove(params.id);
       const tasks = taskRepo.list();
+      const taskUpdates: Array<{ before: Task; after: Task }> = [];
       const removeDeletedMilestoneTasks = tasks.map((task) => {
-        if (task.milestoneId === params.id) {
-          return {
-            ...task,
-            milestoneId: null,
-          };
+        if (task.milestoneId !== params.id) {
+          return task;
         }
-        return task;
+        const updatedTask = {
+          ...task,
+          milestoneId: null,
+        };
+        taskUpdates.push({ before: task, after: updatedTask });
+        return updatedTask;
       });
-      await taskRepo.replaceAll(removeDeletedMilestoneTasks);
-      logAction("MILESTONE", "DELETE", params.id, { before: existing });
+      if (taskUpdates.length > 0) {
+        await taskRepo.replaceAll(removeDeletedMilestoneTasks);
+        for (const taskUpdate of taskUpdates) {
+          await logAction("TASK", "UPDATE", taskUpdate.before.id, {
+            before: taskUpdate.before,
+            after: taskUpdate.after,
+          });
+        }
+      }
+      await logAction("MILESTONE", "DELETE", params.id, { before: existing });
     })
     .get("/api/tasks", () => {
       return taskRepo.list();

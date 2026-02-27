@@ -273,6 +273,14 @@ describe("api", () => {
       new Date(ctx.repos.taskRepo.get("t-1")?.dueDate as string).toISOString()
     ).toBe("2026-03-01T00:00:00.000Z");
     expect(ctx.repos.taskRepo.get("t-2")?.dueDate).toBeNull();
+    expect(
+      ctx.mutationPublisher.published.some(
+        (log) =>
+          log.entityType === "TASK" &&
+          log.entityId === "t-1" &&
+          log.action === "UPDATE"
+      )
+    ).toBe(true);
   });
 
   test("刪除 milestone 會把相關 task 的 milestoneId 清空", async () => {
@@ -311,6 +319,14 @@ describe("api", () => {
     expect(result.error).toBeNull();
     expect(ctx.repos.milestoneRepo.get("m-1")).toBeUndefined();
     expect(ctx.repos.taskRepo.get("t-1")?.milestoneId).toBeNull();
+    expect(
+      ctx.mutationPublisher.published.some(
+        (log) =>
+          log.entityType === "TASK" &&
+          log.entityId === "t-1" &&
+          log.action === "UPDATE"
+      )
+    ).toBe(true);
   });
 
   test("刪除 task 會同步刪除該 task 的 assignments", async () => {
