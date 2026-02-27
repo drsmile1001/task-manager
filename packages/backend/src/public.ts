@@ -1,4 +1,5 @@
 export type { Api } from "@backend/api";
+export type { SystemUser } from "@backend/constants/SystemUsers";
 export type { MutationTopic } from "@backend/services/MutationPublisher";
 export type { Assignment } from "@backend/schemas/Assignment";
 export type {

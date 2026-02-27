@@ -1,3 +1,8 @@
+import {
+  SYSTEM_USERS,
+  SYSTEM_USER_IDS,
+  getSystemUserById,
+} from "@backend/constants/SystemUsers";
 import { assignmentSchema } from "@backend/schemas/Assignment";
 import {
   type ActionType,
@@ -134,9 +139,10 @@ export async function buildApi(deps: {
 
       const apiKey = headers["x-api-key"];
       if (!!apiKey && apiKey === Bun.env.API_KEY) {
+        const apiKeyUser = getSystemUserById(SYSTEM_USER_IDS.API_KEY);
         requester = {
-          id: "api-key-user",
-          name: "API Key User",
+          id: SYSTEM_USER_IDS.API_KEY,
+          name: apiKeyUser?.name ?? "API Key",
           email: "apikey@local",
         };
       } else {
@@ -181,6 +187,9 @@ export async function buildApi(deps: {
     })
     .get("/api/me", ({ requester }) => {
       return requester;
+    })
+    .get("/api/system-users", () => {
+      return SYSTEM_USERS;
     })
     .ws("/ws", {
       open(ws) {

@@ -12,6 +12,7 @@ import { usePlanningStore } from "./stores/planningStore";
 import { type TableType, usePreferenceStore } from "./stores/preferenceStore";
 import { useProjectStore } from "./stores/projectStore";
 import { useSyncStatusStore } from "./stores/syncStatusStore";
+import { useSystemUserStore } from "./stores/systemUserStore";
 import { useTaskStore } from "./stores/taskStore";
 import { sync } from "./sync";
 import ByDaySchedule from "./views/ByDaySchedule";
@@ -27,6 +28,7 @@ export default function App() {
   useTaskStore();
   usePlanningStore();
   useAssignmentStore();
+  useSystemUserStore();
   const { preference, setPreference } = usePreferenceStore();
   const { currentUser, setCurrentUser } = useCurrentUserStore();
   const { state: syncState } = useSyncStatusStore();

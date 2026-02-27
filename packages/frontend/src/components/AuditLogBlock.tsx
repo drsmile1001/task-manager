@@ -3,6 +3,7 @@ import { useLabelStore } from "@frontend/stores/labelStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
+import { useSystemUserStore } from "@frontend/stores/systemUserStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
 import { format } from "date-fns";
 
@@ -75,6 +76,15 @@ export function AuditLogBlock(props: { log: AuditLog; link?: boolean }) {
   const { getMilestone } = useMilestoneStore();
   const { getTaskWithRelation } = useTaskStore();
   const { getLabel } = useLabelStore();
+  const { getSystemUser } = useSystemUserStore();
+
+  function actorName() {
+    return (
+      getPerson(log.userId)?.name ||
+      getSystemUser(log.userId)?.name ||
+      `未知使用者(${log.userId})`
+    );
+  }
 
   const entityTypeRenderers: Record<
     EntityType,
@@ -220,7 +230,7 @@ export function AuditLogBlock(props: { log: AuditLog; link?: boolean }) {
         }}
       >
         <div>{format(log.timestamp, "yyyy-MM-dd HH:mm:ss")}</div>
-        <div>{getPerson(log.userId)?.name}</div>
+        <div>{actorName()}</div>
         <div>{actionLabel[log.action]}</div>
         <div>{matchedRenderer.name}</div>
       </div>

@@ -1,4 +1,5 @@
 import { buildApi } from "@backend/api";
+import { SYSTEM_USER_IDS } from "@backend/constants/SystemUsers";
 import { AutoArchiveScheduler } from "@backend/services/AutoArchiveScheduler";
 import { MilestoneAutoArchiveService } from "@backend/services/MilestoneAutoArchiveService";
 import { MutationPublisherService } from "@backend/services/MutationPublisher";
@@ -74,7 +75,7 @@ const autoArchiveScheduler = new AutoArchiveScheduler({
   enabled: autoArchiveEnabled,
   days: autoArchiveDays,
   timezone: autoArchiveTimezone,
-  actorId: "system-auto-archive",
+  actorId: SYSTEM_USER_IDS.AUTO_ARCHIVE,
 });
 
 const app = new Elysia()

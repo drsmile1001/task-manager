@@ -1,3 +1,4 @@
+import { SYSTEM_USER_IDS } from "@backend/constants/SystemUsers";
 import type { AuditLog } from "@backend/schemas/AuditLog";
 import type { Task } from "@backend/schemas/Task";
 import { MutationPublisherService } from "@backend/services/MutationPublisher";
@@ -72,7 +73,7 @@ test("可封存 7 天前完成且尚未封存的 task", async () => {
 
   const archivedCount = await service.archiveCompletedTasksBefore(
     cutoffMs,
-    "system-auto-archive"
+    SYSTEM_USER_IDS.AUTO_ARCHIVE
   );
 
   expect(archivedCount).toBe(1);

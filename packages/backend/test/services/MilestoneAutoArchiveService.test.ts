@@ -1,3 +1,4 @@
+import { SYSTEM_USER_IDS } from "@backend/constants/SystemUsers";
 import type { AuditLog } from "@backend/schemas/AuditLog";
 import type { Milestone } from "@backend/schemas/Milestone";
 import { MilestoneAutoArchiveService } from "@backend/services/MilestoneAutoArchiveService";
@@ -55,7 +56,7 @@ test("可封存 7 天前到期且尚未封存的里程碑", async () => {
 
   const archivedCount = await service.archiveByDueDateBefore(
     "2026-02-03",
-    "system-auto-archive"
+    SYSTEM_USER_IDS.AUTO_ARCHIVE
   );
 
   expect(archivedCount).toBe(1);
