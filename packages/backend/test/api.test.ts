@@ -200,6 +200,18 @@ describe("api", () => {
             acknowledged: false,
           },
         ],
+        plannings: [
+          {
+            id: "pl-1",
+            taskId: "t-1",
+            weekStartDate: "2026-02-23",
+          },
+          {
+            id: "pl-2",
+            taskId: "t-2",
+            weekStartDate: "2026-02-23",
+          },
+        ],
       },
     });
 
@@ -209,11 +221,13 @@ describe("api", () => {
     expect(ctx.repos.projectRepo.get("p-1")).toBeUndefined();
     expect(ctx.repos.taskRepo.get("t-1")).toBeUndefined();
     expect(ctx.repos.assignmentRepo.get("a-1")).toBeUndefined();
+    expect(ctx.repos.planningRepo.get("pl-1")).toBeUndefined();
     expect(ctx.repos.milestoneRepo.get("m-1")).toBeUndefined();
 
     expect(ctx.repos.projectRepo.get("p-2")?.id).toBe("p-2");
     expect(ctx.repos.taskRepo.get("t-2")?.id).toBe("t-2");
     expect(ctx.repos.assignmentRepo.get("a-2")?.id).toBe("a-2");
+    expect(ctx.repos.planningRepo.get("pl-2")?.id).toBe("pl-2");
     expect(ctx.repos.milestoneRepo.get("m-2")?.id).toBe("m-2");
   });
 
@@ -377,6 +391,18 @@ describe("api", () => {
             acknowledged: false,
           },
         ],
+        plannings: [
+          {
+            id: "pl-1",
+            taskId: "t-1",
+            weekStartDate: "2026-02-23",
+          },
+          {
+            id: "pl-2",
+            taskId: "t-2",
+            weekStartDate: "2026-02-23",
+          },
+        ],
       },
     });
 
@@ -384,7 +410,9 @@ describe("api", () => {
     expect(result.error).toBeNull();
     expect(ctx.repos.taskRepo.get("t-1")).toBeUndefined();
     expect(ctx.repos.assignmentRepo.get("a-1")).toBeUndefined();
+    expect(ctx.repos.planningRepo.get("pl-1")).toBeUndefined();
     expect(ctx.repos.assignmentRepo.get("a-2")?.id).toBe("a-2");
+    expect(ctx.repos.planningRepo.get("pl-2")?.id).toBe("pl-2");
   });
 
   test("刪除 label 會從 task labelIds 移除該 label", async () => {

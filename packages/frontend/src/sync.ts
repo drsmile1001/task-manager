@@ -63,6 +63,7 @@ export function sync() {
     deleteTasksByProjectId,
     applyMilestoneDueDateToTasks,
     clearMilestoneFromTasks,
+    removeLabelFromTasks,
     loadTasks,
   } = useTaskStore();
   const {
@@ -171,7 +172,10 @@ export function sync() {
   > = {
     LABEL: {
       onCreateOrUpdate: setLabel,
-      onDelete: deleteLabel,
+      onDelete: (id: string) => {
+        removeLabelFromTasks(id);
+        deleteLabel(id);
+      },
     },
     PERSON: {
       onCreateOrUpdate: setPerson,

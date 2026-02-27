@@ -104,6 +104,28 @@ function createTaskStore() {
     setMap(Object.fromEntries(updatedTasks.map((task) => [task.id, task])));
   }
 
+  function removeLabelFromTasks(labelId: string) {
+    let hasUpdated = false;
+    const updatedTasks = Object.values(map)
+      .filter((task): task is Task => !!task)
+      .map((task) => {
+        if (!task.labelIds.includes(labelId)) {
+          return task;
+        }
+        hasUpdated = true;
+        return {
+          ...task,
+          labelIds: task.labelIds.filter((id) => id !== labelId),
+        };
+      });
+
+    if (!hasUpdated) {
+      return;
+    }
+
+    setMap(Object.fromEntries(updatedTasks.map((task) => [task.id, task])));
+  }
+
   function getTask(id: string): Task | undefined {
     return map[id];
   }
@@ -176,6 +198,7 @@ function createTaskStore() {
     loadTasks,
     applyMilestoneDueDateToTasks,
     clearMilestoneFromTasks,
+    removeLabelFromTasks,
     getTaskWithRelation,
     tasksWithRelation,
   };

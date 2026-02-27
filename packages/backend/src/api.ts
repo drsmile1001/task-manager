@@ -251,7 +251,7 @@ export async function buildApi(deps: {
         return task;
       });
       await taskRepo.replaceAll(removedLabelTasks);
-      logAction("LABEL", "DELETE", params.id, { before: existing });
+      await logAction("LABEL", "DELETE", params.id, { before: existing });
     })
     .get("/api/persons", () => {
       return personRepo.list();
@@ -298,7 +298,7 @@ export async function buildApi(deps: {
         (a) => a.personId !== params.id
       );
       await assignmentRepo.replaceAll(otherPersonAssignments);
-      logAction("PERSON", "DELETE", params.id, { before: existing });
+      await logAction("PERSON", "DELETE", params.id, { before: existing });
     })
     .get("/api/projects", () => {
       return projectRepo.list();
@@ -349,12 +349,17 @@ export async function buildApi(deps: {
         otherProjectTaskIdSet.has(a.taskId)
       );
       await assignmentRepo.replaceAll(otherProjectAssignments);
+      const plannings = planningRepo.list();
+      const otherProjectPlannings = plannings.filter((planning) =>
+        otherProjectTaskIdSet.has(planning.taskId)
+      );
+      await planningRepo.replaceAll(otherProjectPlannings);
       const milestones = milestoneRepo.list();
       const otherProjectMilestones = milestones.filter(
         (m) => m.projectId !== params.id
       );
       await milestoneRepo.replaceAll(otherProjectMilestones);
-      logAction("PROJECT", "DELETE", params.id, { before: existing });
+      await logAction("PROJECT", "DELETE", params.id, { before: existing });
     })
     .get("/api/milestones", () => {
       return milestoneRepo.list();
@@ -506,7 +511,12 @@ export async function buildApi(deps: {
         (a) => a.taskId !== params.id
       );
       await assignmentRepo.replaceAll(otherTaskAssignments);
-      logAction("TASK", "DELETE", params.id, { before: existing });
+      const plannings = planningRepo.list();
+      const otherTaskPlannings = plannings.filter(
+        (p) => p.taskId !== params.id
+      );
+      await planningRepo.replaceAll(otherTaskPlannings);
+      await logAction("TASK", "DELETE", params.id, { before: existing });
     })
     .get("/api/plannings", () => {
       return planningRepo.list();
@@ -548,7 +558,7 @@ export async function buildApi(deps: {
       const existing = planningRepo.get(params.id);
       if (!existing) return;
       await planningRepo.remove(params.id);
-      logAction("PLANNING", "DELETE", params.id, { before: existing });
+      await logAction("PLANNING", "DELETE", params.id, { before: existing });
     })
     .get("/api/assignments", () => {
       return assignmentRepo.list();
@@ -617,7 +627,7 @@ export async function buildApi(deps: {
       const existing = assignmentRepo.get(params.id);
       if (!existing) return;
       await assignmentRepo.remove(params.id);
-      logAction("ASSIGNMENT", "DELETE", params.id, { before: existing });
+      await logAction("ASSIGNMENT", "DELETE", params.id, { before: existing });
     })
     .get("/api/audit-logs", () => {
       const logs = auditLogRepo.list();
