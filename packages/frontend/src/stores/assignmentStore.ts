@@ -5,46 +5,19 @@ import { createStore } from "solid-js/store";
 
 import type { Assignment } from "@backend/schemas/Assignment";
 
+import {
+  buildAssignmentState,
+  byPersonIdAndDateKey,
+  deleteAssignmentsByPersonId as reduceDeleteAssignmentsByPersonId,
+  deleteAssignmentsByTaskIds as reduceDeleteAssignmentsByTaskIds,
+} from "./reducers/assignmentState";
+
 function createAssignmentStore() {
   const [state, setState] = createStore({
     byId: {} as Record<string, Assignment | undefined>,
     byTaskId: {} as Record<string, Assignment[]>,
     byPersonIdAndDate: {} as Record<string, Assignment[]>,
   });
-
-  function buildAssignmentState(assignments: Assignment[]) {
-    const byId: Record<string, Assignment | undefined> = {};
-    const byTaskId: Record<string, Assignment[]> = {};
-    const byPersonIdAndDate: Record<string, Assignment[]> = {};
-
-    for (const assignment of assignments) {
-      byId[assignment.id] = assignment;
-
-      if (!byTaskId[assignment.taskId]) {
-        byTaskId[assignment.taskId] = [];
-      }
-      byTaskId[assignment.taskId].push(assignment);
-
-      const personDateKey = byPersonIdAndDateKey(
-        assignment.personId,
-        assignment.date
-      );
-      if (!byPersonIdAndDate[personDateKey]) {
-        byPersonIdAndDate[personDateKey] = [];
-      }
-      byPersonIdAndDate[personDateKey].push(assignment);
-    }
-
-    return {
-      byId,
-      byTaskId,
-      byPersonIdAndDate,
-    };
-  }
-
-  function byPersonIdAndDateKey(personId: string, date: string) {
-    return `${personId}::${date}`;
-  }
 
   async function loadAssignments() {
     const result = await client.api.assignments.get();
@@ -115,15 +88,7 @@ function createAssignmentStore() {
   }
 
   async function deleteAssignmentsByTaskIds(taskIds: string[]) {
-    if (taskIds.length === 0) {
-      return;
-    }
-    const taskIdSet = new Set(taskIds);
-    const remainedAssignments = Object.values(state.byId).filter(
-      (assignment): assignment is Assignment =>
-        !!assignment && !taskIdSet.has(assignment.taskId)
-    );
-    setState(buildAssignmentState(remainedAssignments));
+    setState(reduceDeleteAssignmentsByTaskIds(state, taskIds));
   }
 
   async function deleteAssignmentsByTaskId(taskId: string) {
@@ -131,17 +96,7 @@ function createAssignmentStore() {
   }
 
   async function deleteAssignmentsByPersonId(personId: string) {
-    const currentAssignments = Object.values(state.byId).filter(
-      (assignment): assignment is Assignment => !!assignment
-    );
-    const remainedAssignments = Object.values(state.byId).filter(
-      (assignment): assignment is Assignment =>
-        !!assignment && assignment.personId !== personId
-    );
-    if (remainedAssignments.length === currentAssignments.length) {
-      return;
-    }
-    setState(buildAssignmentState(remainedAssignments));
+    setState(reduceDeleteAssignmentsByPersonId(state, personId));
   }
 
   function getAssignmentsByTask(taskId: string) {

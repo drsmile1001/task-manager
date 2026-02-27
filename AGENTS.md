@@ -95,6 +95,19 @@ bun test test/utils/YamlRepo.test.ts -t "可從空白檔案讀取"
 bun test packages/backend/test/utils/YamlRepo.test.ts
 ```
 
+前端目前有小規模純邏輯測試（reducers/helpers），同樣使用 `bun:test`：
+
+```bash
+# 在 repo root 執行
+bun --filter frontend test
+
+# 跑單一前端測試檔
+bun test packages/frontend/test/stores/assignmentState.test.ts
+
+# 跑單一測試名稱（regex）
+bun test packages/frontend/test/stores/assignmentState.test.ts -t "可刪除指定 taskIds"
+```
+
 ## 5) Agent 工作流程（建議）
 
 1. 先讀本檔 + `docs/CODING_STYLE.md`。

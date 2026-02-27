@@ -80,6 +80,19 @@ bun test test/utils/YamlRepo.test.ts
 bun test test/utils/YamlRepo.test.ts -t "可從空白檔案讀取"
 ```
 
+### 前端（小規模純邏輯單元測試）
+
+```bash
+# 於 root 執行
+bun --filter frontend test
+
+# 跑單一測試檔
+bun test packages/frontend/test/stores/assignmentState.test.ts
+
+# 跑單一測試名稱（regex）
+bun test packages/frontend/test/stores/assignmentState.test.ts -t "可刪除指定 taskIds"
+```
+
 ## 目錄說明
 
 - `packages/backend/src`：API 與資料邏輯

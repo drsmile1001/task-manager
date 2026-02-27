@@ -5,38 +5,17 @@ import { createStore } from "solid-js/store";
 
 import type { Planning } from "@backend/schemas/Planning";
 
+import {
+  buildPlanningState,
+  deletePlanningsByTaskIds as reduceDeletePlanningsByTaskIds,
+} from "./reducers/planningState";
+
 function createPlanningStore() {
   const [state, setState] = createStore({
     byId: {} as Record<string, Planning | undefined>,
     byTaskId: {} as Record<string, Planning[]>,
     byWeekStartDate: {} as Record<string, Planning[]>,
   });
-
-  function buildPlanningState(plannings: Planning[]) {
-    const byId: Record<string, Planning | undefined> = {};
-    const byTaskId: Record<string, Planning[]> = {};
-    const byWeekStartDate: Record<string, Planning[]> = {};
-
-    for (const planning of plannings) {
-      byId[planning.id] = planning;
-
-      if (!byTaskId[planning.taskId]) {
-        byTaskId[planning.taskId] = [];
-      }
-      byTaskId[planning.taskId].push(planning);
-
-      if (!byWeekStartDate[planning.weekStartDate]) {
-        byWeekStartDate[planning.weekStartDate] = [];
-      }
-      byWeekStartDate[planning.weekStartDate].push(planning);
-    }
-
-    return {
-      byId,
-      byTaskId,
-      byWeekStartDate,
-    };
-  }
 
   async function loadPlannings() {
     const result = await client.api.plannings.get();
@@ -103,15 +82,7 @@ function createPlanningStore() {
   }
 
   async function deletePlanningsByTaskIds(taskIds: string[]) {
-    if (taskIds.length === 0) {
-      return;
-    }
-    const taskIdSet = new Set(taskIds);
-    const remainedPlannings = Object.values(state.byId).filter(
-      (planning): planning is Planning =>
-        !!planning && !taskIdSet.has(planning.taskId)
-    );
-    setState(buildPlanningState(remainedPlannings));
+    setState(reduceDeletePlanningsByTaskIds(state, taskIds));
   }
 
   function getPlanning(id: string) {

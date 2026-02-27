@@ -8,7 +8,9 @@
     "build": "tsc -b && bunx --bun vite build",
     "preview": "bunx --bun vite preview",
     "format": "bunx prettier . --write",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "test": "bun test test",
+    "test:watch": "bun test --watch test"
   },
   "dependencies": {
     "@elysiajs/eden": "^1.4.5",
