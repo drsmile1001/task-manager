@@ -181,9 +181,32 @@ export async function buildApi(deps: {
         mutationPublisher.publish(auditLog);
       }
 
+      async function syncTaskAssigneeFromAssignment(assignment: {
+        taskId: string;
+        personId: string;
+      }) {
+        const existingTask = taskRepo.get(assignment.taskId);
+        if (!existingTask) {
+          return;
+        }
+        if (existingTask.assigneeIds.includes(assignment.personId)) {
+          return;
+        }
+        const updatedTask = {
+          ...existingTask,
+          assigneeIds: [...existingTask.assigneeIds, assignment.personId],
+        };
+        await taskRepo.set(updatedTask);
+        await logAction("TASK", "UPDATE", existingTask.id, {
+          before: existingTask,
+          after: updatedTask,
+        });
+      }
+
       return {
         requester,
         logAction,
+        syncTaskAssigneeFromAssignment,
       };
     })
     .get("/api/me", ({ requester }) => {
@@ -547,8 +570,9 @@ export async function buildApi(deps: {
     })
     .post(
       "/api/assignments",
-      async ({ body, logAction }) => {
+      async ({ body, logAction, syncTaskAssigneeFromAssignment }) => {
         await assignmentRepo.set(body);
+        await syncTaskAssigneeFromAssignment(body);
         await logAction("ASSIGNMENT", "CREATE", body.id, { after: body });
         return body;
       },
@@ -563,11 +587,18 @@ export async function buildApi(deps: {
     })
     .patch(
       "/api/assignments/:id",
-      async ({ params, body, status, logAction }) => {
+      async ({
+        params,
+        body,
+        status,
+        logAction,
+        syncTaskAssigneeFromAssignment,
+      }) => {
         const existing = assignmentRepo.get(params.id);
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await assignmentRepo.set(updated);
+        await syncTaskAssigneeFromAssignment(updated);
         await logAction("ASSIGNMENT", "UPDATE", params.id, {
           before: existing,
           after: updated,
