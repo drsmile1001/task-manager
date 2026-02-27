@@ -125,3 +125,7 @@ VITE_TM_PERF=1
 - `window.__TM_PERF__.clear()`
 
 若文件與程式碼行為不一致，以程式碼與 `package.json` scripts 為準，並建議在同一個 PR 修正文檔。
+
+## 已知目前 ws 問題
+
+相關文件在 `docs/WS_ISSUES.md`，包含目前已知的問題與預計解法。
