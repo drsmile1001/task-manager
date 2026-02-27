@@ -225,7 +225,8 @@ export async function buildApi(deps: {
       "/api/labels",
       async ({ body, logAction }) => {
         await labelRepo.set(body);
-        logAction("LABEL", "CREATE", body.id, { after: body });
+        await logAction("LABEL", "CREATE", body.id, { after: body });
+        return body;
       },
       {
         body: labelSchema,
@@ -243,10 +244,11 @@ export async function buildApi(deps: {
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await labelRepo.set(updated);
-        logAction("LABEL", "UPDATE", params.id, {
+        await logAction("LABEL", "UPDATE", params.id, {
           before: existing,
           after: updated,
         });
+        return updated;
       },
       {
         body: t.Partial(labelSchema),
@@ -276,7 +278,8 @@ export async function buildApi(deps: {
       "/api/persons",
       async ({ body, logAction }) => {
         await personRepo.set(body);
-        logAction("PERSON", "CREATE", body.id, { after: body });
+        await logAction("PERSON", "CREATE", body.id, { after: body });
+        return body;
       },
       {
         body: personSchema,
@@ -294,10 +297,11 @@ export async function buildApi(deps: {
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await personRepo.set(updated);
-        logAction("PERSON", "UPDATE", params.id, {
+        await logAction("PERSON", "UPDATE", params.id, {
           before: existing,
           after: updated,
         });
+        return updated;
       },
       {
         body: t.Partial(personSchema),
@@ -321,7 +325,8 @@ export async function buildApi(deps: {
       "/api/projects",
       async ({ body, logAction }) => {
         await projectRepo.set(body);
-        logAction("PROJECT", "CREATE", body.id, { after: body });
+        await logAction("PROJECT", "CREATE", body.id, { after: body });
+        return body;
       },
       {
         body: projectSchema,
@@ -339,10 +344,11 @@ export async function buildApi(deps: {
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await projectRepo.set(updated);
-        logAction("PROJECT", "UPDATE", params.id, {
+        await logAction("PROJECT", "UPDATE", params.id, {
           before: existing,
           after: updated,
         });
+        return updated;
       },
       {
         body: t.Partial(projectSchema),
@@ -375,7 +381,8 @@ export async function buildApi(deps: {
       "/api/milestones",
       async ({ body, logAction }) => {
         await milestoneRepo.set(body);
-        logAction("MILESTONE", "CREATE", body.id, { after: body });
+        await logAction("MILESTONE", "CREATE", body.id, { after: body });
+        return body;
       },
       {
         body: milestoneSchema,
@@ -406,10 +413,11 @@ export async function buildApi(deps: {
           });
           await taskRepo.replaceAll(updatedTasks);
         }
-        logAction("MILESTONE", "UPDATE", params.id, {
+        await logAction("MILESTONE", "UPDATE", params.id, {
           before: existing,
           after: updated,
         });
+        return updated;
       },
       {
         body: t.Partial(milestoneSchema),
@@ -471,10 +479,11 @@ export async function buildApi(deps: {
           updated.completedAt = null;
         }
         await taskRepo.set(updated);
-        logAction("TASK", "UPDATE", params.id, {
+        await logAction("TASK", "UPDATE", params.id, {
           before: existing,
           after: updated,
         });
+        return updated;
       },
       {
         body: t.Partial(taskWriteSchema),
@@ -498,7 +507,8 @@ export async function buildApi(deps: {
       "/api/plannings",
       async ({ body, logAction }) => {
         await planningRepo.set(body);
-        logAction("PLANNING", "CREATE", body.id, { after: body });
+        await logAction("PLANNING", "CREATE", body.id, { after: body });
+        return body;
       },
       {
         body: planningSchema,
@@ -516,10 +526,11 @@ export async function buildApi(deps: {
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await planningRepo.set(updated);
-        logAction("PLANNING", "UPDATE", params.id, {
+        await logAction("PLANNING", "UPDATE", params.id, {
           before: existing,
           after: updated,
         });
+        return updated;
       },
       {
         body: t.Partial(planningSchema),
@@ -538,7 +549,8 @@ export async function buildApi(deps: {
       "/api/assignments",
       async ({ body, logAction }) => {
         await assignmentRepo.set(body);
-        logAction("ASSIGNMENT", "CREATE", body.id, { after: body });
+        await logAction("ASSIGNMENT", "CREATE", body.id, { after: body });
+        return body;
       },
       {
         body: assignmentSchema,
@@ -556,10 +568,11 @@ export async function buildApi(deps: {
         if (!existing) return status(404);
         const updated = { ...existing, ...body };
         await assignmentRepo.set(updated);
-        logAction("ASSIGNMENT", "UPDATE", params.id, {
+        await logAction("ASSIGNMENT", "UPDATE", params.id, {
           before: existing,
           after: updated,
         });
+        return updated;
       },
       {
         body: t.Partial(assignmentSchema),
