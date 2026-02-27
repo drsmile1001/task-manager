@@ -1,7 +1,5 @@
-import {
-  buildApi,
-  setCurrentBunServerPublish as setCurrentBunServer,
-} from "@backend/api";
+import { buildApi } from "@backend/api";
+import { MutationPublisherService } from "@backend/services/MutationPublisher";
 import {
   createRepositories,
   initRepositories,
@@ -52,9 +50,10 @@ await rewriteBaseUrl("public");
 
 const repos = createRepositories(logger);
 await initRepositories(repos);
+const mutationPublisher = new MutationPublisherService(logger);
 
 const app = new Elysia()
-  .use(await buildApi({ logger, repos }))
+  .use(await buildApi({ logger, repos, mutationPublisher }))
   .get("/*", async ({ path }) => {
     const allowedExtensions = [
       ".js",
@@ -83,7 +82,7 @@ const app = new Elysia()
   })
   .get("/*", () => file("public/index.html"))
   .listen(3000, (server) => {
-    setCurrentBunServer(server);
+    mutationPublisher.setServer(server);
     logger.info(`伺服器已啟動，監聽於 http://localhost:3000${baseUrl}`);
   });
 

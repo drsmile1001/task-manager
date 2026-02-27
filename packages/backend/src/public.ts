@@ -1,4 +1,5 @@
-export type { Api, MutationTopic } from "@backend/api";
+export type { Api } from "@backend/api";
+export type { MutationTopic } from "@backend/services/MutationPublisher";
 export type { Assignment } from "@backend/schemas/Assignment";
 export type {
   ActionType,

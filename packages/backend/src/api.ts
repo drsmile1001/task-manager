@@ -10,6 +10,7 @@ import { type Person, personSchema } from "@backend/schemas/Person";
 import { planningSchema } from "@backend/schemas/Planning";
 import { projectSchema } from "@backend/schemas/Project";
 import { taskSchema } from "@backend/schemas/Task";
+import type { MutationPublisherService } from "@backend/services/MutationPublisher";
 import type { AppRepositories } from "@backend/services/Repositories";
 import type { Logger } from "@backend/utils/Logger";
 import { addDays } from "date-fns";
@@ -17,21 +18,12 @@ import { Elysia, t } from "elysia";
 import { jwtDecode } from "jwt-decode";
 import { ulid } from "ulid";
 
-let currentBunServer: Bun.Server<unknown> | null = null;
-
-export type MutationTopic = {
-  topic: "mutations";
-} & AuditLog;
-
-export function setCurrentBunServerPublish(server: Bun.Server<unknown>) {
-  currentBunServer = server;
-}
-
 export async function buildApi(deps: {
   logger: Logger;
   repos: AppRepositories;
+  mutationPublisher: MutationPublisherService;
 }) {
-  const { logger, repos } = deps;
+  const { repos, mutationPublisher } = deps;
   const {
     projectRepo,
     milestoneRepo,
@@ -44,22 +36,6 @@ export async function buildApi(deps: {
     auditLogRepo,
   } = repos;
 
-  function broadcastMutation(message: AuditLog) {
-    logger.info(
-      {
-        type: "broadcastMutation",
-        message,
-      },
-      `Broadcasting mutation: ${message.entityType} ${message.action} ${message.entityId}`
-    );
-    currentBunServer?.publish(
-      "mutations",
-      JSON.stringify({
-        topic: "mutations",
-        ...message,
-      })
-    );
-  }
   const sessionCookieKey = "task-manager-session-id";
 
   const api = new Elysia()
@@ -111,7 +87,7 @@ export async function buildApi(deps: {
             },
           };
           await auditLogRepo.set(auditLog);
-          broadcastMutation(auditLog);
+          mutationPublisher.publish(auditLog);
         }
 
         const sessionId = crypto.randomUUID();
@@ -194,7 +170,7 @@ export async function buildApi(deps: {
           changes,
         };
         await auditLogRepo.set(auditLog);
-        broadcastMutation(auditLog);
+        mutationPublisher.publish(auditLog);
       }
 
       return {
