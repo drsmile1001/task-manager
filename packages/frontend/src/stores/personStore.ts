@@ -47,6 +47,7 @@ function createPersonStore() {
 
   return {
     persons,
+    loadPersons,
     setPerson,
     deletePerson,
     getPerson,

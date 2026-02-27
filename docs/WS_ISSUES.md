@@ -20,6 +20,26 @@
 - `stale`：heartbeat/pong 逾時，判定為不可靠
 - `disconnected`：socket 關閉或錯誤
 
+## 重新規劃（2026-02）
+
+### Phase 1：連線可視化與重連（高優先）
+
+- [x] 建立同步狀態 store：`connecting/connected/reconnecting/stale/disconnected`
+- [x] 補齊 `onerror/onclose` 與指數退避重連（含 jitter）
+- [x] 補齊 heartbeat watchdog（pong timeout -> stale -> reconnect）
+- [x] UI 顯示同步狀態與斷線提醒
+
+### Phase 2：離線寫入保護（高優先）
+
+- [x] client request guard：非 `connected` 阻擋 mutation（POST/PATCH/DELETE）
+- [x] 保留 `GET/HEAD/OPTIONS` 讀取
+- [x] `login/logout` bypass
+
+### Phase 3：重連後一致性收斂（中優先）
+
+- [x] 重連成功後執行 `resyncAll()`
+- [ ] 視需要補 server-side sequence/cursor（避免大量全量 resync）
+
 ## 核心機制
 
 1. **Heartbeat + Watchdog**
@@ -52,6 +72,14 @@
 3. 離線時嘗試新增/刪除資料，應被阻擋。
 4. backend 恢復後應自動重連並完成 resync。
 5. 再次寫入應恢復正常。
+
+## 程式碼位置
+
+- 連線生命週期：`packages/frontend/src/sync.ts`
+- 同步狀態 store：`packages/frontend/src/stores/syncStatusStore.ts`
+- 寫入守門策略：`packages/frontend/src/syncPolicy.ts`
+- API 守門入口：`packages/frontend/src/client.ts`
+- UI 狀態顯示：`packages/frontend/src/App.tsx`
 
 ## 建議單元測試（小規模）
 

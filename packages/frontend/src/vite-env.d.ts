@@ -3,6 +3,7 @@ interface ViteTypeOptions {
 }
 
 interface ImportMetaEnv {
+  readonly BASE_URL: string;
   readonly VITE_GOOGLE_CLIENT_ID: string;
   readonly VITE_TM_PERF?: "0" | "1";
 }

@@ -50,6 +50,7 @@ function createProjectStore() {
 
   return {
     projects,
+    loadProjects,
     setProject,
     deleteProject,
     getProject,

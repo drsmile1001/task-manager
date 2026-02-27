@@ -78,6 +78,7 @@ function createMilestoneStore() {
 
   return {
     milestones,
+    loadMilestones,
     setMilestone,
     deleteMilestone,
     deleteMilestonesByProjectId,

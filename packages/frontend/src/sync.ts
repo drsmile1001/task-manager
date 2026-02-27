@@ -11,42 +11,68 @@ import { useMilestoneStore } from "./stores/milestoneStore";
 import { usePersonStore } from "./stores/personStore";
 import { usePlanningStore } from "./stores/planningStore";
 import { useProjectStore } from "./stores/projectStore";
+import { useSyncStatusStore } from "./stores/syncStatusStore";
 import { useTaskStore } from "./stores/taskStore";
 
+const HEARTBEAT_INTERVAL_MS = 10_000;
+const PONG_TIMEOUT_MS = 30_000;
+const RECONNECT_BASE_DELAY_MS = 1_000;
+const RECONNECT_MAX_DELAY_MS = 30_000;
+
+let hasSyncStarted = false;
+
+function getReconnectDelayMs(attempt: number) {
+  const expDelay = Math.min(
+    RECONNECT_MAX_DELAY_MS,
+    RECONNECT_BASE_DELAY_MS * 2 ** Math.max(0, attempt - 1)
+  );
+  return Math.floor(expDelay * (0.8 + Math.random() * 0.4));
+}
+
 export function sync() {
+  if (hasSyncStarted) {
+    return;
+  }
+  hasSyncStarted = true;
+
   const wshost =
     window.location.hostname === "localhost"
       ? "ws://localhost:3000/ws"
       : `wss://${window.location.host + import.meta.env.BASE_URL}ws`;
+  const {
+    setConnecting,
+    setConnected,
+    setDisconnected,
+    setReconnecting,
+    setStale,
+    markMessage,
+    markPong,
+    state: syncState,
+  } = useSyncStatusStore();
 
-  const ws = new WebSocket(wshost);
-  ws.onopen = () => {
-    setInterval(() => {
-      ws.send(
-        JSON.stringify({
-          topic: "ping",
-          timeStamp: new Date().toISOString(),
-        })
-      );
-    }, 10000);
-  };
-  const { setLabel, deleteLabel } = useLabelStore();
-  const { setPerson, deletePerson } = usePersonStore();
-  const { setProject, deleteProject } = useProjectStore();
-  const { setMilestone, deleteMilestone, deleteMilestonesByProjectId } =
-    useMilestoneStore();
+  const { setLabel, deleteLabel, loadLabels } = useLabelStore();
+  const { setPerson, deletePerson, loadPersons } = usePersonStore();
+  const { setProject, deleteProject, loadProjects } = useProjectStore();
+  const {
+    setMilestone,
+    deleteMilestone,
+    deleteMilestonesByProjectId,
+    loadMilestones,
+  } = useMilestoneStore();
   const {
     setTask,
     deleteTask,
     deleteTasksByProjectId,
     applyMilestoneDueDateToTasks,
     clearMilestoneFromTasks,
+    loadTasks,
   } = useTaskStore();
   const {
     setPlanning,
     deletePlanning,
     deletePlanningsByTaskId,
     deletePlanningsByTaskIds,
+    loadPlannings,
   } = usePlanningStore();
   const {
     setAssignment,
@@ -54,8 +80,90 @@ export function sync() {
     deleteAssignmentsByTaskId,
     deleteAssignmentsByTaskIds,
     deleteAssignmentsByPersonId,
+    loadAssignments,
   } = useAssignmentStore();
   const { addAuditLog } = useAuditLogStore();
+
+  let ws: WebSocket | null = null;
+  let reconnectAttempt = 0;
+  let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+  let watchdogTimer: ReturnType<typeof setInterval> | null = null;
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  let hasConnectedOnce = false;
+
+  function clearTimers() {
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
+    }
+    if (watchdogTimer) {
+      clearInterval(watchdogTimer);
+      watchdogTimer = null;
+    }
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+  }
+
+  async function resyncAll() {
+    await Promise.all([
+      loadLabels(),
+      loadPersons(),
+      loadProjects(),
+      loadMilestones(),
+      loadTasks(),
+      loadPlannings(),
+      loadAssignments(),
+    ]);
+  }
+
+  function startHeartbeat() {
+    if (!ws) {
+      return;
+    }
+    heartbeatTimer = setInterval(() => {
+      if (ws?.readyState !== WebSocket.OPEN) {
+        return;
+      }
+      ws.send(
+        JSON.stringify({
+          topic: "ping",
+          timeStamp: new Date().toISOString(),
+        })
+      );
+    }, HEARTBEAT_INTERVAL_MS);
+
+    watchdogTimer = setInterval(() => {
+      const lastPongAt = syncState.lastPongAt;
+      if (!lastPongAt) {
+        return;
+      }
+      if (Date.now() - lastPongAt > PONG_TIMEOUT_MS) {
+        setStale();
+        ws?.close();
+      }
+    }, HEARTBEAT_INTERVAL_MS);
+  }
+
+  function scheduleReconnect() {
+    if (reconnectTimer) {
+      return;
+    }
+    reconnectAttempt += 1;
+    setReconnecting(reconnectAttempt);
+    const delay = getReconnectDelayMs(reconnectAttempt);
+    reconnectTimer = setTimeout(() => {
+      reconnectTimer = null;
+      connect();
+    }, delay);
+  }
+
+  function handleDisconnect(reason: string) {
+    clearTimers();
+    setDisconnected(reason);
+    scheduleReconnect();
+  }
   const mutationHandlers: Record<
     EntityType,
     {
@@ -118,19 +226,51 @@ export function sync() {
     },
   };
 
-  ws.onmessage = async (event) => {
-    const message = JSON.parse(event.data);
-    if (message.topic === "mutations") {
-      const m = message as MutationTopic;
-      const entityType = m.entityType;
-      const action = m.action;
-      if (action === "CREATE" || action === "UPDATE") {
-        mutationHandlers[entityType].onCreateOrUpdate(m.changes.after as any);
-      } else if (action === "DELETE") {
-        await mutationHandlers[entityType].onDelete(m.entityId);
+  function connect() {
+    setConnecting();
+    ws = new WebSocket(wshost);
+
+    ws.onopen = async () => {
+      reconnectAttempt = 0;
+      setConnected();
+      clearTimers();
+      startHeartbeat();
+
+      if (hasConnectedOnce) {
+        await resyncAll();
       }
-      const { topic, ...log } = m;
-      addAuditLog(log);
-    }
-  };
+      hasConnectedOnce = true;
+    };
+
+    ws.onerror = () => {
+      handleDisconnect("socket_error");
+    };
+
+    ws.onclose = () => {
+      handleDisconnect("socket_closed");
+    };
+
+    ws.onmessage = async (event) => {
+      markMessage();
+      const message = JSON.parse(event.data);
+      if (message.topic === "pong") {
+        markPong();
+        return;
+      }
+      if (message.topic === "mutations") {
+        const m = message as MutationTopic;
+        const entityType = m.entityType;
+        const action = m.action;
+        if (action === "CREATE" || action === "UPDATE") {
+          mutationHandlers[entityType].onCreateOrUpdate(m.changes.after as any);
+        } else if (action === "DELETE") {
+          await mutationHandlers[entityType].onDelete(m.entityId);
+        }
+        const { topic, ...log } = m;
+        addAuditLog(log);
+      }
+    };
+  }
+
+  connect();
 }

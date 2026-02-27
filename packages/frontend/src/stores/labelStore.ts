@@ -54,6 +54,7 @@ function createLabelStore() {
 
   return {
     labels,
+    loadLabels,
     setLabel,
     deleteLabel,
     getLabel,

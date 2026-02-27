@@ -11,6 +11,7 @@ import { usePersonStore } from "./stores/personStore";
 import { usePlanningStore } from "./stores/planningStore";
 import { type TableType, usePreferenceStore } from "./stores/preferenceStore";
 import { useProjectStore } from "./stores/projectStore";
+import { useSyncStatusStore } from "./stores/syncStatusStore";
 import { useTaskStore } from "./stores/taskStore";
 import { sync } from "./sync";
 import ByDaySchedule from "./views/ByDaySchedule";
@@ -28,6 +29,7 @@ export default function App() {
   useAssignmentStore();
   const { preference, setPreference } = usePreferenceStore();
   const { currentUser, setCurrentUser } = useCurrentUserStore();
+  const { state: syncState } = useSyncStatusStore();
   sync();
   const { stack: panelStack } = usePanelController();
   const { openPanel } = usePanelController();
@@ -51,6 +53,23 @@ export default function App() {
     await client.api.logout.post();
     window.location.reload();
   }
+
+  function syncStatusText() {
+    switch (syncState.connectionState) {
+      case "connected":
+        return "同步中";
+      case "connecting":
+        return "連線中";
+      case "reconnecting":
+        return `重連中 (${syncState.reconnectAttempt})`;
+      case "stale":
+        return "連線逾時";
+      case "disconnected":
+      default:
+        return "已離線";
+    }
+  }
+
   return (
     <>
       <div class="h-screen" onDragOver={(e) => e.preventDefault()}>
@@ -111,6 +130,27 @@ export default function App() {
               計劃表
             </Button>
             <div class="flex-1"></div>
+            <div
+              class="px-2 py-1 rounded text-xs font-medium"
+              classList={{
+                "text-green-700 bg-green-100":
+                  syncState.connectionState === "connected",
+                "text-amber-700 bg-amber-100":
+                  syncState.connectionState === "connecting" ||
+                  syncState.connectionState === "reconnecting",
+                "text-red-700 bg-red-100":
+                  syncState.connectionState === "stale" ||
+                  syncState.connectionState === "disconnected",
+              }}
+              title={syncState.lastDisconnectReason ?? ""}
+            >
+              {syncStatusText()}
+            </div>
+            {syncState.connectionState !== "connected" && (
+              <div class="text-xs text-red-700 px-2 text-center">
+                已暫停寫入操作，避免離線時產生不一致資料。
+              </div>
+            )}
             <span>{currentUser.name}</span>
             <Button variant="secondary" onclick={() => logout()}>
               登出
