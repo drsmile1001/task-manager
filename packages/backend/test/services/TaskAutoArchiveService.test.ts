@@ -3,8 +3,9 @@ import type { Task } from "@backend/schemas/Task";
 import { MutationPublisherService } from "@backend/services/MutationPublisher";
 import { TaskAutoArchiveService } from "@backend/services/TaskAutoArchiveService";
 import { createDefaultLoggerFromEnv } from "@backend/utils/Logger";
-import { createInMemoryRepo } from "~test/helpers/InMemoryRepo";
 import { expect, test } from "bun:test";
+
+import { createInMemoryRepo } from "~test/helpers/InMemoryRepo";
 
 class TestMutationPublisherService extends MutationPublisherService {
   published: AuditLog[] = [];

@@ -165,6 +165,10 @@ bun test packages/frontend/test/stores/assignmentState.test.ts -t "可刪除指�
   - backend: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_OAUTH_HD_RESTRICTION`, `API_KEY`, `BASE_URL`, `LOG_LEVEL`, `LOG_WITH_CONTEXT`, `AUTO_ARCHIVE_ENABLED`, `AUTO_ARCHIVE_DAYS`, `AUTO_ARCHIVE_TZ`
   - frontend: `VITE_GOOGLE_CLIENT_ID`, `BASE_URL`
 
+- 後端 auto archive 規則：
+  - task：封存 7 天前已完成且未封存項目。
+  - milestone：封存 7 天前已到期且未封存項目（不看底下 task 是否完成）。
+
 ## 11) 文件同步原則
 
 當你做以下修改時，請同步更新文件：

@@ -1,3 +1,4 @@
+import type { MilestoneAutoArchiveService } from "@backend/services/MilestoneAutoArchiveService";
 import type { TaskAutoArchiveService } from "@backend/services/TaskAutoArchiveService";
 import type { Logger } from "@backend/utils/Logger";
 import { Cron } from "croner";
@@ -11,6 +12,7 @@ export class AutoArchiveScheduler {
     private readonly deps: {
       logger: Logger;
       taskAutoArchiveService: TaskAutoArchiveService;
+      milestoneAutoArchiveService: MilestoneAutoArchiveService;
       enabled: boolean;
       days: number;
       timezone: string;
@@ -40,9 +42,20 @@ export class AutoArchiveScheduler {
   }
 
   async runOnce() {
-    const { days, actorId, taskAutoArchiveService } = this.deps;
+    const {
+      days,
+      actorId,
+      timezone,
+      taskAutoArchiveService,
+      milestoneAutoArchiveService,
+    } = this.deps;
     const cutoffMs = Date.now() - days * DAY_MS;
+    const cutoffDate = formatDateInTimezone(cutoffMs, timezone);
     await taskAutoArchiveService.archiveCompletedTasksBefore(cutoffMs, actorId);
+    await milestoneAutoArchiveService.archiveByDueDateBefore(
+      cutoffDate,
+      actorId
+    );
   }
 
   stop() {
@@ -52,4 +65,15 @@ export class AutoArchiveScheduler {
     this.job.stop();
     this.job = null;
   }
+}
+
+function formatDateInTimezone(timeMs: number, timezone: string) {
+  const date = new Date(timeMs);
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  return formatter.format(date);
 }

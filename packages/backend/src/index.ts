@@ -1,5 +1,6 @@
 import { buildApi } from "@backend/api";
 import { AutoArchiveScheduler } from "@backend/services/AutoArchiveScheduler";
+import { MilestoneAutoArchiveService } from "@backend/services/MilestoneAutoArchiveService";
 import { MutationPublisherService } from "@backend/services/MutationPublisher";
 import {
   createRepositories,
@@ -61,9 +62,15 @@ const taskAutoArchiveService = new TaskAutoArchiveService({
   repos,
   mutationPublisher,
 });
+const milestoneAutoArchiveService = new MilestoneAutoArchiveService({
+  logger,
+  repos,
+  mutationPublisher,
+});
 const autoArchiveScheduler = new AutoArchiveScheduler({
   logger,
   taskAutoArchiveService,
+  milestoneAutoArchiveService,
   enabled: autoArchiveEnabled,
   days: autoArchiveDays,
   timezone: autoArchiveTimezone,
