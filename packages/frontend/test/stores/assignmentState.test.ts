@@ -1,11 +1,10 @@
-import { describe, expect, it } from "bun:test";
-
 import {
   buildAssignmentState,
   byPersonIdAndDateKey,
   deleteAssignmentsByPersonId,
   deleteAssignmentsByTaskIds,
-} from "../../src/stores/reducers/assignmentState";
+} from "@frontend/stores/reducers/assignmentState";
+import { describe, expect, it } from "bun:test";
 
 const assignments = [
   {

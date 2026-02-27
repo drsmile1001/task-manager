@@ -1,9 +1,8 @@
-import { describe, expect, it } from "bun:test";
-
 import {
   buildPlanningState,
   deletePlanningsByTaskIds,
-} from "../../src/stores/reducers/planningState";
+} from "@frontend/stores/reducers/planningState";
+import { describe, expect, it } from "bun:test";
 
 const plannings = [
   {

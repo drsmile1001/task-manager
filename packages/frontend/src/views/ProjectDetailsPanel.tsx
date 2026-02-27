@@ -16,6 +16,7 @@ import { useAuditLogStore } from "@frontend/stores/auditLogStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
+import { createTaskAndOpen } from "@frontend/views/helpers/createTaskAndOpen";
 import { Show, createMemo, onMount } from "solid-js";
 import { ulid } from "ulid";
 
@@ -75,7 +76,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
     pushPanel({ type: "MILESTONE", milestoneId });
   }
 
-  const { tasksWithRelation } = useTaskStore();
+  const { tasksWithRelation, setTask } = useTaskStore();
   const tasks = createMemo(() =>
     tasksWithRelation()
       .filter((task) => task.projectId === props.projectId && !task.isArchived)
@@ -101,7 +102,7 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
 
   async function createTask() {
     const taskId = ulid();
-    await client.api.tasks.post({
+    const task: Task = {
       id: taskId,
       projectId: props.projectId,
       milestoneId: null,
@@ -112,8 +113,13 @@ export default function ProjectDetailsPanel(props: ProjectDetailsPanelProps) {
       isArchived: false,
       labelIds: [],
       assigneeIds: [],
+    };
+    await createTaskAndOpen({
+      task,
+      postTask: (newTask) => client.api.tasks.post(newTask),
+      setTask,
+      pushPanel,
     });
-    pushPanel({ type: "TASK", taskId });
   }
 
   function relatedAuditLogs() {

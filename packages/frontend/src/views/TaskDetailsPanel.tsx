@@ -17,7 +17,7 @@ import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { usePersonStore } from "@frontend/stores/personStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
-import { For, Show, createMemo, onMount } from "solid-js";
+import { For, Show, createEffect, createMemo } from "solid-js";
 
 import type { Assignment } from "@backend/schemas/Assignment";
 import type { Planning } from "@backend/schemas/Planning";
@@ -43,8 +43,15 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
   const { setDragContext } = useDragController();
   const { logs } = useAuditLogStore();
   let nameInputRef: HTMLInputElement | undefined;
-  onMount(() => {
-    nameInputRef?.focus();
+  let hasFocusedName = false;
+  createEffect(() => {
+    if (!task() || hasFocusedName) {
+      return;
+    }
+    hasFocusedName = true;
+    queueMicrotask(() => {
+      nameInputRef?.focus();
+    });
   });
 
   const removeTask = async () => {
@@ -142,12 +149,16 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
             variant="secondary"
             size="small"
             class="ml-2"
-            onclick={() =>
+            onclick={() => {
+              const currentTask = task();
+              if (!currentTask) {
+                return;
+              }
               pushPanel({
                 type: "PROJECT_DETAILS",
-                projectId: task()!.projectId,
-              })
-            }
+                projectId: currentTask.projectId,
+              });
+            }}
           >
             詳細
           </Button>
@@ -176,12 +187,16 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
               variant="secondary"
               size="small"
               class="ml-2"
-              onclick={() =>
+              onclick={() => {
+                const milestoneId = task()?.milestoneId;
+                if (!milestoneId) {
+                  return;
+                }
                 pushPanel({
                   type: "MILESTONE",
-                  milestoneId: task()!.milestoneId!,
-                })
-              }
+                  milestoneId,
+                });
+              }}
             >
               詳細
             </Button>

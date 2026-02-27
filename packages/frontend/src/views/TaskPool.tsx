@@ -11,12 +11,15 @@ import {
   type TaskWithRelation,
   useTaskStore,
 } from "@frontend/stores/taskStore";
+import { createTaskAndOpen } from "@frontend/views/helpers/createTaskAndOpen";
 import { format } from "date-fns";
 import { For, Show, createMemo } from "solid-js";
 import { ulid } from "ulid";
 
+import type { Task } from "@backend/schemas/Task";
+
 export default function TaskPool() {
-  const { tasksWithRelation } = useTaskStore();
+  const { tasksWithRelation, setTask } = useTaskStore();
   const { sharedFilter } = useSharedFilterStore();
   const { preference, setPreference } = usePreferenceStore();
   const { pushPanel } = usePanelController();
@@ -248,7 +251,7 @@ export default function TaskPool() {
                     onClick={async () => {
                       const projectId = group.key;
                       const taskId = ulid();
-                      await client.api.tasks.post({
+                      const task: Task = {
                         id: taskId,
                         projectId: projectId,
                         milestoneId: null,
@@ -259,8 +262,13 @@ export default function TaskPool() {
                         isArchived: false,
                         dueDate: null,
                         assigneeIds: [],
+                      };
+                      await createTaskAndOpen({
+                        task,
+                        postTask: (newTask) => client.api.tasks.post(newTask),
+                        setTask,
+                        pushPanel,
                       });
-                      pushPanel({ type: "TASK", taskId });
                     }}
                   >
                     ＋ 新增工作
@@ -296,7 +304,7 @@ export default function TaskPool() {
                     onClick={async () => {
                       const [projectId, milestoneId] = group.key.split("::");
                       const taskId = ulid();
-                      await client.api.tasks.post({
+                      const task: Task = {
                         id: taskId,
                         projectId: projectId,
                         milestoneId: milestoneId === "_" ? null : milestoneId,
@@ -307,8 +315,13 @@ export default function TaskPool() {
                         isArchived: false,
                         dueDate: null,
                         assigneeIds: [],
+                      };
+                      await createTaskAndOpen({
+                        task,
+                        postTask: (newTask) => client.api.tasks.post(newTask),
+                        setTask,
+                        pushPanel,
                       });
-                      pushPanel({ type: "TASK", taskId });
                     }}
                   >
                     ＋ 新增工作

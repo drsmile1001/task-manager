@@ -1,10 +1,9 @@
-import { describe, expect, it } from "bun:test";
-
 import {
   isMutationMethod,
   shouldBlockMutationRequest,
   shouldBypassSyncGuard,
-} from "../../src/syncPolicy";
+} from "@frontend/syncPolicy";
+import { describe, expect, it } from "bun:test";
 
 describe("syncPolicy", () => {
   it("可判斷 mutation method", () => {
