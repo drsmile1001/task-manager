@@ -16,7 +16,6 @@ import { useAuditLogStore } from "@frontend/stores/auditLogStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { useProjectStore } from "@frontend/stores/projectStore";
 import { useTaskStore } from "@frontend/stores/taskStore";
-import { createTaskAndOpen } from "@frontend/views/helpers/createTaskAndOpen";
 import { Show, createMemo, onMount } from "solid-js";
 import { ulid } from "ulid";
 
@@ -81,12 +80,12 @@ export default function MilestoneDetailsPanel(
       labelIds: [],
       assigneeIds: [],
     };
-    await createTaskAndOpen({
-      task,
-      postTask: (newTask) => client.api.tasks.post(newTask),
-      setTask,
-      pushPanel,
-    });
+    const result = await client.api.tasks.post(task);
+    if (result.error || !result.data) {
+      throw new Error("CREATE_TASK_FAILED");
+    }
+    await setTask(result.data);
+    pushPanel({ type: "TASK", taskId: result.data.id });
   }
 
   function relatedAuditLogs() {

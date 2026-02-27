@@ -447,7 +447,8 @@ export async function buildApi(deps: {
           completedAt: body.isDone ? Date.now() : null,
         };
         await taskRepo.set(task);
-        logAction("TASK", "CREATE", body.id, { after: task });
+        await logAction("TASK", "CREATE", body.id, { after: task });
+        return task;
       },
       {
         body: taskWriteSchema,

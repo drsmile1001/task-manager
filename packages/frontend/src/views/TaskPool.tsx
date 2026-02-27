@@ -12,7 +12,6 @@ import {
   type TaskWithRelation,
   useTaskStore,
 } from "@frontend/stores/taskStore";
-import { createTaskAndOpen } from "@frontend/views/helpers/createTaskAndOpen";
 import { format } from "date-fns";
 import { For, Show, createMemo } from "solid-js";
 import { ulid } from "ulid";
@@ -284,12 +283,12 @@ export default function TaskPool() {
                         dueDate: null,
                         assigneeIds: [],
                       };
-                      await createTaskAndOpen({
-                        task,
-                        postTask: (newTask) => client.api.tasks.post(newTask),
-                        setTask,
-                        pushPanel,
-                      });
+                      const result = await client.api.tasks.post(task);
+                      if (result.error || !result.data) {
+                        throw new Error("CREATE_TASK_FAILED");
+                      }
+                      await setTask(result.data);
+                      pushPanel({ type: "TASK", taskId: result.data.id });
                     }}
                   >
                     ＋ 新增工作
@@ -338,12 +337,12 @@ export default function TaskPool() {
                         dueDate: null,
                         assigneeIds: [],
                       };
-                      await createTaskAndOpen({
-                        task,
-                        postTask: (newTask) => client.api.tasks.post(newTask),
-                        setTask,
-                        pushPanel,
-                      });
+                      const result = await client.api.tasks.post(task);
+                      if (result.error || !result.data) {
+                        throw new Error("CREATE_TASK_FAILED");
+                      }
+                      await setTask(result.data);
+                      pushPanel({ type: "TASK", taskId: result.data.id });
                     }}
                   >
                     ＋ 新增工作
