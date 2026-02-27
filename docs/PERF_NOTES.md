@@ -29,11 +29,10 @@
 - `sync.ts` 在 TASK 刪除時採用全量 `loadPlannings()`、`loadAssignments()`，
   導致可避免的全量重建開銷。
 
-## 後續優化方向（待實作）
+## 後續優化方向
 
-1. `assignment/planning` 改為批次建索引後單次 `setState`。
-2. TASK 刪除改為局部清理（by taskId），避免全量 reload。
-3. 視需要將 audit log 改 lazy load（面板開啟時載入）。
+1. 視需要將 audit log 改 lazy load（面板開啟時載入）。
+2. 若未來資料量再成長，可再評估 `taskStore` relation 增量快取。
 
 ## 進度更新（已實作）
 
@@ -42,9 +41,15 @@
 - `sync.ts` 的 TASK DELETE 已改為局部清理：
   - `deletePlanningsByTaskId(taskId)`
   - `deleteAssignmentsByTaskId(taskId)`
-- 相關觀測指標名稱：
-  - `sync:task.delete.cleanupPlannings`
-  - `sync:task.delete.cleanupAssignments`
+- `sync.ts` 其餘先前使用全量 reload 的路徑已改為局部清理：
+  - PERSON DELETE：`deleteAssignmentsByPersonId(personId)`
+  - PROJECT DELETE：批次清理 project 相關 task / assignment / planning / milestone
+  - MILESTONE CREATE/UPDATE：`applyMilestoneDueDateToTasks(milestoneId, dueDate)`
+  - MILESTONE DELETE：`clearMilestoneFromTasks(milestoneId)`
+- 目前保留觀測指標（精簡後）：
+  - `taskStore:relation.recompute`
+  - `sync:task.delete.cleanup`
+  - `auditLogStore:load`
 
 ## 觀測工具使用方式
 
@@ -72,5 +77,5 @@ window.__TM_PERF__.getRecords();
 window.__TM_PERF__.clear();
 ```
 
-> 註：目前保留的 log 以「索引建立 / relation 重算 / task delete 清理」為主，
-> 避免非關鍵訊號造成觀測雜訊。
+> 註：在確認效能問題改善後，已移除大量一次性診斷 log，
+> 目前只保留低噪音且對回歸監測有價值的指標。

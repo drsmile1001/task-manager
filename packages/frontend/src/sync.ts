@@ -33,15 +33,27 @@ export function sync() {
   const { setLabel, deleteLabel } = useLabelStore();
   const { setPerson, deletePerson } = usePersonStore();
   const { setProject, deleteProject } = useProjectStore();
-  const { setMilestone, deleteMilestone } = useMilestoneStore();
-  const { setTask, deleteTask, loadTasks } = useTaskStore();
-  const { setPlanning, deletePlanning, deletePlanningsByTaskId } =
-    usePlanningStore();
+  const { setMilestone, deleteMilestone, deleteMilestonesByProjectId } =
+    useMilestoneStore();
+  const {
+    setTask,
+    deleteTask,
+    deleteTasksByProjectId,
+    applyMilestoneDueDateToTasks,
+    clearMilestoneFromTasks,
+  } = useTaskStore();
+  const {
+    setPlanning,
+    deletePlanning,
+    deletePlanningsByTaskId,
+    deletePlanningsByTaskIds,
+  } = usePlanningStore();
   const {
     setAssignment,
     deleteAssignment,
     deleteAssignmentsByTaskId,
-    loadAssignments,
+    deleteAssignmentsByTaskIds,
+    deleteAssignmentsByPersonId,
   } = useAssignmentStore();
   const { addAuditLog } = useAuditLogStore();
   const mutationHandlers: Record<
@@ -57,26 +69,29 @@ export function sync() {
     },
     PERSON: {
       onCreateOrUpdate: setPerson,
-      onDelete: (id: string) => {
-        loadAssignments();
+      onDelete: async (id: string) => {
+        await deleteAssignmentsByPersonId(id);
         deletePerson(id);
       },
     },
     PROJECT: {
       onCreateOrUpdate: setProject,
-      onDelete: (id: string) => {
-        loadAssignments();
-        loadTasks();
+      onDelete: async (id: string) => {
+        const deletedTaskIds = deleteTasksByProjectId(id);
+        await deleteAssignmentsByTaskIds(deletedTaskIds);
+        await deletePlanningsByTaskIds(deletedTaskIds);
+        deleteMilestonesByProjectId(id);
+
         deleteProject(id);
       },
     },
     MILESTONE: {
       onCreateOrUpdate: (after: Milestone) => {
         setMilestone(after);
-        loadTasks();
+        applyMilestoneDueDateToTasks(after.id, after.dueDate ?? null);
       },
       onDelete: (id: string) => {
-        loadTasks();
+        clearMilestoneFromTasks(id);
         deleteMilestone(id);
       },
     },
@@ -86,23 +101,8 @@ export function sync() {
         const taskDeleteToken = perfStart("sync:task.delete.cleanup", {
           taskId: id,
         });
-        const cleanupPlanningsToken = perfStart(
-          "sync:task.delete.cleanupPlannings",
-          {
-            taskId: id,
-          }
-        );
         await deletePlanningsByTaskId(id);
-        perfEnd(cleanupPlanningsToken, undefined, 1);
-
-        const cleanupAssignmentsToken = perfStart(
-          "sync:task.delete.cleanupAssignments",
-          {
-            taskId: id,
-          }
-        );
         await deleteAssignmentsByTaskId(id);
-        perfEnd(cleanupAssignmentsToken, undefined, 1);
 
         deleteTask(id);
         perfEnd(taskDeleteToken, undefined, 1);
@@ -127,12 +127,7 @@ export function sync() {
       if (action === "CREATE" || action === "UPDATE") {
         mutationHandlers[entityType].onCreateOrUpdate(m.changes.after as any);
       } else if (action === "DELETE") {
-        const deleteToken = perfStart("sync:mutation.delete", {
-          entityType,
-          entityId: m.entityId,
-        });
         await mutationHandlers[entityType].onDelete(m.entityId);
-        perfEnd(deleteToken, undefined, 1);
       }
       const { topic, ...log } = m;
       addAuditLog(log);

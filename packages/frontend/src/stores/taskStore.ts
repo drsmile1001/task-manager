@@ -33,6 +33,77 @@ function createTaskStore() {
     setMap(id, undefined);
   }
 
+  function getTaskIdsByProjectId(projectId: string) {
+    return Object.values(map)
+      .filter((task): task is Task => !!task && task.projectId === projectId)
+      .map((task) => task.id);
+  }
+
+  function deleteTasksByProjectId(projectId: string) {
+    const deletedTaskIds = getTaskIdsByProjectId(projectId);
+    if (deletedTaskIds.length === 0) {
+      return deletedTaskIds;
+    }
+
+    const projectTaskIdSet = new Set(deletedTaskIds);
+    const remainedTasks = Object.values(map).filter(
+      (task): task is Task => !!task && !projectTaskIdSet.has(task.id)
+    );
+    setMap(Object.fromEntries(remainedTasks.map((task) => [task.id, task])));
+
+    return deletedTaskIds;
+  }
+
+  function applyMilestoneDueDateToTasks(
+    milestoneId: string,
+    dueDate: string | null
+  ) {
+    let hasUpdated = false;
+    const updatedTasks = Object.values(map)
+      .filter((task): task is Task => !!task)
+      .map((task) => {
+        if (task.milestoneId !== milestoneId) {
+          return task;
+        }
+        if (task.dueDate === dueDate) {
+          return task;
+        }
+        hasUpdated = true;
+        return {
+          ...task,
+          dueDate,
+        };
+      });
+
+    if (!hasUpdated) {
+      return;
+    }
+
+    setMap(Object.fromEntries(updatedTasks.map((task) => [task.id, task])));
+  }
+
+  function clearMilestoneFromTasks(milestoneId: string) {
+    let hasUpdated = false;
+    const updatedTasks = Object.values(map)
+      .filter((task): task is Task => !!task)
+      .map((task) => {
+        if (task.milestoneId !== milestoneId) {
+          return task;
+        }
+        hasUpdated = true;
+        return {
+          ...task,
+          milestoneId: null,
+        };
+      });
+
+    if (!hasUpdated) {
+      return;
+    }
+
+    setMap(Object.fromEntries(updatedTasks.map((task) => [task.id, task])));
+  }
+
   function getTask(id: string): Task | undefined {
     return map[id];
   }
@@ -84,7 +155,7 @@ function createTaskStore() {
           ];
         })
     );
-    perfEnd(relationToken, { relationCount: relationMap.size }, 8);
+    perfEnd(relationToken, { relationCount: relationMap.size }, 16);
     return relationMap;
   });
 
@@ -99,8 +170,12 @@ function createTaskStore() {
   return {
     setTask,
     deleteTask,
+    deleteTasksByProjectId,
     getTask,
+    getTaskIdsByProjectId,
     loadTasks,
+    applyMilestoneDueDateToTasks,
+    clearMilestoneFromTasks,
     getTaskWithRelation,
     tasksWithRelation,
   };

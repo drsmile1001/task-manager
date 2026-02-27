@@ -1,5 +1,4 @@
 import { client } from "@frontend/client";
-import { perfEnd, perfStart } from "@frontend/utils/perf";
 import { singulation } from "@frontend/utils/singulation";
 import { cloneDeep } from "lodash";
 import { createStore } from "solid-js/store";
@@ -13,23 +12,12 @@ function createPlanningStore() {
     byWeekStartDate: {} as Record<string, Planning[]>,
   });
 
-  async function loadPlannings() {
-    const loadToken = perfStart("planningStore:load");
-    const apiToken = perfStart("planningStore:api.get");
-    const result = await client.api.plannings.get();
-    perfEnd(apiToken, { status: result.status }, 1);
-    if (result.error) {
-      perfEnd(loadToken, { error: true }, 1);
-      throw new Error("Failed to load plannings");
-    }
-
-    const buildIndexToken = perfStart("planningStore:index.build", {
-      count: result.data.length,
-    });
+  function buildPlanningState(plannings: Planning[]) {
     const byId: Record<string, Planning | undefined> = {};
     const byTaskId: Record<string, Planning[]> = {};
     const byWeekStartDate: Record<string, Planning[]> = {};
-    for (const planning of result.data) {
+
+    for (const planning of plannings) {
       byId[planning.id] = planning;
 
       if (!byTaskId[planning.taskId]) {
@@ -43,13 +31,19 @@ function createPlanningStore() {
       byWeekStartDate[planning.weekStartDate].push(planning);
     }
 
-    setState({
+    return {
       byId,
       byTaskId,
       byWeekStartDate,
-    });
-    perfEnd(buildIndexToken, undefined, 1);
-    perfEnd(loadToken, { count: result.data.length }, 1);
+    };
+  }
+
+  async function loadPlannings() {
+    const result = await client.api.plannings.get();
+    if (result.error) {
+      throw new Error("Failed to load plannings");
+    }
+    setState(buildPlanningState(result.data));
   }
   loadPlannings();
 
@@ -105,17 +99,19 @@ function createPlanningStore() {
   }
 
   async function deletePlanningsByTaskId(taskId: string) {
-    const plannings = [...(state.byTaskId[taskId] || [])];
-    if (plannings.length === 0) return;
+    await deletePlanningsByTaskIds([taskId]);
+  }
 
-    for (const planning of plannings) {
-      setState("byId", planning.id, undefined);
-      setState("byWeekStartDate", planning.weekStartDate, (list = []) =>
-        list.filter((item) => item.id !== planning.id)
-      );
+  async function deletePlanningsByTaskIds(taskIds: string[]) {
+    if (taskIds.length === 0) {
+      return;
     }
-
-    setState("byTaskId", taskId, []);
+    const taskIdSet = new Set(taskIds);
+    const remainedPlannings = Object.values(state.byId).filter(
+      (planning): planning is Planning =>
+        !!planning && !taskIdSet.has(planning.taskId)
+    );
+    setState(buildPlanningState(remainedPlannings));
   }
 
   function getPlanning(id: string) {
@@ -137,6 +133,7 @@ function createPlanningStore() {
     getPlanningsByTask,
     getPlanningsByWeekStartDate,
     deletePlanningsByTaskId,
+    deletePlanningsByTaskIds,
     loadPlannings,
   };
 }

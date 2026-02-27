@@ -43,6 +43,18 @@ function createMilestoneStore() {
     setMap(id, undefined);
   }
 
+  function deleteMilestonesByProjectId(projectId: string) {
+    const remainedMilestones = Object.values(map).filter(
+      (milestone): milestone is Milestone =>
+        !!milestone && milestone.projectId !== projectId
+    );
+    setMap(
+      Object.fromEntries(
+        remainedMilestones.map((milestone) => [milestone.id, milestone])
+      )
+    );
+  }
+
   function getMilestone(id: string): Milestone | undefined {
     return map[id];
   }
@@ -68,6 +80,7 @@ function createMilestoneStore() {
     milestones,
     setMilestone,
     deleteMilestone,
+    deleteMilestonesByProjectId,
     getMilestone,
     getMilestonesByProjectId,
   };

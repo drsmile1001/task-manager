@@ -1,5 +1,4 @@
 import { client } from "@frontend/client";
-import { perfEnd, perfStart } from "@frontend/utils/perf";
 import { singulation } from "@frontend/utils/singulation";
 import { cloneDeep } from "lodash";
 import { createStore } from "solid-js/store";
@@ -13,27 +12,12 @@ function createAssignmentStore() {
     byPersonIdAndDate: {} as Record<string, Assignment[]>,
   });
 
-  function byPersonIdAndDateKey(personId: string, date: string) {
-    return `${personId}::${date}`;
-  }
-
-  async function loadAssignments() {
-    const loadToken = perfStart("assignmentStore:load");
-    const apiToken = perfStart("assignmentStore:api.get");
-    const result = await client.api.assignments.get();
-    perfEnd(apiToken, { status: result.status }, 1);
-    if (result.error) {
-      perfEnd(loadToken, { error: true }, 1);
-      throw new Error("Failed to load assignments");
-    }
-
-    const buildIndexToken = perfStart("assignmentStore:index.build", {
-      count: result.data.length,
-    });
+  function buildAssignmentState(assignments: Assignment[]) {
     const byId: Record<string, Assignment | undefined> = {};
     const byTaskId: Record<string, Assignment[]> = {};
     const byPersonIdAndDate: Record<string, Assignment[]> = {};
-    for (const assignment of result.data) {
+
+    for (const assignment of assignments) {
       byId[assignment.id] = assignment;
 
       if (!byTaskId[assignment.taskId]) {
@@ -51,13 +35,23 @@ function createAssignmentStore() {
       byPersonIdAndDate[personDateKey].push(assignment);
     }
 
-    setState({
+    return {
       byId,
       byTaskId,
       byPersonIdAndDate,
-    });
-    perfEnd(buildIndexToken, undefined, 1);
-    perfEnd(loadToken, { count: result.data.length }, 1);
+    };
+  }
+
+  function byPersonIdAndDateKey(personId: string, date: string) {
+    return `${personId}::${date}`;
+  }
+
+  async function loadAssignments() {
+    const result = await client.api.assignments.get();
+    if (result.error) {
+      throw new Error("Failed to load assignments");
+    }
+    setState(buildAssignmentState(result.data));
   }
   loadAssignments();
 
@@ -120,21 +114,34 @@ function createAssignmentStore() {
     );
   }
 
-  async function deleteAssignmentsByTaskId(taskId: string) {
-    const assignments = [...(state.byTaskId[taskId] || [])];
-    if (assignments.length === 0) {
+  async function deleteAssignmentsByTaskIds(taskIds: string[]) {
+    if (taskIds.length === 0) {
       return;
     }
+    const taskIdSet = new Set(taskIds);
+    const remainedAssignments = Object.values(state.byId).filter(
+      (assignment): assignment is Assignment =>
+        !!assignment && !taskIdSet.has(assignment.taskId)
+    );
+    setState(buildAssignmentState(remainedAssignments));
+  }
 
-    for (const assignment of assignments) {
-      setState("byId", assignment.id, undefined);
-      const key = byPersonIdAndDateKey(assignment.personId, assignment.date);
-      setState("byPersonIdAndDate", key, (list = []) =>
-        list.filter((item) => item.id !== assignment.id)
-      );
+  async function deleteAssignmentsByTaskId(taskId: string) {
+    await deleteAssignmentsByTaskIds([taskId]);
+  }
+
+  async function deleteAssignmentsByPersonId(personId: string) {
+    const currentAssignments = Object.values(state.byId).filter(
+      (assignment): assignment is Assignment => !!assignment
+    );
+    const remainedAssignments = Object.values(state.byId).filter(
+      (assignment): assignment is Assignment =>
+        !!assignment && assignment.personId !== personId
+    );
+    if (remainedAssignments.length === currentAssignments.length) {
+      return;
     }
-
-    setState("byTaskId", taskId, []);
+    setState(buildAssignmentState(remainedAssignments));
   }
 
   function getAssignmentsByTask(taskId: string) {
@@ -156,6 +163,8 @@ function createAssignmentStore() {
     getAssignmentsByTask,
     getAssignmentsByPersonAndDate,
     deleteAssignmentsByTaskId,
+    deleteAssignmentsByTaskIds,
+    deleteAssignmentsByPersonId,
     loadAssignments,
   };
 }
