@@ -3,6 +3,9 @@
 本文件提供給在此 repo 內工作的 agent（如 OpenCode、Cursor Agent、Copilot Agent）。
 目標是讓 agent 在最少互動下，做出一致、可維護、可驗證的修改。
 
+- 程式風格、命名、模組設計等通用規範，請以 `docs/CODING_STYLE.md` 為唯一準則。
+- 本文件聚焦 repo 當前行為、工作流程、測試與文件同步要求。
+
 ## 專案定位與開發前提
 
 - 本系統服務對象：公司內單一部門，約 30 人以內。
@@ -145,11 +148,7 @@ bun test packages/frontend/test/stores/assignmentState.test.ts -t "可刪除指�
 - API 框架：Elysia。
 - Schema 優先使用 TypeBox（`t.Object(...)`）定義，型別由 schema 推導。
 - 資料儲存採 YAML repo（`createYamlRepo`），改 schema 時要同步考慮 migration。
-- API handler 慣例：
-  - 先檢查資料存在與權限。
-  - 缺資料多用 `status(404)` 或 `status(401)`。
-  - 需要追蹤的 CRUD 變更要寫入 audit log。
-  - 新增/編輯 API（`POST/PATCH`）維持回傳「最終實體結果」。
+- API handler 通用寫法（命名、錯誤處理、紀錄慣例）請直接遵循 `docs/CODING_STYLE.md`。
 
 - 身份解析（requester）
   - 目前透過 `RequesterResolver` 注入，不要在 `api.ts` 寫死 cookie/api key 判斷。
@@ -159,6 +158,14 @@ bun test packages/frontend/test/stores/assignmentState.test.ts -t "可刪除指�
 - assignment 與 task assignee 連動
   - `POST/PATCH /api/assignments` 若 `personId` 未在 task `assigneeIds`，會自動補上。
   - 此連動需同時記錄 `TASK UPDATE` audit log 並廣播 mutation。
+
+- 刪除與連動更新規則（目前實作）
+  - `DELETE /api/projects/:id`：會級聯清理 project 底下的 `task`、`assignment`、`planning`、`milestone`。
+  - `DELETE /api/tasks/:id`：會級聯清理該 task 的 `assignment` 與 `planning`。
+  - `DELETE /api/persons/:id`：會清理該 person 的 `assignment`。
+  - `DELETE /api/labels/:id`：會從所有 task 的 `labelIds` 移除該 label。
+  - `PATCH /api/milestones/:id`（`dueDate` 有傳入）：只更新 dueDate 不一致的 tasks，並逐筆廣播 `TASK UPDATE`。
+  - `DELETE /api/milestones/:id`：會清空關聯 task 的 `milestoneId`，並逐筆廣播 `TASK UPDATE`。
 
 ## Frontend 改動注意事項
 

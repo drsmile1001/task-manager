@@ -147,6 +147,7 @@ VITE_TM_PERF=1
 ## API 與前端互動慣例
 
 - Backend 新增/編輯 API（`POST/PATCH`）優先回傳「最終實體結果」。
+- Backend 刪除主實體若有級聯清理，需維持資料一致並透過 WS 讓前端可即時收斂。
 - Frontend 面板中的新增流程，統一採用：
   - 呼叫 API
   - 用 `result.data` 更新對應 store

@@ -3,6 +3,8 @@
 本文件定義本專案的程式風格，提供給人類開發者與 agent 共同遵循。
 若需求緊急，請優先遵守「可讀性、可維護性、可驗證」三原則。
 
+- 針對 repo 當前功能行為與流程規則（例如級聯刪除策略、測試工作流），請以 `AGENTS.md` 為準。
+
 ## 總體原則
 
 - 以「小步、可回滾」為原則，避免一次改過多檔案。
@@ -83,7 +85,14 @@
 - 優先使用既有 logger，不直接散落 `console.log`。
 - 關鍵 CRUD 異動要寫 audit log，並推播 mutation。
 - log 訊息重點為可追查，不需冗長。
+- `logAction(...)` 必須 `await`，避免 fire-and-forget 造成廣播與資料寫入時序不一致。
 - 若單次請求會連動更新其他實體（例如 assignment 連動 task assignee），連動更新也要寫對應 audit log。
+
+### 聯動副作用
+
+- 連動更新只變更「實際有差異」的資料，避免不必要的全量覆寫。
+- 若主實體變更會導致關聯實體改變（例如 milestone dueDate 影響 task），需補對應關聯實體的 audit log 與 broadcast。
+- 刪除主實體涉及級聯清理時，前後端行為需一致，避免重連 resync 後資料回彈。
 
 ## Frontend 規範
 
