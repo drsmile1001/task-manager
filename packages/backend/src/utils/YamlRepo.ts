@@ -1,4 +1,4 @@
-import type { Logger } from "@backend/utils/Logger";
+import type { Logger } from "@drsmile1001/logger";
 import {
   type TObject,
   type TProperties,

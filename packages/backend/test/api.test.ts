@@ -1,6 +1,6 @@
 import { buildApi } from "@backend/api";
 import type { Person } from "@backend/schemas/Person";
-import { createDefaultLoggerFromEnv } from "@backend/utils/Logger";
+import { createDefaultLoggerFromEnv } from "@drsmile1001/logger";
 import { treaty } from "@elysiajs/eden";
 import { describe, expect, test } from "bun:test";
 

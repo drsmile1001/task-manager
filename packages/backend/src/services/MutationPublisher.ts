@@ -1,5 +1,5 @@
 import type { AuditLog } from "@backend/schemas/AuditLog";
-import type { Logger } from "@backend/utils/Logger";
+import type { Logger } from "@drsmile1001/logger";
 
 export type MutationTopic = {
   topic: "mutations";

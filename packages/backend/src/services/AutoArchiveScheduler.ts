@@ -1,6 +1,6 @@
 import type { MilestoneAutoArchiveService } from "@backend/services/MilestoneAutoArchiveService";
 import type { TaskAutoArchiveService } from "@backend/services/TaskAutoArchiveService";
-import type { Logger } from "@backend/utils/Logger";
+import type { Logger } from "@drsmile1001/logger";
 import { Cron } from "croner";
 
 const DAY_MS = 24 * 60 * 60 * 1000;

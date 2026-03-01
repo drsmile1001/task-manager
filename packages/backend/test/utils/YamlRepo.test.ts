@@ -1,5 +1,5 @@
-import { createDefaultLoggerFromEnv } from "@backend/utils/Logger";
 import { MigrationBuilder, createYamlRepo } from "@backend/utils/YamlRepo";
+import { createDefaultLoggerFromEnv } from "@drsmile1001/logger";
 import { expect, test } from "bun:test";
 import { t } from "elysia";
 import { tmpdir } from "node:os";

@@ -9,7 +9,7 @@ import {
 } from "@backend/services/Repositories";
 import { RequesterResolverDefault } from "@backend/services/RequesterResolver";
 import { TaskAutoArchiveService } from "@backend/services/TaskAutoArchiveService";
-import { createDefaultLoggerFromEnv } from "@backend/utils/Logger";
+import { createDefaultLoggerFromEnv } from "@drsmile1001/logger";
 import { Elysia, file } from "elysia";
 import { readFile, readdir, stat, writeFile } from "node:fs/promises";
 

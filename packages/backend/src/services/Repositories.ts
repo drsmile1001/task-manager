@@ -23,9 +23,9 @@ import {
 } from "@backend/schemas/Project";
 import { type Session, sessionSchema } from "@backend/schemas/Session";
 import { type Task, taskMigrations, taskSchema } from "@backend/schemas/Task";
-import type { Logger } from "@backend/utils/Logger";
 import type { YamlRepo } from "@backend/utils/YamlRepo";
 import { createYamlRepo } from "@backend/utils/YamlRepo";
+import type { Logger } from "@drsmile1001/logger";
 
 export type AppRepositories = {
   projectRepo: YamlRepo<Project>;

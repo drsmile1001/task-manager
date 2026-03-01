@@ -2,7 +2,7 @@ import type { AuditLog } from "@backend/schemas/AuditLog";
 import type { Milestone } from "@backend/schemas/Milestone";
 import type { MutationPublisherService } from "@backend/services/MutationPublisher";
 import type { AppRepositories } from "@backend/services/Repositories";
-import type { Logger } from "@backend/utils/Logger";
+import type { Logger } from "@drsmile1001/logger";
 import { ulid } from "ulid";
 
 export class MilestoneAutoArchiveService {

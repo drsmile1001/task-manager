@@ -15,7 +15,7 @@ import type { MutationPublisherService } from "@backend/services/MutationPublish
 import type { AppRepositories } from "@backend/services/Repositories";
 import type { RequesterResolver } from "@backend/services/RequesterResolver";
 import { applyTaskCreateAssigneePolicy } from "@backend/services/TaskAssigneePolicy";
-import type { Logger } from "@backend/utils/Logger";
+import type { Logger } from "@drsmile1001/logger";
 import { addDays } from "date-fns";
 import { Elysia, t } from "elysia";
 import { jwtDecode } from "jwt-decode";

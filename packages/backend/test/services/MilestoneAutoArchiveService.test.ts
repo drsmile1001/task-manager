@@ -3,7 +3,7 @@ import type { AuditLog } from "@backend/schemas/AuditLog";
 import type { Milestone } from "@backend/schemas/Milestone";
 import { MilestoneAutoArchiveService } from "@backend/services/MilestoneAutoArchiveService";
 import { MutationPublisherService } from "@backend/services/MutationPublisher";
-import { createDefaultLoggerFromEnv } from "@backend/utils/Logger";
+import { createDefaultLoggerFromEnv } from "@drsmile1001/logger";
 import { expect, test } from "bun:test";
 
 import { createInMemoryRepo } from "~test/helpers/InMemoryRepo";
