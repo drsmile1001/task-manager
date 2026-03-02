@@ -19,7 +19,9 @@ export default function SharedFilterPanel() {
       const project = getProject(milestone.projectId);
       return {
         ...milestone,
-        name: project ? `${project.name}:${milestone.name}` : milestone.name,
+        name: project
+          ? `${project.code ? `[${project.code}] ` : ""}${project.name}:${milestone.name}`
+          : milestone.name,
       };
     });
   }
@@ -71,8 +73,24 @@ export default function SharedFilterPanel() {
             已封存工作
           </label>
         </div>
-        <SectionLabel>所屬專案</SectionLabel>
-        <div class="flex flex-wrap gap-2">
+        <SectionLabel>
+          <div class="flex items-center gap-2">
+            <p>所屬專案</p>
+            <p>已選取: {sharedFilter.projectIds.length}</p>
+            <Button
+              size="small"
+              onclick={() => {
+                setSharedFilter({
+                  projectIds: [],
+                });
+              }}
+            >
+              清空
+            </Button>
+          </div>
+        </SectionLabel>
+
+        <div class="flex flex-col max-h-48 overflow-auto px-1 border rounded">
           {nonArchivedProjects().map((project) => (
             <label class={checkboxLabelClass}>
               <input
@@ -88,12 +106,27 @@ export default function SharedFilterPanel() {
                   })
                 }
               />
-              {project.name}
+              {project.code ? `[${project.code}]` : ""} {project.name}
             </label>
           ))}
         </div>
-        <SectionLabel>所屬里程碑</SectionLabel>
-        <div class="flex flex-wrap gap-2">
+        <SectionLabel>
+          <div class="flex items-center gap-2">
+            <p>所屬里程碑</p>
+            <p>已選取: {sharedFilter.milestoneIds.length}</p>
+            <Button
+              size="small"
+              onclick={() => {
+                setSharedFilter({
+                  milestoneIds: [],
+                });
+              }}
+            >
+              清空
+            </Button>
+          </div>
+        </SectionLabel>
+        <div class="flex flex-col max-h-48 overflow-auto px-1 border rounded">
           {milestoneWithProjectName().map((milestone) => (
             <label class={checkboxLabelClass}>
               <input
