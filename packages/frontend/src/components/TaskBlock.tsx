@@ -49,12 +49,12 @@ export function TaskBlock(props: {
         "border-3": hasActivedPlannings(),
         "bg-gray-50 border-gray-300 hover:bg-gray-100 text-gray-400":
           isArchived(),
-        "bg-red-50 border-red-400 hover:bg-red-100":
-          !isArchived() && isOverdue(),
         "bg-green-50 border-green-400 hover:bg-green-100":
-          !isArchived() && !isOverdue() && hasActivedAssignments(),
+          !isArchived() && hasActivedAssignments(),
         "bg-yellow-50 border-yellow-400 hover:bg-yellow-100":
-          !isArchived() && !isOverdue() && !hasActivedAssignments(),
+          !isArchived() && !hasActivedAssignments() && !isOverdue(),
+        "bg-red-50 border-red-400 hover:bg-red-100":
+          !isArchived() && !hasActivedAssignments() && isOverdue(),
       }}
       onClick={() => pushPanel({ type: "TASK", taskId: task.id })}
       draggable="true"
