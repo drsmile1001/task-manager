@@ -184,12 +184,12 @@ function createTaskStore() {
             : false;
           const statusLevel: TaskStatusLevel = isArchivedComputed
             ? "archive"
-            : hasActiveAssignments
-              ? "ongoing"
-              : isOverdue
-                ? "danger"
-                : task.isDone
-                  ? "done"
+            : task.isDone
+              ? "done"
+              : hasActiveAssignments
+                ? "ongoing"
+                : isOverdue
+                  ? "danger"
                   : "warn";
           return [
             task.id,
