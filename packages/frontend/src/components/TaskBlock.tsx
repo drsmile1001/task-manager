@@ -4,11 +4,35 @@ import { usePanelController } from "@frontend/stores/PanelController";
 import { useHolidayStore } from "@frontend/stores/holidayStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
 import { usePersonStore } from "@frontend/stores/personStore";
-import type { TaskWithRelation } from "@frontend/stores/taskStore";
-import { format, isBefore, startOfDay, startOfWeek } from "date-fns";
+import type {
+  TaskStatusLevel,
+  TaskWithRelation,
+} from "@frontend/stores/taskStore";
+import { format } from "date-fns";
 import { For, Show, createMemo } from "solid-js";
 
 import LabelLine from "./LabelLine";
+
+type TaskColorMeta = Pick<
+  TaskWithRelation,
+  "statusLevel" | "hasActivePlannings"
+>;
+
+export const taskStatusColorClassMap: Record<TaskStatusLevel, string> = {
+  archive: "bg-gray-50 border-gray-300 hover:bg-gray-100 text-gray-400",
+  done: "bg-green-50 border-green-400 hover:bg-green-100",
+  ongoing: "bg-blue-50 border-blue-400 hover:bg-blue-100",
+  warn: "bg-yellow-50 border-yellow-400 hover:bg-yellow-100",
+  danger: "bg-red-50 border-red-400 hover:bg-red-100",
+};
+
+export function getTaskColorClasses(task: TaskColorMeta | undefined) {
+  if (!task) {
+    return "";
+  }
+  const borderClass = task.hasActivePlannings ? " border-2" : "";
+  return `${taskStatusColorClassMap[task.statusLevel]}${borderClass}`;
+}
 
 export function TaskBlock(props: {
   class?: string;
@@ -22,18 +46,7 @@ export function TaskBlock(props: {
   const { getMilestone } = useMilestoneStore();
   const { getWorkDays } = useHolidayStore();
 
-  const today = startOfDay(new Date());
-  const currentWeekStart = startOfWeek(new Date());
   const { task } = props;
-  const hasActivedAssignments = createMemo(() =>
-    task.assignments.some((a) => !isBefore(a.date, today))
-  );
-  const hasActivedPlannings = createMemo(() =>
-    task.plannings.some((p) => !isBefore(p.weekStartDate, currentWeekStart))
-  );
-  const isArchived = () => task.isArchived || task.project?.isArchived;
-  const isOverdue = () =>
-    task.dueDate ? isBefore(task.dueDate, today) : false;
   const workDays = createMemo(() => {
     if (!task.dueDate) return null;
     return getWorkDays(task.dueDate);
@@ -41,21 +54,12 @@ export function TaskBlock(props: {
 
   const baseClass =
     "p-1 border rounded text-sm shadow cursor-pointer select-none";
-  const mergedClass = props.class ? `${baseClass} ${props.class}` : baseClass;
+  const mergedClass = [baseClass, props.class, getTaskColorClasses(task)]
+    .filter(Boolean)
+    .join(" ");
   return (
     <div
       class={mergedClass}
-      classList={{
-        "border-3": hasActivedPlannings(),
-        "bg-gray-50 border-gray-300 hover:bg-gray-100 text-gray-400":
-          isArchived(),
-        "bg-green-50 border-green-400 hover:bg-green-100":
-          !isArchived() && hasActivedAssignments(),
-        "bg-yellow-50 border-yellow-400 hover:bg-yellow-100":
-          !isArchived() && !hasActivedAssignments() && !isOverdue(),
-        "bg-red-50 border-red-400 hover:bg-red-100":
-          !isArchived() && !hasActivedAssignments() && isOverdue(),
-      }}
       onClick={() => pushPanel({ type: "TASK", taskId: task.id })}
       draggable="true"
       onDragStart={() =>

@@ -1,7 +1,10 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
 import Panel, { PanelList } from "@frontend/components/Panel";
-import { TaskBlock } from "@frontend/components/TaskBlock";
+import {
+  TaskBlock,
+  taskStatusColorClassMap,
+} from "@frontend/components/TaskBlock";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useSharedFilterStore } from "@frontend/stores/SharedFilterStore";
 import { useMilestoneStore } from "@frontend/stores/milestoneStore";
@@ -17,6 +20,14 @@ import { For, Show, createMemo } from "solid-js";
 import { ulid } from "ulid";
 
 import type { Task } from "@backend/public";
+
+const TASK_STATUS_LEGEND = [
+  { label: "封存", status: "archive" },
+  { label: "完成", status: "done" },
+  { label: "已安排", status: "ongoing" },
+  { label: "未安排", status: "warn" },
+  { label: "逾期未安排", status: "danger" },
+] as const;
 
 export default function TaskPool() {
   const { tasksWithRelation, setTask } = useTaskStore();
@@ -202,46 +213,68 @@ export default function TaskPool() {
     <Panel
       title="工作總覽"
       actions={
-        <div class="flex items-center gap-1">
-          <Button
-            variant="secondary"
-            size="small"
-            onClick={() => pushPanel({ type: "SHARED_FILTER" })}
-          >
-            篩選
-          </Button>
-          <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
-            <input
-              type="radio"
-              name="groupType"
-              value="BY_DUE_DATE"
-              checked={preference.taskPoolGroupType === "BY_DUE_DATE"}
-              onInput={() => setPreference("taskPoolGroupType", "BY_DUE_DATE")}
-            />
-            <span>依到期日</span>
-          </label>
-          <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
-            <input
-              type="radio"
-              name="groupType"
-              value="BY_PROJECT"
-              checked={preference.taskPoolGroupType === "BY_PROJECT"}
-              onInput={() => setPreference("taskPoolGroupType", "BY_PROJECT")}
-            />
-            <span>依專案</span>
-          </label>
-          <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
-            <input
-              type="radio"
-              name="groupType"
-              value="BY_MILESTONE"
-              checked={preference.taskPoolGroupType === "BY_PROJECT_MILESTONE"}
-              onInput={() =>
-                setPreference("taskPoolGroupType", "BY_PROJECT_MILESTONE")
-              }
-            />
-            <span>依專案里程碑</span>
-          </label>
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-1">
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={() => pushPanel({ type: "SHARED_FILTER" })}
+            >
+              篩選
+            </Button>
+            <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
+              <input
+                type="radio"
+                name="groupType"
+                value="BY_DUE_DATE"
+                checked={preference.taskPoolGroupType === "BY_DUE_DATE"}
+                onInput={() =>
+                  setPreference("taskPoolGroupType", "BY_DUE_DATE")
+                }
+              />
+              <span>依到期日</span>
+            </label>
+            <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
+              <input
+                type="radio"
+                name="groupType"
+                value="BY_PROJECT"
+                checked={preference.taskPoolGroupType === "BY_PROJECT"}
+                onInput={() => setPreference("taskPoolGroupType", "BY_PROJECT")}
+              />
+              <span>依專案</span>
+            </label>
+            <label class="inline-flex items-center gap-1 text-sm cursor-pointer">
+              <input
+                type="radio"
+                name="groupType"
+                value="BY_MILESTONE"
+                checked={
+                  preference.taskPoolGroupType === "BY_PROJECT_MILESTONE"
+                }
+                onInput={() =>
+                  setPreference("taskPoolGroupType", "BY_PROJECT_MILESTONE")
+                }
+              />
+              <span>依專案里程碑</span>
+            </label>
+          </div>
+          <div class="flex flex-wrap items-center pl-2 gap-2 text-xs">
+            <For each={TASK_STATUS_LEGEND}>
+              {(item) => (
+                <div class="inline-flex items-center gap-1">
+                  <span
+                    class={`inline-block w-3 h-3 rounded border ${taskStatusColorClassMap[item.status]}`}
+                  />
+                  <span>{item.label}</span>
+                </div>
+              )}
+            </For>
+            <div class="inline-flex items-center gap-1">
+              <span class="inline-block w-3 h-3 rounded border border-gray-400 border-2" />
+              <span>有計劃</span>
+            </div>
+          </div>
         </div>
       }
     >

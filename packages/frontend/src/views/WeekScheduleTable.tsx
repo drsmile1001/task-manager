@@ -1,5 +1,6 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
+import { getTaskColorClasses } from "@frontend/components/TaskBlock";
 import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useSharedFilterStore } from "@frontend/stores/SharedFilterStore";
@@ -350,11 +351,12 @@ export default function WeekScheduleTable() {
                         {({ task, id }) => {
                           return (
                             <div
-                              class="bg-blue-50 border border-blue-300 text-xs shadow p-1 rounded mb-1 cursor-pointer hover:bg-blue-100 select-none"
-                              classList={{
-                                "bg-gray-50 border-gray-300 text-gray-400 hover:bg-gray-100":
-                                  task?.isArchived || task?.project?.isArchived,
-                              }}
+                              class={[
+                                "border text-xs shadow p-1 rounded mb-1 cursor-pointer select-none",
+                                getTaskColorClasses(task),
+                              ]
+                                .filter(Boolean)
+                                .join(" ")}
                               draggable="true"
                               onDragStart={() => {
                                 setDragContext({

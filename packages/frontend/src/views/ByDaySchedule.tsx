@@ -1,5 +1,6 @@
 import { client } from "@frontend/client";
 import Button from "@frontend/components/Button";
+import { getTaskColorClasses } from "@frontend/components/TaskBlock";
 import { useDragController } from "@frontend/stores/DragController";
 import { usePanelController } from "@frontend/stores/PanelController";
 import { useSharedFilterStore } from "@frontend/stores/SharedFilterStore";
@@ -16,14 +17,7 @@ import {
   type TaskWithRelation,
   useTaskStore,
 } from "@frontend/stores/taskStore";
-import {
-  addDays,
-  format,
-  isAfter,
-  isBefore,
-  startOfDay,
-  startOfWeek,
-} from "date-fns";
+import { addDays, format, startOfDay, startOfWeek } from "date-fns";
 import { For, Show, createMemo, createSignal } from "solid-js";
 import { ulid } from "ulid";
 
@@ -111,7 +105,6 @@ export default function ByDaySchedule() {
         id: string;
         taskId: string;
         task: TaskWithRelation | undefined;
-        hasAssignment: boolean;
       }[];
     }[] = [];
 
@@ -120,24 +113,13 @@ export default function ByDaySchedule() {
         addDays(viewStartDate(), w * 7),
         "yyyy-MM-dd"
       );
-      const weekEndDate = format(
-        addDays(viewStartDate(), w * 7 + 6),
-        "yyyy-MM-dd"
-      );
       const plans = getPlanningsByWeekStartDate(weekStartDate)
         .map((plan) => {
           const task = getTaskWithRelation(plan.taskId);
-          const hasAssignment =
-            task?.assignments.some(
-              (a) =>
-                !isBefore(a.date, weekStartDate) &&
-                !isAfter(a.date, weekEndDate)
-            ) ?? false;
           return {
             id: plan.id,
             taskId: plan.taskId,
             task,
-            hasAssignment,
           };
         })
         .filter(({ task }) => {
@@ -462,21 +444,14 @@ export default function ByDaySchedule() {
                     }}
                   >
                     <For each={plans}>
-                      {({ task, id, hasAssignment }) => (
+                      {({ task, id }) => (
                         <div
-                          class="border text-xs shadow p-1 rounded mr-1 mb-1 cursor-pointer select-none"
-                          classList={{
-                            "bg-gray-50 border-gray-300 text-gray-400 hover:bg-gray-100":
-                              task?.isArchived || task?.project?.isArchived,
-                            "bg-green-50 border-green-400 hover:bg-green-100":
-                              !(
-                                task?.isArchived || task?.project?.isArchived
-                              ) && hasAssignment,
-                            "bg-yellow-50 border-yellow-400 hover:bg-yellow-100":
-                              !(
-                                task?.isArchived || task?.project?.isArchived
-                              ) && !hasAssignment,
-                          }}
+                          class={[
+                            "border text-xs shadow p-1 rounded mr-1 mb-1 cursor-pointer select-none",
+                            getTaskColorClasses(task),
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
                           draggable="true"
                           onDragStart={() => {
                             setDragContext({
@@ -580,12 +555,18 @@ export default function ByDaySchedule() {
                     >
                       <For each={assignments}>
                         {({ assignment, task }) => {
+                          if (!task) {
+                            return null;
+                          }
                           return (
                             <div
-                              class="bg-blue-50 border border-blue-300 text-xs shadow p-1 rounded mb-1 cursor-pointer hover:bg-blue-100 select-none"
+                              class={[
+                                "border text-xs shadow p-1 rounded mb-1 cursor-pointer select-none",
+                                getTaskColorClasses(task),
+                              ]
+                                .filter(Boolean)
+                                .join(" ")}
                               classList={{
-                                "bg-gray-50 border-gray-300 text-gray-400 hover:bg-gray-100":
-                                  task?.isArchived || task?.project?.isArchived,
                                 "border-dashed": !assignment.acknowledged,
                               }}
                               draggable="true"
@@ -608,22 +589,22 @@ export default function ByDaySchedule() {
                                 }
                                 openPanel({
                                   type: "TASK",
-                                  taskId: task?.id ?? "",
+                                  taskId: task.id,
                                 });
                               }}
                             >
                               <div
                                 classList={{
-                                  "line-through": task?.isDone,
+                                  "line-through": task.isDone,
                                 }}
                               >
-                                {task?.name}
+                                {task.name}
                               </div>
                               <div class="text-gray-500 pl-1">
-                                {task?.project?.name}
+                                {task.project?.name}
                               </div>
                               <div class="flex justify-end">
-                                {task?.labels.map((label) => (
+                                {task.labels.map((label) => (
                                   <span
                                     class="text-xs px-1 py-0.5 rounded mr-1"
                                     style={{

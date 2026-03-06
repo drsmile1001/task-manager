@@ -1,6 +1,7 @@
 import { client } from "@frontend/client";
 import { perfEnd, perfStart } from "@frontend/utils/perf";
 import { singulation } from "@frontend/utils/singulation";
+import { isBefore, startOfDay, startOfWeek } from "date-fns";
 import { createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 
@@ -12,6 +13,13 @@ import { useMilestoneStore } from "./milestoneStore";
 import { usePersonStore } from "./personStore";
 import { usePlanningStore } from "./planningStore";
 import { useProjectStore } from "./projectStore";
+
+export type TaskStatusLevel =
+  | "danger"
+  | "warn"
+  | "ongoing"
+  | "done"
+  | "archive";
 
 function createTaskStore() {
   const [map, setMap] = createStore({} as Record<string, Task | undefined>);
@@ -131,6 +139,8 @@ function createTaskStore() {
   }
 
   const tasksWithRelationMap = createMemo(() => {
+    const today = startOfDay(new Date());
+    const currentWeekStart = startOfWeek(new Date());
     const relationToken = perfStart("taskStore:relation.recompute", {
       taskCount: Object.values(map).filter((t) => t !== undefined).length,
     });
@@ -162,6 +172,25 @@ function createTaskStore() {
                   ...labels.map((l) => l.priority ?? Number.MAX_SAFE_INTEGER)
                 );
           const plannings = getPlanningsByTask(task.id);
+          const hasActiveAssignments = assignments.some(
+            (assignment) => !isBefore(assignment.date, today)
+          );
+          const hasActivePlannings = plannings.some(
+            (planning) => !isBefore(planning.weekStartDate, currentWeekStart)
+          );
+          const isArchivedComputed = task.isArchived || !!project?.isArchived;
+          const isOverdue = task.dueDate
+            ? isBefore(task.dueDate, today)
+            : false;
+          const statusLevel: TaskStatusLevel = isArchivedComputed
+            ? "archive"
+            : hasActiveAssignments
+              ? "ongoing"
+              : isOverdue
+                ? "danger"
+                : task.isDone
+                  ? "done"
+                  : "warn";
           return [
             task.id,
             {
@@ -173,6 +202,11 @@ function createTaskStore() {
               priority,
               assignments,
               plannings,
+              hasActiveAssignments,
+              hasActivePlannings,
+              isArchivedComputed,
+              isOverdue,
+              statusLevel,
             },
           ];
         })
