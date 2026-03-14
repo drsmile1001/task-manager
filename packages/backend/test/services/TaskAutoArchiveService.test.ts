@@ -3,10 +3,9 @@ import type { AuditLog } from "@backend/schemas/AuditLog";
 import type { Task } from "@backend/schemas/Task";
 import { MutationPublisherService } from "@backend/services/MutationPublisher";
 import { TaskAutoArchiveService } from "@backend/services/TaskAutoArchiveService";
+import { EntityStoreInMemory } from "@drsmile1001/entity-store";
 import { createDefaultLoggerFromEnv } from "@drsmile1001/logger";
 import { expect, test } from "bun:test";
-
-import { createInMemoryRepo } from "~test/helpers/InMemoryRepo";
 
 class TestMutationPublisherService extends MutationPublisherService {
   published: AuditLog[] = [];
@@ -62,8 +61,10 @@ test("可封存 7 天前完成且尚未封存的 task", async () => {
     },
   ];
 
-  const taskRepo = createInMemoryRepo(tasks);
-  const auditLogRepo = createInMemoryRepo<AuditLog>([]);
+  const taskRepo = new EntityStoreInMemory({
+    initialItems: tasks,
+  });
+  const auditLogRepo = new EntityStoreInMemory<AuditLog>();
   const mutationPublisher = new TestMutationPublisherService(logger);
   const service = new TaskAutoArchiveService({
     logger,

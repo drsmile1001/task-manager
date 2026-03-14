@@ -4,7 +4,7 @@ import {
 } from "@backend/constants/SystemUsers";
 import type { Person } from "@backend/schemas/Person";
 import type { Session } from "@backend/schemas/Session";
-import type { YamlRepo } from "@backend/utils/YamlRepo";
+import type { EntityStore } from "@drsmile1001/entity-store";
 
 export type RequesterResolveContext = {
   apiKey?: string;
@@ -18,8 +18,8 @@ export interface RequesterResolver {
 export class RequesterResolverDefault implements RequesterResolver {
   constructor(
     private readonly deps: {
-      personRepo: YamlRepo<Person>;
-      sessionRepo: YamlRepo<Session>;
+      personRepo: EntityStore<Person>;
+      sessionRepo: EntityStore<Session>;
     }
   ) {}
 

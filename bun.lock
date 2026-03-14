@@ -15,6 +15,7 @@
       "name": "backend",
       "version": "0.1.0",
       "dependencies": {
+        "@drsmile1001/entity-store": "^1.0.0",
         "@drsmile1001/logger": "^2.0.0",
         "@elysiajs/eden": "^1.4.8",
         "@sinclair/typebox": "0.34.48",
@@ -98,7 +99,11 @@
 
     "@borewit/text-codec": ["@borewit/text-codec@0.1.1", "", {}, "sha512-5L/uBxmjaCIX5h8Z+uu+kA9BQLkc/Wl06UGR5ajNRxu+/XjonB5i8JpgFMrPj3LXTCPA0pv8yxUvbUi+QthGGA=="],
 
+    "@drsmile1001/entity-store": ["@drsmile1001/entity-store@1.0.0", "", { "dependencies": { "@drsmile1001/logger": "^1.0.0", "@drsmile1001/utils": "^1.0.0", "@sinclair/typebox": "^0.34.48" } }, "sha512-mop8+jCjQhmcBgnNnJxXYj2Oi49rkPYIBc4+qipJ/YKJRjT5+7OqIKPeoIi0w4+HXLwJ+E41HNbrsTBARel1aw=="],
+
     "@drsmile1001/logger": ["@drsmile1001/logger@2.0.0", "", { "dependencies": { "kleur": "^4.1.5", "rotating-file-stream": "^3.2.7" } }, "sha512-ncyk4CtU/h5Z1JdINwWCCwsgRb6OxbHWMvZGl/FdJ8jre8E9+B86Aii+UmebmBae+qxkRWyAVFTuCAQvvW0bCw=="],
+
+    "@drsmile1001/utils": ["@drsmile1001/utils@1.0.0", "", {}, "sha512-RQPlW/wZJRTsgLUCyncAi1Ukro2rXYoD1ypd+O/FZ5+tg7JKhDtgQysRSf57soj6+MoEDvKt8QDSW6SxAiVPww=="],
 
     "@elysiajs/eden": ["@elysiajs/eden@1.4.8", "", { "peerDependencies": { "elysia": ">=1.4.19" } }, "sha512-a7oct2kFa49tH+GawZtSUCZR2rQgucNYgGLz8alXUqb4IrU3PASA0T4zXJw4MhdV1Xb6vyiR7p7kkqJcVjgbkA=="],
 
@@ -453,6 +458,8 @@
     "vitefu": ["vitefu@1.1.1", "", { "peerDependencies": { "vite": "^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0-beta.0" }, "optionalPeers": ["vite"] }, "sha512-B/Fegf3i8zh0yFbpzZ21amWzHmuNlLlmJT6n7bu5e+pCHUKQIfXSYokrqOBGEMMe9UG2sostKQF9mml/vYaWJQ=="],
 
     "yallist": ["yallist@3.1.1", "", {}, "sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g=="],
+
+    "@drsmile1001/entity-store/@drsmile1001/logger": ["@drsmile1001/logger@1.0.0", "", { "dependencies": { "kleur": "^4.1.5", "rotating-file-stream": "^3.2.7" } }, "sha512-tCF0uCtHwesP4V5bQllEMHSaxZ3MJTzJyW4RAOsrtKHX28QwKJRgqG6yzcCZea5A6uDjKKprV4AV6cqzqxVqvg=="],
 
     "@tailwindcss/oxide-wasm32-wasi/@emnapi/core": ["@emnapi/core@1.8.1", "", { "dependencies": { "@emnapi/wasi-threads": "1.1.0", "tslib": "^2.4.0" }, "bundled": true }, "sha512-AvT9QFpxK0Zd8J0jopedNm+w/2fIzvtPKPjqyw9jwvBaReTTqPBk9Hixaz7KbjimP+QNz605/XnjFcDAL2pqBg=="],
 

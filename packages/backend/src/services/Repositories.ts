@@ -23,76 +23,96 @@ import {
 } from "@backend/schemas/Project";
 import { type Session, sessionSchema } from "@backend/schemas/Session";
 import { type Task, taskMigrations, taskSchema } from "@backend/schemas/Task";
-import type { YamlRepo } from "@backend/utils/YamlRepo";
-import { createYamlRepo } from "@backend/utils/YamlRepo";
+import { type EntityStore, EntityStoreYaml } from "@drsmile1001/entity-store";
 import type { Logger } from "@drsmile1001/logger";
 
 export type AppRepositories = {
-  projectRepo: YamlRepo<Project>;
-  milestoneRepo: YamlRepo<Milestone>;
-  taskRepo: YamlRepo<Task>;
-  planningRepo: YamlRepo<Planning>;
-  assignmentRepo: YamlRepo<Assignment>;
-  personRepo: YamlRepo<Person>;
-  labelRepo: YamlRepo<Label>;
-  sessionRepo: YamlRepo<Session>;
-  auditLogRepo: YamlRepo<AuditLog>;
+  projectRepo: EntityStore<Project>;
+  milestoneRepo: EntityStore<Milestone>;
+  taskRepo: EntityStore<Task>;
+  planningRepo: EntityStore<Planning>;
+  assignmentRepo: EntityStore<Assignment>;
+  personRepo: EntityStore<Person>;
+  labelRepo: EntityStore<Label>;
+  sessionRepo: EntityStore<Session>;
+  auditLogRepo: EntityStore<AuditLog>;
 };
 
 export function createProjectRepo(logger: Logger) {
-  return createYamlRepo(
-    "data/projects.yaml",
-    projectSchema,
+  return new EntityStoreYaml({
+    path: "data/projects.yaml",
+    schema: projectSchema,
     logger,
-    projectMigrations
-  );
+    migrations: projectMigrations,
+  });
 }
 
 export function createMilestoneRepo(logger: Logger) {
-  return createYamlRepo(
-    "data/milestones.yaml",
-    milestoneSchema,
+  return new EntityStoreYaml({
+    path: "data/milestones.yaml",
+    schema: milestoneSchema,
     logger,
-    milestoneMigrations
-  );
+    migrations: milestoneMigrations,
+  });
 }
 
 export function createTaskRepo(logger: Logger) {
-  return createYamlRepo("data/tasks.yaml", taskSchema, logger, taskMigrations);
+  return new EntityStoreYaml({
+    path: "data/tasks.yaml",
+    schema: taskSchema,
+    logger,
+    migrations: taskMigrations,
+  });
 }
 
 export function createPlanningRepo(logger: Logger) {
-  return createYamlRepo("data/plannings.yaml", planningSchema, logger);
+  return new EntityStoreYaml({
+    path: "data/plannings.yaml",
+    schema: planningSchema,
+    logger,
+  });
 }
 
 export function createAssignmentRepo(logger: Logger) {
-  return createYamlRepo(
-    "data/assignments.yaml",
-    assignmentSchema,
+  return new EntityStoreYaml({
+    path: "data/assignments.yaml",
+    schema: assignmentSchema,
     logger,
-    assignmentMigrations
-  );
+    migrations: assignmentMigrations,
+  });
 }
 
 export function createPersonRepo(logger: Logger) {
-  return createYamlRepo(
-    "data/persons.yaml",
-    personSchema,
+  return new EntityStoreYaml({
+    path: "data/persons.yaml",
+    schema: personSchema,
     logger,
-    personMigrations
-  );
+    migrations: personMigrations,
+  });
 }
 
 export function createLabelRepo(logger: Logger) {
-  return createYamlRepo("data/labels.yaml", labelSchema, logger);
+  return new EntityStoreYaml({
+    path: "data/labels.yaml",
+    schema: labelSchema,
+    logger,
+  });
 }
 
 export function createSessionRepo(logger: Logger) {
-  return createYamlRepo("data/sessions.yaml", sessionSchema, logger);
+  return new EntityStoreYaml({
+    path: "data/sessions.yaml",
+    schema: sessionSchema,
+    logger,
+  });
 }
 
 export function createAuditLogRepo(logger: Logger) {
-  return createYamlRepo("data/auditLogs.yaml", auditLogSchema, logger);
+  return new EntityStoreYaml({
+    path: "data/auditLogs.yaml",
+    schema: auditLogSchema,
+    logger,
+  });
 }
 
 export function createRepositories(logger: Logger): AppRepositories {

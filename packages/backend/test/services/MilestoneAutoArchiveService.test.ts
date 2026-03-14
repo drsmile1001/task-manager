@@ -3,10 +3,9 @@ import type { AuditLog } from "@backend/schemas/AuditLog";
 import type { Milestone } from "@backend/schemas/Milestone";
 import { MilestoneAutoArchiveService } from "@backend/services/MilestoneAutoArchiveService";
 import { MutationPublisherService } from "@backend/services/MutationPublisher";
+import { EntityStoreInMemory } from "@drsmile1001/entity-store";
 import { createDefaultLoggerFromEnv } from "@drsmile1001/logger";
 import { expect, test } from "bun:test";
-
-import { createInMemoryRepo } from "~test/helpers/InMemoryRepo";
 
 class TestMutationPublisherService extends MutationPublisherService {
   published: AuditLog[] = [];
@@ -45,8 +44,10 @@ test("可封存 7 天前到期且尚未封存的里程碑", async () => {
     },
   ];
 
-  const milestoneRepo = createInMemoryRepo(milestones);
-  const auditLogRepo = createInMemoryRepo<AuditLog>([]);
+  const milestoneRepo = new EntityStoreInMemory({
+    initialItems: milestones,
+  });
+  const auditLogRepo = new EntityStoreInMemory<AuditLog>();
   const mutationPublisher = new TestMutationPublisherService(logger);
   const service = new MilestoneAutoArchiveService({
     logger,

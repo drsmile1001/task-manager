@@ -1,4 +1,4 @@
-import { MigrationBuilder } from "@backend/utils/YamlRepo";
+import { MigrationBuilder } from "@drsmile1001/entity-store";
 import { t } from "elysia";
 
 export const milestoneSchema = t.Object({

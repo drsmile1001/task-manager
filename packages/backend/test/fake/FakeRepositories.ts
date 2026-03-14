@@ -8,9 +8,10 @@ import type { Project } from "@backend/schemas/Project";
 import type { Session } from "@backend/schemas/Session";
 import type { Task } from "@backend/schemas/Task";
 import type { AppRepositories } from "@backend/services/Repositories";
-import type { YamlRepo } from "@backend/utils/YamlRepo";
-
-import { createInMemoryRepo } from "~test/helpers/InMemoryRepo";
+import {
+  type EntityStore,
+  EntityStoreInMemory,
+} from "@drsmile1001/entity-store";
 
 type RepoSeed = {
   projects: Project[];
@@ -30,14 +31,16 @@ type RepoCalls<T> = {
   replaceAll: T[][];
 };
 
-export type FakeRepo<T extends { id: string }> = YamlRepo<T> & {
+export type FakeRepo<T extends { id: string }> = EntityStore<T> & {
   calls: RepoCalls<T>;
 };
 
 function createTrackedRepo<T extends { id: string }>(
   initialData: T[]
 ): FakeRepo<T> {
-  const base = createInMemoryRepo(initialData);
+  const base = new EntityStoreInMemory({
+    initialItems: initialData,
+  });
   const calls: RepoCalls<T> = {
     set: [],
     remove: [],
