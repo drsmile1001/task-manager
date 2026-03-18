@@ -131,7 +131,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         <SectionLabel>所屬專案</SectionLabel>
         <div class="w-full flex">
           <select
-            class="flex-1 border px-2 py-1 rounded"
+            class="flex-1 min-w-0 border px-2 py-1 rounded"
             value={task()?.projectId}
             onInput={(e) =>
               handleUpdateTask({
@@ -165,7 +165,7 @@ export default function TaskDetailsPanel(props: TaskDetailsPanelProps) {
         <SectionLabel>所屬里程碑</SectionLabel>
         <div class="w-full flex items-center">
           <select
-            class="flex-1 border px-2 py-1 rounded"
+            class="flex-1 min-w-0 border px-2 py-1 rounded"
             value={task()?.milestoneId || ""}
             onInput={(e) =>
               handleUpdateTask({
